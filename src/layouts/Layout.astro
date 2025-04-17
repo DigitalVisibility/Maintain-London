@@ -1,0 +1,47 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource/plus-jakarta-sans';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { 
+  title,
+  description = "Maintain London - Your trusted partner for high-end home renovations, extensions, and property development in Southwest London and Surrey."
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="bg-white">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --accent: 74, 178, 89;
+    --accent-light: 163, 230, 174;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+</style>

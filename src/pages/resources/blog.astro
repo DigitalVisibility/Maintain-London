@@ -1,0 +1,295 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<Layout title="Blog - Maintain London | Renovation Insights & Tips">
+  <Navigation />
+  
+  <!-- Hero Section -->
+  <section class="pt-32 pb-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+          Renovation Insights
+        </h1>
+        <p class="mt-6 max-w-3xl mx-auto text-xl text-gray-500">
+          Expert advice, industry trends, and inspiration for your home renovation journey.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Post -->
+  <section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative rounded-lg overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+          alt="Modern kitchen design trends"
+          class="w-full h-[600px] object-cover"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent">
+          <div class="absolute bottom-0 left-0 right-0 p-8">
+            <div class="max-w-3xl">
+              <div class="flex items-center space-x-4 text-white/80 mb-4">
+                <span>By Sarah Thompson</span>
+                <span>•</span>
+                <span>8 min read</span>
+                <span>•</span>
+                <span>March 15, 2025</span>
+              </div>
+              <h2 class="text-4xl font-bold text-white mb-4">
+                2025 Kitchen Design Trends: Blending Technology with Timeless Elegance
+              </h2>
+              <p class="text-lg text-gray-200 mb-6">
+                Discover how the latest smart home innovations are being seamlessly integrated into classic kitchen designs, creating spaces that are both functional and timeless.
+              </p>
+              <a href="/blog/kitchen-design-trends-2025" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                Read Article
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest Posts -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-gray-900 mb-12">Latest Articles</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Article 1 -->
+        <article class="bg-white rounded-lg overflow-hidden shadow-sm">
+          <img
+            src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80"
+            alt="Sustainable bathroom renovation"
+            class="w-full h-48 object-cover"
+          />
+          <div class="p-6">
+            <div class="flex items-center text-sm text-gray-500 mb-4">
+              <img
+                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80"
+                alt="James Wilson"
+                class="w-8 h-8 rounded-full mr-2"
+              />
+              <span>James Wilson</span>
+              <span class="mx-2">•</span>
+              <span>6 min read</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">
+              Sustainable Bathroom Renovations: A Guide to Eco-Friendly Materials
+            </h3>
+            <p class="text-gray-600 mb-4">
+              Learn how to create a luxurious bathroom while minimizing environmental impact through smart material choices and water-saving fixtures.
+            </p>
+            <div class="flex items-center text-sm text-gray-500">
+              <span>March 10, 2025</span>
+              <span class="mx-2">•</span>
+              <span class="text-brand-green">Sustainability</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article 2 -->
+        <article class="bg-white rounded-lg overflow-hidden shadow-sm">
+          <img
+            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80"
+            alt="Home extension planning"
+            class="w-full h-48 object-cover"
+          />
+          <div class="p-6">
+            <div class="flex items-center text-sm text-gray-500 mb-4">
+              <img
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80"
+                alt="Emma Davis"
+                class="w-8 h-8 rounded-full mr-2"
+              />
+              <span>Emma Davis</span>
+              <span class="mx-2">•</span>
+              <span>10 min read</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">
+              Planning Your Home Extension: Key Considerations for Success
+            </h3>
+            <p class="text-gray-600 mb-4">
+              A comprehensive guide to planning permissions, budgeting, and timeline management for your home extension project.
+            </p>
+            <div class="flex items-center text-sm text-gray-500">
+              <span>March 5, 2025</span>
+              <span class="mx-2">•</span>
+              <span class="text-brand-green">Planning</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Article 3 -->
+        <article class="bg-white rounded-lg overflow-hidden shadow-sm">
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+            alt="Smart home integration"
+            class="w-full h-48 object-cover"
+          />
+          <div class="p-6">
+            <div class="flex items-center text-sm text-gray-500 mb-4">
+              <img
+                src="https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&q=80"
+                alt="David Chen"
+                class="w-8 h-8 rounded-full mr-2"
+              />
+              <span>David Chen</span>
+              <span class="mx-2">•</span>
+              <span>7 min read</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">
+              Smart Home Integration: Future-Proofing Your Renovation
+            </h3>
+            <p class="text-gray-600 mb-4">
+              Explore the latest smart home technologies and how to incorporate them seamlessly into your renovation project.
+            </p>
+            <div class="flex items-center text-sm text-gray-500">
+              <span>March 1, 2025</span>
+              <span class="mx-2">•</span>
+              <span class="text-brand-green">Technology</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-gray-900 mb-12">Browse by Category</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="/blog/category/design" class="group relative h-40 rounded-lg overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+            alt="Design"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+          <div class="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition-colors duration-300">
+            <div class="h-full flex items-center justify-center">
+              <span class="text-xl font-bold text-white">Design</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="/blog/category/sustainability" class="group relative h-40 rounded-lg overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80"
+            alt="Sustainability"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+          <div class="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition-colors duration-300">
+            <div class="h-full flex items-center justify-center">
+              <span class="text-xl font-bold text-white">Sustainability</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="/blog/category/technology" class="group relative h-40 rounded-lg overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80"
+            alt="Technology"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+          <div class="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition-colors duration-300">
+            <div class="h-full flex items-center justify-center">
+              <span class="text-xl font-bold text-white">Technology</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="/blog/category/planning" class="group relative h-40 rounded-lg overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+            alt="Planning"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+          <div class="absolute inset-0 bg-black/50 group-hover:bg-black/60 transition-colors duration-300">
+            <div class="h-full flex items-center justify-center">
+              <span class="text-xl font-bold text-white">Planning</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+        <div class="lg:grid lg:grid-cols-2">
+          <div class="relative">
+            <img
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+              alt="Subscribe to our newsletter"
+              class="h-full w-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent">
+              <div class="p-12">
+                <h3 class="text-3xl font-bold text-white mb-4">Stay Informed</h3>
+                <p class="text-lg text-white/90">
+                  Get the latest renovation insights and tips delivered to your inbox.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="p-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">Subscribe to Our Newsletter</h3>
+            <form class="space-y-4">
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring focus:ring-brand-green/20"
+                />
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring focus:ring-brand-green/20"
+                />
+              </div>
+              <div>
+                <label for="interests" class="block text-sm font-medium text-gray-700">Interests</label>
+                <select
+                  id="interests"
+                  name="interests"
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring focus:ring-brand-green/20"
+                >
+                  <option>All Topics</option>
+                  <option>Design Trends</option>
+                  <option>Sustainability</option>
+                  <option>Technology</option>
+                  <option>Planning & Budgeting</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-brand-green hover:bg-brand-green/90"
+              >
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>

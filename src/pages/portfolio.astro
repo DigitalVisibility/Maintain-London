@@ -1,0 +1,279 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Our Portfolio - Maintain London | Premium Home Renovations">
+  <Navigation />
+  
+  <!-- Hero Section -->
+  <section class="pt-32 pb-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+          Our Signature Projects
+        </h1>
+        <p class="mt-6 max-w-3xl mx-auto text-xl text-gray-500">
+          Discover how we've transformed some of Southwest London's most distinguished properties, creating spaces that inspire and delight.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Project Categories -->
+  <section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap justify-center gap-4 mb-16">
+        <button data-category="all" class="category-filter px-6 py-2 rounded-full bg-brand-green text-white hover:bg-brand-green/90 transition-colors duration-200">
+          All Projects
+        </button>
+        <button data-category="renovation" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
+          Full Renovations
+        </button>
+        <button data-category="kitchen" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
+          Kitchen Design
+        </button>
+        <button data-category="bathroom" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
+          Bathroom Design
+        </button>
+        <button data-category="extension" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
+          Extensions
+        </button>
+      </div>
+
+      <!-- Featured Project -->
+      <div class="mb-24">
+        <div class="relative h-[600px] rounded-lg overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+            alt="Luxury Kitchen Renovation in Richmond"
+            class="absolute inset-0 w-full h-full object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent">
+            <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
+              <span class="text-brand-green font-semibold">Featured Project</span>
+              <h2 class="text-3xl font-bold mt-2 mb-4">Richmond Luxury Kitchen</h2>
+              <p class="text-lg text-gray-200 mb-6 max-w-2xl">
+                Complete kitchen transformation featuring bespoke cabinetry, premium appliances, and smart home integration. This project seamlessly blends contemporary design with practical functionality.
+              </p>
+              <a href="/portfolio/richmond-kitchen" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                View Project Details
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Grid -->
+      <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Kitchen Projects -->
+        <div class="group relative project-item" data-category="kitchen">
+          <div class="relative h-[400px] rounded-lg overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&q=80"
+              alt="Modern Kitchen Design"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <span class="text-brand-green font-semibold">Kitchen Design</span>
+                <h3 class="text-xl font-bold text-white mt-2 mb-2">Contemporary Kitchen</h3>
+                <p class="text-gray-200 mb-4">Modern kitchen featuring sleek lines and premium appliances</p>
+                <a href="/portfolio/modern-kitchen" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                  View Project
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bathroom Projects -->
+        <div class="group relative project-item" data-category="bathroom">
+          <div class="relative h-[400px] rounded-lg overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80"
+              alt="Luxury Bathroom Design"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <span class="text-brand-green font-semibold">Bathroom Design</span>
+                <h3 class="text-xl font-bold text-white mt-2 mb-2">Spa-Inspired Bathroom</h3>
+                <p class="text-gray-200 mb-4">Luxury bathroom featuring premium fixtures and natural stone</p>
+                <a href="/portfolio/spa-bathroom" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                  View Project
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extension Projects -->
+        <div class="group relative project-item" data-category="extension">
+          <div class="relative h-[400px] rounded-lg overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80"
+              alt="Modern House Extension"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <span class="text-brand-green font-semibold">Extension</span>
+                <h3 class="text-xl font-bold text-white mt-2 mb-2">Glass Extension</h3>
+                <p class="text-gray-200 mb-4">Contemporary glass extension with seamless integration</p>
+                <a href="/portfolio/glass-extension" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                  View Project
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Renovation Projects -->
+        <div class="group relative project-item" data-category="renovation">
+          <div class="relative h-[400px] rounded-lg overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+              alt="Complete Home Renovation"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <span class="text-brand-green font-semibold">Full Renovation</span>
+                <h3 class="text-xl font-bold text-white mt-2 mb-2">Period Property</h3>
+                <p class="text-gray-200 mb-4">Complete renovation of Victorian townhouse</p>
+                <a href="/portfolio/victorian-renovation" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                  View Project
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kitchen Project 2 -->
+        <div class="group relative project-item" data-category="kitchen">
+          <div class="relative h-[400px] rounded-lg overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+              alt="Luxury Kitchen Design"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <span class="text-brand-green font-semibold">Kitchen Design</span>
+                <h3 class="text-xl font-bold text-white mt-2 mb-2">Luxury Open Plan</h3>
+                <p class="text-gray-200 mb-4">Open-concept kitchen with island and premium finishes</p>
+                <a href="/portfolio/luxury-kitchen" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                  View Project
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bathroom Project 2 -->
+        <div class="group relative project-item" data-category="bathroom">
+          <div class="relative h-[400px] rounded-lg overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80"
+              alt="Modern Bathroom Design"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <span class="text-brand-green font-semibold">Bathroom Design</span>
+                <h3 class="text-xl font-bold text-white mt-2 mb-2">Contemporary Bathroom</h3>
+                <p class="text-gray-200 mb-4">Modern bathroom with premium fixtures and finishes</p>
+                <a href="/portfolio/modern-bathroom" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
+                  View Project
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load More Button -->
+      <div class="text-center mt-16">
+        <button id="load-more" class="inline-flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+          Load More Projects
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<script>
+  // Category filtering
+  const categoryButtons = document.querySelectorAll('.category-filter');
+  const projectItems = document.querySelectorAll('.project-item');
+
+  categoryButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons
+      categoryButtons.forEach(btn => {
+        btn.classList.remove('bg-brand-green', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-700');
+      });
+
+      // Add active class to clicked button
+      button.classList.remove('bg-gray-100', 'text-gray-700');
+      button.classList.add('bg-brand-green', 'text-white');
+
+      const category = button.dataset.category;
+
+      // Show/hide projects based on category
+      projectItems.forEach(item => {
+        if (category === 'all' || item.dataset.category === category) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Load more functionality
+  const loadMoreButton = document.getElementById('load-more');
+  let currentlyShown = 6;
+
+  loadMoreButton.addEventListener('click', () => {
+    const hiddenProjects = document.querySelectorAll('.project-item[style="display: none;"]');
+    const projectsToShow = Array.from(hiddenProjects).slice(0, 3);
+
+    projectsToShow.forEach(project => {
+      project.style.display = 'block';
+    });
+
+    if (hiddenProjects.length <= 3) {
+      loadMoreButton.style.display = 'none';
+    }
+  });
+</script>
