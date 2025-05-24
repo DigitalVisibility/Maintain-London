@@ -2,6 +2,20 @@
 import Layout from '../layouts/Layout.astro';
 import Navigation from '../components/Navigation.astro';
 import Footer from '../components/Footer.astro';
+import PortfolioGallery from '../components/PortfolioGallery.astro';
+import BrochurePromo from '../components/BrochurePromo.astro';
+import { projects, serviceCategories } from '../data/portfolio-metadata.js';
+
+// Get URL parameters for filtering
+const { searchParams } = Astro.url;
+const activeProject = searchParams.get('project') || 'all';
+const activeCategory = searchParams.get('category') || 'all';
+
+// Debug params
+console.log('URL Parameters:', { activeProject, activeCategory });
+
+// Get featured project for hero section
+const featuredProject = projects.find(p => p.id === 'chesterton-road') || projects[0];
 ---
 
 <Layout title="Our Portfolio - Maintain London | Premium Home Renovations">
@@ -20,210 +34,45 @@ import Footer from '../components/Footer.astro';
       </div>
     </div>
   </section>
-
-  <!-- Project Categories -->
-  <section class="py-16">
+  
+  <!-- Featured Project Banner -->
+  <section class="pb-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-wrap justify-center gap-4 mb-16">
-        <button data-category="all" class="category-filter px-6 py-2 rounded-full bg-brand-green text-white hover:bg-brand-green/90 transition-colors duration-200">
-          All Projects
-        </button>
-        <button data-category="renovation" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
-          Full Renovations
-        </button>
-        <button data-category="kitchen" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
-          Kitchen Design
-        </button>
-        <button data-category="bathroom" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
-          Bathroom Design
-        </button>
-        <button data-category="extension" class="category-filter px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
-          Extensions
-        </button>
-      </div>
-
-      <!-- Featured Project -->
-      <div class="mb-24">
-        <div class="relative h-[600px] rounded-lg overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
-            alt="Luxury Kitchen Renovation in Richmond"
-            class="absolute inset-0 w-full h-full object-cover"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent">
-            <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
-              <span class="text-brand-green font-semibold">Featured Project</span>
-              <h2 class="text-3xl font-bold mt-2 mb-4">Richmond Luxury Kitchen</h2>
-              <p class="text-lg text-gray-200 mb-6 max-w-2xl">
-                Complete kitchen transformation featuring bespoke cabinetry, premium appliances, and smart home integration. This project seamlessly blends contemporary design with practical functionality.
-              </p>
-              <a href="/portfolio/richmond-kitchen" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
-                View Project Details
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
+      <div class="relative h-[500px] rounded-lg overflow-hidden">
+        <img
+          src={featuredProject.featuredImage}
+          alt={`${featuredProject.name} by Maintain London`}
+          class="absolute inset-0 w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent">
+          <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
+            <span class="text-brand-green font-semibold">Featured Project</span>
+            <h2 class="text-3xl font-bold mt-2 mb-2">{featuredProject.name}</h2>
+            <p class="text-gray-200 mb-4 max-w-xl text-lg">{featuredProject.description}</p>
+            <a 
+              href={`/portfolio?project=${featuredProject.id}&category=all`}
+              class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200"
+            >
+              View Project Details
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </a>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Project Grid -->
-      <div id="project-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Kitchen Projects -->
-        <div class="group relative project-item" data-category="kitchen">
-          <div class="relative h-[400px] rounded-lg overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&q=80"
-              alt="Modern Kitchen Design"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <span class="text-brand-green font-semibold">Kitchen Design</span>
-                <h3 class="text-xl font-bold text-white mt-2 mb-2">Contemporary Kitchen</h3>
-                <p class="text-gray-200 mb-4">Modern kitchen featuring sleek lines and premium appliances</p>
-                <a href="/portfolio/modern-kitchen" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
-                  View Project
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- Portfolio Gallery with Filters -->
+  <section class="py-16">
+    <PortfolioGallery activeProject={activeProject} activeCategory={activeCategory} />
+  </section>
 
-        <!-- Bathroom Projects -->
-        <div class="group relative project-item" data-category="bathroom">
-          <div class="relative h-[400px] rounded-lg overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80"
-              alt="Luxury Bathroom Design"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <span class="text-brand-green font-semibold">Bathroom Design</span>
-                <h3 class="text-xl font-bold text-white mt-2 mb-2">Spa-Inspired Bathroom</h3>
-                <p class="text-gray-200 mb-4">Luxury bathroom featuring premium fixtures and natural stone</p>
-                <a href="/portfolio/spa-bathroom" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
-                  View Project
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Extension Projects -->
-        <div class="group relative project-item" data-category="extension">
-          <div class="relative h-[400px] rounded-lg overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80"
-              alt="Modern House Extension"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <span class="text-brand-green font-semibold">Extension</span>
-                <h3 class="text-xl font-bold text-white mt-2 mb-2">Glass Extension</h3>
-                <p class="text-gray-200 mb-4">Contemporary glass extension with seamless integration</p>
-                <a href="/portfolio/glass-extension" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
-                  View Project
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Renovation Projects -->
-        <div class="group relative project-item" data-category="renovation">
-          <div class="relative h-[400px] rounded-lg overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
-              alt="Complete Home Renovation"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <span class="text-brand-green font-semibold">Full Renovation</span>
-                <h3 class="text-xl font-bold text-white mt-2 mb-2">Period Property</h3>
-                <p class="text-gray-200 mb-4">Complete renovation of Victorian townhouse</p>
-                <a href="/portfolio/victorian-renovation" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
-                  View Project
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Kitchen Project 2 -->
-        <div class="group relative project-item" data-category="kitchen">
-          <div class="relative h-[400px] rounded-lg overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
-              alt="Luxury Kitchen Design"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <span class="text-brand-green font-semibold">Kitchen Design</span>
-                <h3 class="text-xl font-bold text-white mt-2 mb-2">Luxury Open Plan</h3>
-                <p class="text-gray-200 mb-4">Open-concept kitchen with island and premium finishes</p>
-                <a href="/portfolio/luxury-kitchen" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
-                  View Project
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bathroom Project 2 -->
-        <div class="group relative project-item" data-category="bathroom">
-          <div class="relative h-[400px] rounded-lg overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80"
-              alt="Modern Bathroom Design"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <span class="text-brand-green font-semibold">Bathroom Design</span>
-                <h3 class="text-xl font-bold text-white mt-2 mb-2">Contemporary Bathroom</h3>
-                <p class="text-gray-200 mb-4">Modern bathroom with premium fixtures and finishes</p>
-                <a href="/portfolio/modern-bathroom" class="inline-flex items-center text-white hover:text-brand-green transition-colors duration-200">
-                  View Project
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Load More Button -->
-      <div class="text-center mt-16">
-        <button id="load-more" class="inline-flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
-          Load More Projects
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </button>
-      </div>
+  <!-- Digital Brochure Promo -->
+  <section class="py-8 mb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <BrochurePromo />
     </div>
   </section>
 
@@ -231,49 +80,176 @@ import Footer from '../components/Footer.astro';
 </Layout>
 
 <script>
-  // Category filtering
-  const categoryButtons = document.querySelectorAll('.category-filter');
-  const projectItems = document.querySelectorAll('.project-item');
-
-  categoryButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      // Remove active class from all buttons
-      categoryButtons.forEach(btn => {
-        btn.classList.remove('bg-brand-green', 'text-white');
-        btn.classList.add('bg-gray-100', 'text-gray-700');
-      });
-
-      // Add active class to clicked button
-      button.classList.remove('bg-gray-100', 'text-gray-700');
-      button.classList.add('bg-brand-green', 'text-white');
-
-      const category = button.dataset.category;
-
-      // Show/hide projects based on category
-      projectItems.forEach(item => {
-        if (category === 'all' || item.dataset.category === category) {
-          item.style.display = 'block';
+  // Handle filtering and image loading on the client side
+  document.addEventListener('DOMContentLoaded', () => {
+    // Parse URL parameters for filtering
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectParam = urlParams.get('project') || 'all';
+    const categoryParam = urlParams.get('category') || 'all';
+    
+    console.log('Client-side params:', { projectParam, categoryParam });
+    
+    // Get all portfolio items and filter links
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    const projectLinks = document.querySelectorAll('[data-project-filter]');
+    const categoryLinks = document.querySelectorAll('[data-category-filter]');
+    
+    // Function to filter items based on selected project and category
+    function filterItems(project: string, category: string): number {
+      let visibleCount = 0;
+      
+      portfolioItems.forEach(item => {
+        const itemProject = item.getAttribute('data-project');
+        const itemCategories = JSON.parse(item.getAttribute('data-categories') || '[]');
+        
+        // Check if item matches both filters
+        const projectMatch = project === 'all' || itemProject === project;
+        const categoryMatch = category === 'all' || itemCategories.includes(category);
+        
+        if (projectMatch && categoryMatch) {
+          (item as HTMLElement).style.display = 'block';
+          visibleCount++;
         } else {
-          item.style.display = 'none';
+          (item as HTMLElement).style.display = 'none';
         }
       });
+      
+      // Show/hide no results message
+      const noResultsMessage = document.getElementById('no-results-message');
+      if (noResultsMessage) {
+        (noResultsMessage as HTMLElement).style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+      
+      return visibleCount;
+    }
+    
+    // Apply initial filtering based on URL parameters
+    filterItems(projectParam, categoryParam);
+    
+    // Highlight active project filter
+    projectLinks.forEach(link => {
+      const projectId = link.getAttribute('data-project-filter');
+      
+      // Set initial active state
+      if (projectId === projectParam) {
+        link.classList.add('bg-brand-green', 'text-white');
+        link.classList.remove('bg-gray-200', 'text-gray-800');
+      } else {
+        link.classList.remove('bg-brand-green', 'text-white');
+        link.classList.add('bg-gray-200', 'text-gray-800');
+      }
+      
+      // Add click handler for filtering
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // When clicking a project filter, reset the category filter to 'all'
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('project', projectId || 'all');
+        newUrl.searchParams.set('category', 'all');
+        window.history.pushState({}, '', newUrl);
+        
+        // Update project filter active states
+        projectLinks.forEach(l => {
+          l.classList.remove('bg-brand-green', 'text-white');
+          l.classList.add('bg-gray-200', 'text-gray-800');
+        });
+        link.classList.add('bg-brand-green', 'text-white');
+        link.classList.remove('bg-gray-200', 'text-gray-800');
+        
+        // Update category filter active states - make "All" active
+        categoryLinks.forEach(l => {
+          const catId = l.getAttribute('data-category-filter') || 'all';
+          if (catId === 'all') {
+            l.classList.add('bg-brand-green', 'text-white');
+            l.classList.remove('bg-gray-200', 'text-gray-800');
+          } else {
+            l.classList.remove('bg-brand-green', 'text-white');
+            l.classList.add('bg-gray-200', 'text-gray-800');
+          }
+        });
+        
+        // Filter items
+        filterItems(projectId || 'all', 'all');
+      });
     });
-  });
-
-  // Load more functionality
-  const loadMoreButton = document.getElementById('load-more');
-  let currentlyShown = 6;
-
-  loadMoreButton.addEventListener('click', () => {
-    const hiddenProjects = document.querySelectorAll('.project-item[style="display: none;"]');
-    const projectsToShow = Array.from(hiddenProjects).slice(0, 3);
-
-    projectsToShow.forEach(project => {
-      project.style.display = 'block';
+    
+    // Highlight active category filter
+    categoryLinks.forEach(link => {
+      const categoryId = link.getAttribute('data-category-filter');
+      
+      // Set initial active state
+      if (categoryId === categoryParam) {
+        link.classList.add('bg-brand-green', 'text-white');
+        link.classList.remove('bg-gray-200', 'text-gray-800');
+      } else {
+        link.classList.remove('bg-brand-green', 'text-white');
+        link.classList.add('bg-gray-200', 'text-gray-800');
+      }
+      
+      // Add click handler for filtering
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // When clicking a category filter, reset the project filter to 'all'
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('project', 'all');
+        newUrl.searchParams.set('category', categoryId || 'all');
+        window.history.pushState({}, '', newUrl);
+        
+        // Update category filter active states
+        categoryLinks.forEach(l => {
+          l.classList.remove('bg-brand-green', 'text-white');
+          l.classList.add('bg-gray-200', 'text-gray-800');
+        });
+        link.classList.add('bg-brand-green', 'text-white');
+        link.classList.remove('bg-gray-200', 'text-gray-800');
+        
+        // Update project filter active states - make "All" active
+        projectLinks.forEach(l => {
+          const projId = l.getAttribute('data-project-filter') || 'all';
+          if (projId === 'all') {
+            l.classList.add('bg-brand-green', 'text-white');
+            l.classList.remove('bg-gray-200', 'text-gray-800');
+          } else {
+            l.classList.remove('bg-brand-green', 'text-white');
+            l.classList.add('bg-gray-200', 'text-gray-800');
+          }
+        });
+        
+        // Filter items
+        filterItems('all', categoryId || 'all');
+      });
     });
-
-    if (hiddenProjects.length <= 3) {
-      loadMoreButton.style.display = 'none';
+    
+    // Lazy load images for better performance
+    const lazyImages = document.querySelectorAll('img');
+    
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const image = entry.target as HTMLImageElement;
+            image.classList.add('fade-in');
+            imageObserver.unobserve(image);
+          }
+        });
+      });
+      
+      lazyImages.forEach(image => {
+        imageObserver.observe(image);
+      });
     }
   });
 </script>
+
+<style>
+  img {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  img.fade-in {
+    opacity: 1;
+  }
+</style>

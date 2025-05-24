@@ -6,7 +6,7 @@
     <div class="lg:grid lg:grid-cols-12 lg:gap-8">
       <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
         <h1>
-          <span class="block text-base text-brand-green font-semibold tracking-wide uppercase">Transform Your Space</span>
+          <span class="block text-base font-semibold tracking-wide uppercase bg-clip-text text-transparent bg-text-gradient-green">Transform Your Space</span>
           <span class="mt-1 block text-4xl tracking-tight font-extrabold sm:text-5xl xl:text-6xl">
             High-End Home Renovations in London
           </span>
@@ -16,7 +16,7 @@
         </p>
         <div class="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
           <div class="flex flex-col sm:flex-row gap-4 sm:justify-center lg:justify-start">
-            <a href="/quote" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-brand-green hover:bg-brand-green/90 transition-colors duration-200">
+            <a href="/quote" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-button-green-3 hover:bg-button-green-1 transition-all duration-200 shadow-sm">
               Get a Free Quote
             </a>
             <a href="/portfolio" class="inline-flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
@@ -38,13 +38,115 @@
         </div>
       </div>
       <div class="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
-        <div class="relative mx-auto w-full rounded-lg shadow-lg lg:max-w-md">
+        <div class="relative mx-auto w-full lg:max-w-md watercolor-border-container">
+          <!-- Full surrounding glow effect -->
+          <div class="watercolor-glow full-glow"></div>
+          <div class="watercolor-glow top-left-glow"></div>
+          <div class="watercolor-glow bottom-left-glow"></div>
+          <div class="watercolor-glow bottom-right-glow"></div>
           <img
-            class="w-full rounded-lg"
+            class="w-full rounded-lg relative z-10"
             src="/images/Modern-Kitchen-Renovation-by-Maintain-London.webp"
             alt="Contemporary open-plan kitchen featuring a two-tone design with white upper cabinets and dark grey lower cabinets. Large central island with concrete-look countertop, natural lighting from skylights and bi-fold doors leading to a garden. Wooden dining set and orchid plants add warmth to the minimalist space."
           />
         </div>
+        
+        <style>
+          .watercolor-border-container {
+            position: relative;
+            padding: 15px;
+            border-radius: 0.5rem;
+          }
+          
+          .watercolor-glow {
+            position: absolute;
+            filter: blur(35px);
+            opacity: 0.8;
+            z-index: 1;
+            border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
+          }
+
+          /* Full surround glow with vibrant gradient */
+          .full-glow {
+            width: 120%;
+            height: 120%;
+            top: -10%;
+            left: -10%;
+            background: conic-gradient(
+              from 135deg at 50% 50%,
+              rgba(174, 222, 74, 0.9) 0%, /* Green at top-left */
+              rgba(188, 226, 102, 0.8) 15%, /* Lighter green */
+              rgba(205, 230, 145, 0.7) 25%, /* Very light green */
+              rgba(230, 210, 220, 0.7) 35%, /* Light pink */
+              rgba(255, 182, 193, 0.8) 45%, /* Pink */
+              rgba(240, 150, 190, 0.8) 55%, /* Darker pink */
+              rgba(200, 122, 214, 0.8) 65%, /* Light purple */
+              rgba(170, 100, 223, 0.9) 75%, /* Medium purple */
+              rgba(138, 43, 226, 0.9) 85%, /* Purple at bottom-right */
+              rgba(200, 190, 220, 0.8) 95%, /* Light lavender */
+              rgba(174, 222, 74, 0.9) 100% /* Back to green to complete the circle */
+            );
+            animation: rotate 20s linear infinite, pulse 8s ease-in-out infinite alternate;
+          }
+
+          /* Extra top-left green glow */
+          .top-left-glow {
+            width: 70%;
+            height: 70%;
+            top: -20%;
+            left: -20%;
+            background: radial-gradient(circle at center, 
+              rgba(174, 222, 74, 0.9) 0%, 
+              rgba(174, 222, 74, 0.6) 40%, 
+              rgba(174, 222, 74, 0.3) 60%,
+              rgba(174, 222, 74, 0.0) 80%
+            );
+            animation: pulse 8s ease-in-out infinite alternate;
+          }
+          
+          /* Extra bottom-left pink glow */
+          .bottom-left-glow {
+            width: 70%;
+            height: 70%;
+            bottom: -20%;
+            left: -20%;
+            background: radial-gradient(circle at center, 
+              rgba(255, 182, 193, 0.9) 0%, /* Pink */
+              rgba(255, 182, 193, 0.6) 40%, 
+              rgba(255, 182, 193, 0.3) 60%,
+              rgba(255, 182, 193, 0.0) 80%
+            );
+            animation: pulse 8s ease-in-out infinite alternate 0.5s;
+          }
+
+
+
+          /* Extra bottom-right purple glow */
+          .bottom-right-glow {
+            width: 70%;
+            height: 70%;
+            bottom: -20%;
+            right: -20%;
+            background: radial-gradient(circle at center, 
+              rgba(138, 43, 226, 0.9) 0%, 
+              rgba(138, 43, 226, 0.6) 40%, 
+              rgba(138, 43, 226, 0.3) 60%,
+              rgba(138, 43, 226, 0.0) 80%
+            );
+            animation: pulse 8s ease-in-out infinite alternate 1s;
+          }
+
+          @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
+          @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 0.7; }
+          }
+        </style>
       </div>
     </div>
   </div>
