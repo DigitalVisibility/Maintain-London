@@ -41,6 +41,13 @@ export const projects = [
     description: 'Upscale home renovation with luxury features',
     featuredImage: '/images/portfolio/projects/wimbledon/Wimbledon_Living_Room_1.webp',
     categories: ['renovations']
+  },
+  {
+    id: 'latest-renovation',
+    name: 'Latest Full Renovation',
+    description: 'Contemporary full home renovation featuring modern kitchen, elegant living spaces, and luxury bathroom finishes',
+    featuredImage: '/images/portfolio/projects/undefined/kitchen with oak units.webp',
+    categories: ['renovations']
   }
 ];
 
@@ -365,6 +372,40 @@ export const imageMetadata = [
     categories: ['renovations', 'bedrooms'],
     title: 'Guest Bedroom',
     description: 'Comfortable guest bedroom with modern design'
+  },
+
+  // Latest Full Renovation Project Images
+  {
+    src: '/images/portfolio/projects/undefined/kitchen and living area.webp',
+    alt: 'Modern open-plan kitchen and living area with contemporary design',
+    project: 'latest-renovation',
+    categories: ['renovations', 'kitchens', 'living-spaces'],
+    title: 'Open-Plan Kitchen & Living Area',
+    description: 'Contemporary open-plan design featuring modern kitchen with integrated living space, perfect for entertaining and family life'
+  },
+  {
+    src: '/images/portfolio/projects/undefined/living area with black sliding doors.webp',
+    alt: 'Stylish living area featuring dramatic black sliding doors',
+    project: 'latest-renovation',
+    categories: ['renovations', 'living-spaces'],
+    title: 'Living Area with Black Sliding Doors',
+    description: 'Elegant living space with striking black sliding doors creating seamless indoor-outdoor flow and architectural interest'
+  },
+  {
+    src: '/images/portfolio/projects/undefined/bathroom basin with wallnut cabinet.webp',
+    alt: 'Luxury bathroom featuring walnut vanity cabinet and modern basin',
+    project: 'latest-renovation',
+    categories: ['renovations', 'bathrooms'],
+    title: 'Bathroom with Walnut Cabinet',
+    description: 'Sophisticated bathroom design featuring rich walnut cabinetry, modern basin, and premium finishes for a spa-like experience'
+  },
+  {
+    src: '/images/portfolio/projects/undefined/kitchen with oak units.webp',
+    alt: 'Beautiful kitchen featuring warm oak cabinetry and modern appliances',
+    project: 'latest-renovation',
+    categories: ['renovations', 'kitchens'],
+    title: 'Kitchen with Oak Units',
+    description: 'Stunning kitchen design showcasing warm oak cabinetry, modern appliances, and thoughtful layout creating the perfect culinary workspace'
   }
 ];
 

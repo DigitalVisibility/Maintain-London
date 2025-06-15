@@ -11,8 +11,8 @@ const { searchParams } = Astro.url;
 const activeProject = searchParams.get('project') || 'all';
 const activeCategory = searchParams.get('category') || 'all';
 
-// Debug params
-console.log('URL Parameters:', { activeProject, activeCategory });
+// URL Parameters for filtering
+// console.log('URL Parameters:', { activeProject, activeCategory }); // Debug - remove in production
 
 // Get featured project for hero section
 const featuredProject = projects.find(p => p.id === 'chesterton-road') || projects[0];
@@ -87,7 +87,7 @@ const featuredProject = projects.find(p => p.id === 'chesterton-road') || projec
     const projectParam = urlParams.get('project') || 'all';
     const categoryParam = urlParams.get('category') || 'all';
     
-    console.log('Client-side params:', { projectParam, categoryParam });
+    // console.log('Client-side params:', { projectParam, categoryParam }); // Debug - remove in production
     
     // Get all portfolio items and filter links
     const portfolioItems = document.querySelectorAll('.portfolio-item');
