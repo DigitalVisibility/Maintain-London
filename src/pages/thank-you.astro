@@ -1,0 +1,255 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navigation from '../components/Navigation.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Thank You - Maintain London">
+  <Navigation />
+  
+  <!-- Hero Section -->
+  <section class="pt-32 pb-16 bg-gradient-to-br from-brand-green/10 via-white to-brand-green/5">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div class="mb-8">
+        <svg class="h-16 w-16 text-brand-green mx-auto mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      
+      <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl mb-6">
+        Thank You!
+      </h1>
+      
+      <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+        We've received your message and will get back to you within 24 hours. Our team is excited to help bring your vision to life.
+      </p>
+      
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-12 max-w-2xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">What Happens Next?</h2>
+        <div class="space-y-4 text-left">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-6 h-6 bg-brand-green rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-bold">1</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="font-semibold text-gray-900">Initial Review</h3>
+              <p class="text-gray-600">We'll review your project details and prepare for our conversation.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-6 h-6 bg-brand-green rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-bold">2</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="font-semibold text-gray-900">Personal Consultation</h3>
+              <p class="text-gray-600">We'll contact you to discuss your vision and answer any questions.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start">
+            <div class="flex-shrink-0 mt-1">
+              <div class="w-6 h-6 bg-brand-green rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-bold">3</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="font-semibold text-gray-900">Tailored Proposal</h3>
+              <p class="text-gray-600">If we're a good fit, we'll create a detailed proposal for your project.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cost Calculator CTA -->
+  <section class="py-16 bg-gradient-to-r from-brand-green/30 via-brand-pink/30 to-brand-purple/30">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white rounded-2xl p-8 text-center shadow-xl">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">While You Wait...</h2>
+        <p class="text-xl text-gray-600 mb-6">
+          Curious about potential costs? Our smart calculator gives you London-specific estimates in just 30 seconds.
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-2xl font-bold mb-2">⚡</div>
+            <h3 class="font-semibold text-gray-900 mb-2">30-Second Estimate</h3>
+            <p class="text-sm text-gray-600">Quick, accurate pricing</p>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-2xl font-bold mb-2">📍</div>
+            <h3 class="font-semibold text-gray-900 mb-2">London-Specific</h3>
+            <p class="text-sm text-gray-600">Real market rates</p>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-2xl font-bold mb-2">💯</div>
+            <h3 class="font-semibold text-gray-900 mb-2">100% Free</h3>
+            <p class="text-sm text-gray-600">No hidden catches</p>
+          </div>
+        </div>
+        
+        <a 
+          href="/resources/cost-calculator" 
+          class="inline-flex items-center px-8 py-4 bg-brand-green text-white font-bold rounded-lg hover:bg-brand-green/90 transition-colors duration-200 shadow-lg"
+        >
+          Try Our Build Cost Calculator
+          <svg class="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </a>
+        
+        <p class="mt-4 text-sm text-gray-500">
+          Used by 1,000+ London homeowners to plan their projects
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Navigation Links -->
+  <section class="py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-gray-900 text-center mb-12">
+        Explore More About Maintain London
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Home Page -->
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+          <div class="text-brand-green mb-4">
+            <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Our Story</h3>
+          <p class="text-gray-600 mb-4">
+            Discover why London's most discerning homeowners choose Maintain London for their luxury renovations.
+          </p>
+          <a 
+            href="/" 
+            class="inline-flex items-center text-brand-green font-semibold hover:text-brand-green/80 transition-colors"
+          >
+            Visit Home Page
+            <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+
+        <!-- Services Page -->
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+          <div class="text-brand-green mb-4">
+            <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Our Services</h3>
+          <p class="text-gray-600 mb-4">
+            From luxury kitchens to full home renovations, explore our comprehensive range of premium services.
+          </p>
+          <a 
+            href="/services" 
+            class="inline-flex items-center text-brand-green font-semibold hover:text-brand-green/80 transition-colors"
+          >
+            Explore Services
+            <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+
+        <!-- Contact Page -->
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+          <div class="text-brand-green mb-4">
+            <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Get In Touch</h3>
+          <p class="text-gray-600 mb-4">
+            Have another question? Want to discuss a different project? We're here to help with all your needs.
+          </p>
+          <a 
+            href="/contact" 
+            class="inline-flex items-center text-brand-green font-semibold hover:text-brand-green/80 transition-colors"
+          >
+            Contact Us Again
+            <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Indicators -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-2xl font-bold text-gray-900 mb-8">
+        Why London Homeowners Trust Maintain London
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="bg-white rounded-lg p-6 shadow-lg">
+          <div class="text-3xl font-bold text-brand-green mb-2">10+</div>
+          <p class="text-gray-600">Years Experience</p>
+        </div>
+        
+        <div class="bg-white rounded-lg p-6 shadow-lg">
+          <div class="text-3xl font-bold text-brand-green mb-2">500+</div>
+          <p class="text-gray-600">Projects Completed</p>
+        </div>
+        
+        <div class="bg-white rounded-lg p-6 shadow-lg">
+          <div class="text-3xl font-bold text-brand-green mb-2">10yr</div>
+          <p class="text-gray-600">Guarantee</p>
+        </div>
+        
+        <div class="bg-white rounded-lg p-6 shadow-lg">
+          <div class="text-3xl font-bold text-brand-green mb-2">£1M+</div>
+          <p class="text-gray-600">Property Focus</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  /* Add subtle animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+  }
+</style>
+
+<script>
+  // Add entrance animations
+  document.addEventListener('DOMContentLoaded', function() {
+    const elements = document.querySelectorAll('.bg-white');
+    elements.forEach((el, index) => {
+      setTimeout(() => {
+        el.classList.add('animate-fade-in-up');
+      }, index * 100);
+    });
+  });
+</script> 

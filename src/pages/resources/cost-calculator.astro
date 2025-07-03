@@ -1,0 +1,738 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Navigation from '../../components/Navigation.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<Layout title="Build Cost Calculator - Maintain London | Instant Project Estimates">
+  <Navigation />
+  
+  <!-- Hero Section -->
+  <section class="pt-32 pb-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+          Calculate Your Build Cost in 30 Seconds
+        </h1>
+        <p class="mt-6 max-w-3xl mx-auto text-xl text-gray-500">
+          Get an instant estimate for your renovation, extension, or build project with our intelligent cost calculator.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calculator Section -->
+  <section class="py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Project Type Tabs -->
+      <div class="mb-12">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8" id="project-tabs">
+            <button class="project-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-brand-green text-brand-green" data-project="extension">
+              Extension
+            </button>
+            <button class="project-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-project="loft">
+              Loft Conversion
+            </button>
+            <button class="project-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-project="refurbishment">
+              Refurbishment
+            </button>
+            <button class="project-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-project="newbuild">
+              New Build
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Calculator Form -->
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <form id="cost-calculator" class="space-y-8">
+          <!-- Extension Form -->
+          <div id="extension-form" class="project-form">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Location <span class="text-red-500">*</span></label>
+                <select name="location" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="inner-london">Inner London</option>
+                  <option value="outer-london">Outer London</option>
+                  <option value="south-east">South East</option>
+                  <option value="south-west">South West</option>
+                  <option value="surrey">Surrey</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Property Type <span class="text-red-500">*</span></label>
+                <select name="property-type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="listed">Listed Building</option>
+                  <option value="conservation">Conservation Area</option>
+                  <option value="standard">Standard Property</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Build Quality <span class="text-red-500">*</span></label>
+                <select name="build-quality" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="standard">Standard</option>
+                  <option value="good">Good</option>
+                  <option value="excellent">Excellent</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Procurement Route <span class="text-red-500">*</span></label>
+                <select name="procurement-route" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="traditional">Traditional</option>
+                  <option value="design-build">Design & Build</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Floor Area Slider -->
+            <div class="mt-8">
+              <label class="block text-sm font-medium text-gray-700 mb-4">Floor Area</label>
+              <div class="px-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm text-gray-500">20m²</span>
+                  <span id="floor-area-value" class="text-lg font-semibold text-brand-green">50m²</span>
+                  <span class="text-sm text-gray-500">200m²</span>
+                </div>
+                <input type="range" id="floor-area-slider" min="20" max="200" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+              </div>
+            </div>
+
+            <!-- Number Inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Number of New Kitchens</label>
+                <select name="kitchens" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Number of New Bathrooms</label>
+                <select name="bathrooms" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loft Conversion Form -->
+          <div id="loft-form" class="project-form hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Location <span class="text-red-500">*</span></label>
+                <select name="loft-location" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="inner-london">Inner London</option>
+                  <option value="outer-london">Outer London</option>
+                  <option value="south-east">South East</option>
+                  <option value="south-west">South West</option>
+                  <option value="surrey">Surrey</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Type of Loft Conversion <span class="text-red-500">*</span></label>
+                <select name="loft-type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="dormer">Dormer Loft Conversion</option>
+                  <option value="l-shaped">L-Shaped Loft Conversion</option>
+                  <option value="hip-to-gable">Hip to Gable Loft Conversion</option>
+                  <option value="mansard">Mansard Loft Conversion</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Listed Building <span class="text-red-500">*</span></label>
+                <select name="loft-listed" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Build Quality <span class="text-red-500">*</span></label>
+                <select name="loft-quality" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="standard">Standard</option>
+                  <option value="good">Good</option>
+                  <option value="excellent">Excellent</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Floor Area Slider -->
+            <div class="mt-8">
+              <label class="block text-sm font-medium text-gray-700 mb-4">Floor Area</label>
+              <div class="px-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm text-gray-500">15m²</span>
+                  <span id="loft-area-value" class="text-lg font-semibold text-brand-green">40m²</span>
+                  <span class="text-sm text-gray-500">80m²</span>
+                </div>
+                <input type="range" id="loft-area-slider" min="15" max="80" value="40" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+              </div>
+            </div>
+
+            <div class="mt-8">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Number of New Bathrooms</label>
+              <select name="loft-bathrooms" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent md:w-1/2">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Refurbishment Form -->
+          <div id="refurbishment-form" class="project-form hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Location <span class="text-red-500">*</span></label>
+                <select name="refurb-location" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="inner-london">Inner London</option>
+                  <option value="outer-london">Outer London</option>
+                  <option value="south-east">South East</option>
+                  <option value="south-west">South West</option>
+                  <option value="surrey">Surrey</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Type of Refurbishment <span class="text-red-500">*</span></label>
+                <select name="refurb-type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="extensive">Extensive Refurbishment</option>
+                  <option value="moderate">Moderate Refurbishment</option>
+                  <option value="minor">Minor Refurbishment</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Listed Building <span class="text-red-500">*</span></label>
+                <select name="refurb-listed" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Build Quality <span class="text-red-500">*</span></label>
+                <select name="refurb-quality" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="standard">Standard</option>
+                  <option value="good">Good</option>
+                  <option value="excellent">Excellent</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Floor Area Slider -->
+            <div class="mt-8">
+              <label class="block text-sm font-medium text-gray-700 mb-4">Floor Area</label>
+              <div class="px-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm text-gray-500">50m²</span>
+                  <span id="refurb-area-value" class="text-lg font-semibold text-brand-green">100m²</span>
+                  <span class="text-sm text-gray-500">300m²</span>
+                </div>
+                <input type="range" id="refurb-area-slider" min="50" max="300" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+              </div>
+            </div>
+
+            <!-- Number Inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Number of New Kitchens</label>
+                <select name="refurb-kitchens" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Number of New Bathrooms</label>
+                <select name="refurb-bathrooms" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- New Build Form -->
+          <div id="newbuild-form" class="project-form hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Location <span class="text-red-500">*</span></label>
+                <select name="newbuild-location" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="london">London</option>
+                  <option value="south-east">South East</option>
+                  <option value="south-west">South West</option>
+                  <option value="surrey">Surrey</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Type of New Build <span class="text-red-500">*</span></label>
+                <select name="newbuild-type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="self-build">Self-build</option>
+                  <option value="multiple">Multiple Houses</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Green Belt <span class="text-red-500">*</span></label>
+                <select name="newbuild-greenbelt" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Build Quality <span class="text-red-500">*</span></label>
+                <select name="newbuild-quality" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent" required>
+                  <option value="">Select an option</option>
+                  <option value="standard">Standard</option>
+                  <option value="good">Good</option>
+                  <option value="excellent">Excellent</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Floor Area Slider -->
+            <div class="mt-8">
+              <label class="block text-sm font-medium text-gray-700 mb-4">Floor Area</label>
+              <div class="px-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm text-gray-500">100m²</span>
+                  <span id="newbuild-area-value" class="text-lg font-semibold text-brand-green">200m²</span>
+                  <span class="text-sm text-gray-500">500m²</span>
+                </div>
+                <input type="range" id="newbuild-area-slider" min="100" max="500" value="200" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+              </div>
+            </div>
+
+            <!-- Number Inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Number of New Kitchens</label>
+                <select name="newbuild-kitchens" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Number of New Bathrooms</label>
+                <select name="newbuild-bathrooms" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-transparent">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calculate Button -->
+          <div class="flex justify-center pt-8">
+            <button type="submit" class="px-12 py-4 bg-brand-green text-white font-semibold rounded-md shadow-lg hover:bg-brand-green/90 transition-all duration-200 transform hover:scale-105">
+              CALCULATE
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results-section" class="mt-12 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Estimated Build Cost</h2>
+          <div class="text-6xl font-bold text-brand-green mb-6" id="estimated-cost">£0</div>
+          <p class="text-gray-600 mb-8 max-w-3xl mx-auto">
+            The build cost will depend on several variables including the complexity of the design, extent of structural works and level of fixtures, fittings and material finishes. It does not include professional/legal fees, statutory fees, environmental audits, other third-party fees, VAT or planning obligations.
+          </p>
+          
+          <!-- Call to Action -->
+          <div class="bg-gray-50 rounded-lg p-8 mt-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">Ready to Turn Your Vision Into Reality?</h3>
+            <p class="text-lg text-gray-600 mb-6">
+              Get a comprehensive, personalized quote and discover how Maintain London can bring your dream project to life with our award-winning craftsmanship.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="/contact" class="inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-brand-green hover:bg-brand-green/90 transition-colors duration-200">
+                Book Free Consultation
+              </a>
+              <a href="/portfolio" class="inline-flex items-center justify-center px-8 py-3 border border-brand-green rounded-md shadow-sm text-base font-medium text-brand-green hover:bg-brand-green/10 transition-colors duration-200">
+                View Our Work
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits Section -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-900">Why Choose Maintain London?</h2>
+        <p class="mt-4 text-xl text-gray-600">
+          Experience the difference of working with London's premier renovation specialists.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-6 rounded-lg shadow-sm text-center">
+          <div class="w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-4">10-Year Warranty</h3>
+          <p class="text-gray-600">
+            All our work comes with a comprehensive 10-year structural warranty and 2-year craftsmanship guarantee for complete peace of mind.
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm text-center">
+          <div class="w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-4">On-Time Delivery</h3>
+          <p class="text-gray-600">
+            We pride ourselves on delivering projects on time and within budget, with 98% of our projects completed as scheduled.
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm text-center">
+          <div class="w-16 h-16 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-4">Award-Winning</h3>
+          <p class="text-gray-600">
+            Recognized as London's leading renovation specialists with numerous industry awards and 5-star customer reviews.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  .slider-thumb::-webkit-slider-thumb {
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #AEDE4A;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .slider-thumb::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #AEDE4A;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .project-tab.active {
+    border-color: #AEDE4A;
+    color: #AEDE4A;
+  }
+</style>
+
+<script>
+  // Tab switching functionality
+  const tabs = document.querySelectorAll('.project-tab');
+  const forms = document.querySelectorAll('.project-form');
+
+  // Initialize: disable validation on all hidden forms except the first one
+  forms.forEach((form, index) => {
+    if (index > 0) { // All forms except the first (extension) are hidden initially
+      const requiredSelects = form.querySelectorAll('select[required]');
+      requiredSelects.forEach(select => {
+        select.removeAttribute('required');
+        select.setAttribute('data-required', 'true');
+      });
+    }
+  });
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active class from all tabs
+      tabs.forEach(t => {
+        t.classList.remove('border-brand-green', 'text-brand-green');
+        t.classList.add('border-transparent', 'text-gray-500');
+      });
+
+      // Add active class to clicked tab
+      tab.classList.remove('border-transparent', 'text-gray-500');
+      tab.classList.add('border-brand-green', 'text-brand-green');
+
+      // Hide all forms and disable validation on hidden forms
+      forms.forEach(form => {
+        form.classList.add('hidden');
+        // Disable validation on hidden forms
+        const requiredSelects = form.querySelectorAll('select[required]');
+        requiredSelects.forEach(select => {
+          select.removeAttribute('required');
+          select.setAttribute('data-required', 'true');
+        });
+      });
+
+      // Show selected form and enable validation
+      const projectType = tab.dataset.project;
+      const activeForm = document.getElementById(`${projectType}-form`);
+      activeForm.classList.remove('hidden');
+      
+      // Re-enable validation on active form
+      const activeRequiredSelects = activeForm.querySelectorAll('select[data-required]');
+      activeRequiredSelects.forEach(select => {
+        select.setAttribute('required', '');
+      });
+    });
+  });
+
+  // Slider functionality
+  const sliders = [
+    { slider: 'floor-area-slider', display: 'floor-area-value', suffix: 'm²' },
+    { slider: 'loft-area-slider', display: 'loft-area-value', suffix: 'm²' },
+    { slider: 'refurb-area-slider', display: 'refurb-area-value', suffix: 'm²' },
+    { slider: 'newbuild-area-slider', display: 'newbuild-area-value', suffix: 'm²' }
+  ];
+
+  sliders.forEach(({ slider, display, suffix }) => {
+    const sliderEl = document.getElementById(slider);
+    const displayEl = document.getElementById(display);
+    
+    if (sliderEl && displayEl) {
+      sliderEl.addEventListener('input', (e) => {
+        displayEl.textContent = e.target.value + suffix;
+      });
+    }
+  });
+
+  // Cost calculation functionality
+  const costCalculator = document.getElementById('cost-calculator');
+  const resultsSection = document.getElementById('results-section');
+  const estimatedCostDisplay = document.getElementById('estimated-cost');
+
+  // Base costs per square meter (in £) by project type
+  const baseCosts = {
+    extension: {
+      'inner-london': { standard: 2800, good: 3200, excellent: 3800 },
+      'outer-london': { standard: 2400, good: 2800, excellent: 3400 },
+      'south-east': { standard: 2200, good: 2600, excellent: 3200 },
+      'south-west': { standard: 2100, good: 2500, excellent: 3100 },
+      'surrey': { standard: 2300, good: 2700, excellent: 3300 }
+    },
+    loft: {
+      'inner-london': { standard: 2200, good: 2600, excellent: 3200 },
+      'outer-london': { standard: 1900, good: 2300, excellent: 2900 },
+      'south-east': { standard: 1800, good: 2200, excellent: 2800 },
+      'south-west': { standard: 1700, good: 2100, excellent: 2700 },
+      'surrey': { standard: 1850, good: 2250, excellent: 2850 }
+    },
+    refurbishment: {
+      'inner-london': { standard: 1800, good: 2200, excellent: 2800 },
+      'outer-london': { standard: 1500, good: 1900, excellent: 2500 },
+      'south-east': { standard: 1400, good: 1800, excellent: 2400 },
+      'south-west': { standard: 1350, good: 1750, excellent: 2350 },
+      'surrey': { standard: 1450, good: 1850, excellent: 2450 }
+    },
+    newbuild: {
+      'london': { standard: 3200, good: 3800, excellent: 4600 },
+      'south-east': { standard: 2800, good: 3400, excellent: 4200 },
+      'south-west': { standard: 2700, good: 3300, excellent: 4100 },
+      'surrey': { standard: 2900, good: 3500, excellent: 4300 }
+    }
+  };
+
+  costCalculator.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Get active project type
+    const activeTab = document.querySelector('.project-tab.border-brand-green');
+    const projectType = activeTab.dataset.project;
+    const activeForm = document.getElementById(`${projectType}-form`);
+
+    // Get form values from active form only
+    const selects = activeForm.querySelectorAll('select');
+    
+    // Get location and quality from selects
+    const location = selects[0].value;
+    
+    // Find build quality select (different position for different project types)
+    let qualitySelect;
+    if (projectType === 'extension') {
+      qualitySelect = selects[2]; // Build Quality is 3rd select in extension form
+    } else {
+      qualitySelect = Array.from(selects).find(select => 
+        select.previousElementSibling.textContent.toLowerCase().includes('quality')
+      );
+    }
+    const quality = qualitySelect ? qualitySelect.value : '';
+
+    // Get area from slider
+    let area;
+    switch(projectType) {
+      case 'extension':
+        area = document.getElementById('floor-area-slider').value;
+        break;
+      case 'loft':
+        area = document.getElementById('loft-area-slider').value;
+        break;
+      case 'refurbishment':
+        area = document.getElementById('refurb-area-slider').value;
+        break;
+      case 'newbuild':
+        area = document.getElementById('newbuild-area-slider').value;
+        break;
+    }
+
+    // Validate required fields
+    if (!location || !quality) {
+      alert('Please fill in all required fields to calculate your estimate.');
+      return;
+    }
+
+    // Calculate base cost
+    if (baseCosts[projectType] && baseCosts[projectType][location] && baseCosts[projectType][location][quality]) {
+      let baseCostPerSqm = baseCosts[projectType][location][quality];
+      let totalCost = baseCostPerSqm * parseInt(area);
+
+      // Add multipliers for property type/listed building
+      if (projectType === 'extension') {
+        const propertyType = selects[1].value; // Property Type is 2nd select
+        if (propertyType === 'listed') {
+          totalCost *= 1.3; // 30% increase for listed buildings
+        } else if (propertyType === 'conservation') {
+          totalCost *= 1.15; // 15% increase for conservation areas
+        }
+      } else if (projectType === 'loft' || projectType === 'refurbishment') {
+        const listedBuilding = selects[2].value; // Listed Building is 3rd select
+        if (listedBuilding === 'yes') {
+          totalCost *= 1.3; // 30% increase for listed buildings
+        }
+      }
+
+      // Add costs for kitchens and bathrooms
+      const kitchenSelect = Array.from(selects).find(select => 
+        select.previousElementSibling.textContent.toLowerCase().includes('kitchen')
+      );
+      const bathroomSelect = Array.from(selects).find(select => 
+        select.previousElementSibling.textContent.toLowerCase().includes('bathroom')
+      );
+
+      if (kitchenSelect) {
+        const kitchenCount = parseInt(kitchenSelect.value);
+        totalCost += kitchenCount * 25000; // £25k per kitchen
+      }
+
+      if (bathroomSelect) {
+        const bathroomCount = parseInt(bathroomSelect.value);
+        totalCost += bathroomCount * 15000; // £15k per bathroom
+      }
+
+      // Additional multipliers for loft conversions based on type
+      if (projectType === 'loft') {
+        const loftType = selects[1].value; // Type of Loft Conversion is 2nd select
+        switch(loftType) {
+          case 'mansard':
+            totalCost *= 1.4; // 40% increase for mansard
+            break;
+          case 'hip-to-gable':
+            totalCost *= 1.3; // 30% increase for hip to gable
+            break;
+          case 'l-shaped':
+            totalCost *= 1.2; // 20% increase for L-shaped
+            break;
+          case 'dormer':
+            totalCost *= 1.1; // 10% increase for dormer
+            break;
+        }
+      }
+
+      // Additional multipliers for refurbishment based on extent
+      if (projectType === 'refurbishment') {
+        const refurbType = selects[1].value; // Type of Refurbishment is 2nd select
+        switch(refurbType) {
+          case 'extensive':
+            totalCost *= 1.0; // Base rate for extensive
+            break;
+          case 'moderate':
+            totalCost *= 0.7; // 30% reduction for moderate
+            break;
+          case 'minor':
+            totalCost *= 0.5; // 50% reduction for minor
+            break;
+        }
+      }
+
+      // Format and display result
+      const formattedCost = new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(totalCost);
+
+      estimatedCostDisplay.textContent = formattedCost;
+      resultsSection.classList.remove('hidden');
+      resultsSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      alert('Please fill in all required fields to calculate your estimate.');
+    }
+  });
+</script> 
