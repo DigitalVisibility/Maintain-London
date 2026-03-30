@@ -2,9 +2,44 @@
 import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/Navigation.astro';
 import Footer from '../../../components/Footer.astro';
+
+const serviceSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Luxury Kitchen Design & Installation",
+  "description": "Bespoke luxury kitchen design and installation in Southwest London and Surrey. Handcrafted cabinetry, smart home integration, 3D visualisation, and premium European materials. 150+ luxury kitchens delivered.",
+  "provider": { "@id": "https://maintainlondon.co.uk/#organization" },
+  "areaServed": { "@type": "AdministrativeArea", "name": "Southwest London and Surrey" },
+  "serviceType": "Kitchen Design and Installation",
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": "GBP",
+    "lowPrice": "50000",
+    "highPrice": "150000"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Kitchen Design Services",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Bespoke Kitchen Design with 3D Visualisation" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Handcrafted Custom Cabinetry" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Smart Home Kitchen Integration" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Premium Appliance Supply & Installation" } }
+    ]
+  }
+});
 ---
 
-<Layout title="Luxury Kitchen Design London | Maintain London">
+<Layout
+  title="Luxury Kitchen Design London | Bespoke Kitchens from £50k"
+  description="Bespoke luxury kitchen design and installation in Southwest London. Handcrafted cabinetry, smart home integration, 3D visualisation. 150+ kitchens delivered. Call 020 3886 2023."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Services", url: "/services" },
+    { name: "Kitchen Design", url: "/services/kitchens" }
+  ]}
+  schema={serviceSchema}
+>
   <Navigation />
 
   <!-- Hero Section -->

@@ -1,0 +1,55 @@
+# Maintain London
+
+> High-end home renovation company serving Southwest London and Surrey since 2015. Specialists in luxury kitchen design, bathroom renovations, house extensions, and full property transformations for homes valued at £1m+.
+
+## Company Overview
+
+Maintain London is a premium home renovation company based in Walton-on-Thames, serving Southwest London and Surrey. Established in 2015, we have completed over 500 high-end renovation projects with a 98% client satisfaction rate and a team of 25+ expert craftsmen.
+
+## Services
+
+- [Home Renovations](https://maintainlondon.co.uk/services/renovations/): Full property transformations preserving period character while introducing modern luxury. 10-year structural warranty included.
+- [Kitchen Design & Installation](https://maintainlondon.co.uk/services/kitchens/): Bespoke luxury kitchens with handcrafted cabinetry, smart home integration, and 3D visualisation. 150+ luxury kitchens delivered.
+- [Bathroom Design & Installation](https://maintainlondon.co.uk/services/bathrooms/): Spa-inspired sanctuaries featuring Italian marble, wellness technology, and sustainable fixtures.
+- [House Extensions](https://maintainlondon.co.uk/services/extensions/): Architectural extensions that seamlessly integrate with existing properties. 75+ successful extensions completed.
+
+## Service Area
+
+Southwest London and Surrey including: Richmond, Chelsea, Hampstead, Walton-on-Thames, Wimbledon, Putney, Fulham, Kingston, Esher, Cobham, Weybridge, and surrounding areas.
+
+## Key Information
+
+- Address: 5 Garden Road, Walton-on-Thames, KT12 2HQ
+- Phone: 020 3886 2023
+- Email: team@maintainlondon.co.uk
+- Hours: Mon-Fri 8:00-18:00, Sat 9:00-14:00
+- Website: https://maintainlondon.co.uk
+
+## Typical Investment Ranges
+
+- Kitchen renovations: £50,000 - £150,000
+- Bathroom renovations: £25,000 - £75,000
+- House extensions: £100,000 - £500,000+
+- Full home renovations: Contact for bespoke quote
+
+## Guarantees
+
+- 10-year structural warranty
+- 2-year craftsmanship guarantee
+- Manufacturer warranties on all fixtures and appliances
+- Public liability insurance up to £5 million
+- Professional indemnity insurance up to £2 million
+
+## Key Pages
+
+- [Homepage](https://maintainlondon.co.uk/)
+- [About Us](https://maintainlondon.co.uk/about/)
+- [All Services](https://maintainlondon.co.uk/services/)
+- [Portfolio](https://maintainlondon.co.uk/portfolio/)
+- [FAQ](https://maintainlondon.co.uk/resources/faq/)
+- [Contact / Get a Quote](https://maintainlondon.co.uk/contact/)
+- [Cost Calculator](https://maintainlondon.co.uk/resources/cost-calculator/)
+
+## Optional
+
+- [Full details for AI agents](https://maintainlondon.co.uk/llms-full.txt)

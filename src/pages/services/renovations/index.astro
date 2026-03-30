@@ -2,9 +2,38 @@
 import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/Navigation.astro';
 import Footer from '../../../components/Footer.astro';
+
+const serviceSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Premium Home Renovation",
+  "description": "Full property transformations for period and modern homes in Southwest London and Surrey. Preserving original character while introducing modern luxury. 200+ premium properties renovated.",
+  "provider": { "@id": "https://maintainlondon.co.uk/#organization" },
+  "areaServed": { "@type": "AdministrativeArea", "name": "Southwest London and Surrey" },
+  "serviceType": "Home Renovation",
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Home Renovation Services",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Full Property Renovation" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Period Property Restoration" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Modern Luxury Upgrades" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Project Management & Permits" } }
+    ]
+  }
+});
 ---
 
-<Layout title="Home Renovations - Maintain London | Premium Property Transformations">
+<Layout
+  title="Home Renovations London | Luxury Property Transformations"
+  description="Premium home renovations in Southwest London and Surrey. 200+ properties transformed with 10-year structural warranty. Period restoration to modern luxury. Call 020 3886 2023."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Services", url: "/services" },
+    { name: "Home Renovations", url: "/services/renovations" }
+  ]}
+  schema={serviceSchema}
+>
   <Navigation />
 
   <!-- Hero Section -->

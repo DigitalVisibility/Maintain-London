@@ -4,7 +4,14 @@ import Navigation from '../components/Navigation.astro';
 import Footer from '../components/Footer.astro';
 ---
 
-<Layout title="Our Services - Maintain London | Premium Home Renovations">
+<Layout
+  title="Home Renovation Services London | Kitchens, Bathrooms & Extensions"
+  description="Explore Maintain London's premium renovation services: luxury kitchens (£50k-£150k), bathrooms (£25k-£75k), house extensions (£100k-£500k+) and full renovations in Southwest London."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Services", url: "/services" }
+  ]}
+>
   <Navigation />
   
   <!-- Hero Section -->
@@ -131,7 +138,11 @@ import Footer from '../components/Footer.astro';
         </div>
         <div class="mt-8 lg:mt-0">
           <img 
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800"
+            width="800"
+            height="534"
+            loading="lazy"
+            decoding="async"
             alt="Luxury home renovation project in Southwest London"
             class="rounded-lg shadow-lg"
           />
@@ -147,7 +158,11 @@ import Footer from '../components/Footer.astro';
       <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
         <div class="order-2 lg:order-1">
           <img 
-            src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&q=80"
+            src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&q=80&w=800"
+            width="800"
+            height="534"
+            loading="lazy"
+            decoding="async"
             alt="Bespoke kitchen design in Chelsea"
             class="rounded-lg shadow-lg"
           />
@@ -269,7 +284,11 @@ import Footer from '../components/Footer.astro';
         </div>
         <div class="mt-8 lg:mt-0">
           <img 
-            src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80"
+            src="https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80&w=800"
+            width="800"
+            height="534"
+            loading="lazy"
+            decoding="async"
             alt="Luxury bathroom renovation in Hampstead"
             class="rounded-lg shadow-lg"
           />
@@ -285,7 +304,11 @@ import Footer from '../components/Footer.astro';
       <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
         <div class="order-2 lg:order-1">
           <img 
-            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80"
+            src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=800"
+            width="800"
+            height="534"
+            loading="lazy"
+            decoding="async"
             alt="Contemporary house extension in Richmond"
             class="rounded-lg shadow-lg"
           />

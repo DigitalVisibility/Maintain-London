@@ -2,9 +2,121 @@
 import Layout from '../../layouts/Layout.astro';
 import Navigation from '../../components/Navigation.astro';
 import Footer from '../../components/Footer.astro';
+
+const faqSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What areas do you cover?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We primarily serve Southwest London and Surrey, focusing on properties valued at £1m+. Our core service areas include Richmond, Chelsea, Hampstead, Walton-on-Thames, and surrounding neighbourhoods."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are you fully insured?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, we carry comprehensive insurance coverage including public liability insurance up to £5 million and professional indemnity insurance up to £2 million."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long has Maintain London been operating?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Established in 2015, we've completed over 500 high-end renovation projects across London, building a reputation for excellence in luxury home renovations."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What types of projects do you handle?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We specialize in high-end home renovations, kitchen and bathroom designs, house extensions, and complete property refurbishments for premium properties."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does a typical renovation take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Kitchen renovations: 4-6 weeks. Bathroom renovations: 2-3 weeks. Full home renovations: 3-6 months. Extensions: 3-4 months."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is your project management approach?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Each project is assigned a dedicated project manager who oversees all aspects from planning to completion. You'll receive regular updates and have 24/7 access to our project management platform."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you handle all necessary permits?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, we manage all aspects of planning permission, building regulations approval, and any other required permits as part of our comprehensive service."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is your pricing structure?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We provide detailed, transparent quotes. Typical investment ranges: Kitchen renovations £50,000-£150,000. Bathroom renovations £25,000-£75,000. Extensions £100,000-£500,000+."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are your payment terms?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "10% deposit upon contract signing, 30% at project commencement, remaining balance paid in agreed stages based on progress."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you offer any guarantees?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, all our work comes with a 10-year structural warranty, 2-year craftsmanship guarantee, and manufacturer warranties on all fixtures and appliances."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What materials do you use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We source premium materials including Italian marble and stone, German-engineered appliances, sustainable hardwoods, and premium British and European fixtures."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you offer smart home integration?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, we can incorporate various smart home systems including lighting, heating, security, and home automation. We work with leading brands and certified installers."
+      }
+    }
+  ]
+});
 ---
 
-<Layout title="FAQ - Maintain London | Premium Home Renovations">
+<Layout
+  title="FAQ - Maintain London | Home Renovation Questions Answered"
+  description="Get answers to common questions about Maintain London's premium home renovation services, pricing, timelines, and process. Serving Southwest London and Surrey since 2015."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Resources", url: "/resources/faq" },
+    { name: "FAQ", url: "/resources/faq" }
+  ]}
+  schema={faqSchema}
+>
   <Navigation />
   
   <!-- Hero Section -->
@@ -262,7 +374,7 @@ import Footer from '../../components/Footer.astro';
                 </svg>
                 <div>
                   <h4 class="font-semibold text-gray-900">Call Us</h4>
-                  <p class="text-gray-600">020 3886 2023</p>
+                  <p class="text-gray-600"><a href="tel:+442038862023" class="hover:text-brand-green transition-colors">020 3886 2023</a></p>
                 </div>
               </div>
               <div class="flex items-start">
@@ -271,7 +383,7 @@ import Footer from '../../components/Footer.astro';
                 </svg>
                 <div>
                   <h4 class="font-semibold text-gray-900">Email Us</h4>
-                  <p class="text-gray-600">team@maintainlondon.co.uk</p>
+                  <p class="text-gray-600"><a href="mailto:team@maintainlondon.co.uk" class="hover:text-brand-green transition-colors">team@maintainlondon.co.uk</a></p>
                 </div>
               </div>
               <div class="flex items-start">

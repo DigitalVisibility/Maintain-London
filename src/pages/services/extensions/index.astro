@@ -2,9 +2,44 @@
 import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/Navigation.astro';
 import Footer from '../../../components/Footer.astro';
+
+const serviceSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Architectural House Extensions",
+  "description": "Architectural home extensions in Southwest London and Surrey. Seamless integration with existing properties, full planning permission management. 75+ successful extensions completed.",
+  "provider": { "@id": "https://maintainlondon.co.uk/#organization" },
+  "areaServed": { "@type": "AdministrativeArea", "name": "Southwest London and Surrey" },
+  "serviceType": "House Extension",
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": "GBP",
+    "lowPrice": "100000",
+    "highPrice": "500000"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Extension Services",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Single & Double Storey Extensions" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Glass & Contemporary Extensions" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Planning Permission Management" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Structural Engineering" } }
+    ]
+  }
+});
 ---
 
-<Layout title="House Extensions London | Maintain London">
+<Layout
+  title="House Extensions London | From £100k | Planning to Completion"
+  description="Architectural house extensions in Southwest London. 75+ completed, full planning permission management, 10-year warranty. From £100k. Call 020 3886 2023."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Services", url: "/services" },
+    { name: "House Extensions", url: "/services/extensions" }
+  ]}
+  schema={serviceSchema}
+>
   <Navigation />
 
   <!-- Hero Section -->

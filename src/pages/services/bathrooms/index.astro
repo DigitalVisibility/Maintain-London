@@ -2,9 +2,44 @@
 import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/Navigation.astro';
 import Footer from '../../../components/Footer.astro';
+
+const serviceSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Luxury Bathroom Design & Installation",
+  "description": "Spa-inspired luxury bathroom design and installation in Southwest London and Surrey. Italian marble, wellness technology, chromotherapy, and sustainable fixtures.",
+  "provider": { "@id": "https://maintainlondon.co.uk/#organization" },
+  "areaServed": { "@type": "AdministrativeArea", "name": "Southwest London and Surrey" },
+  "serviceType": "Bathroom Design and Installation",
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": "GBP",
+    "lowPrice": "25000",
+    "highPrice": "75000"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Bathroom Design Services",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Bespoke Bathroom Design" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Italian Marble & Stone Installation" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Wellness Technology Integration" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sustainable Luxury Fixtures" } }
+    ]
+  }
+});
 ---
 
-<Layout title="Luxury Bathroom Design London | Maintain London">
+<Layout
+  title="Luxury Bathroom Design London | Spa Bathrooms from £25k"
+  description="Spa-inspired luxury bathroom design in Southwest London. Italian marble, wellness technology, chromotherapy, and sustainable fixtures. Call 020 3886 2023 for a free consultation."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Services", url: "/services" },
+    { name: "Bathroom Design", url: "/services/bathrooms" }
+  ]}
+  schema={serviceSchema}
+>
   <Navigation />
 
   <!-- Hero Section -->

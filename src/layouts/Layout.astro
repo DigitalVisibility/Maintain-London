@@ -1,29 +1,126 @@
 ---
 import '@fontsource-variable/inter';
-import '@fontsource/plus-jakarta-sans';
+import '@fontsource/plus-jakarta-sans/latin-400.css';
+import '@fontsource/plus-jakarta-sans/latin-600.css';
+import '@fontsource/plus-jakarta-sans/latin-700.css';
+import '@fontsource/plus-jakarta-sans/latin-800.css';
 
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
+  ogType?: string;
+  canonicalPath?: string;
+  noindex?: boolean;
+  breadcrumbs?: Array<{ name: string; url: string }>;
+  schema?: string;
 }
 
-const { 
+const siteUrl = 'https://maintainlondon.co.uk';
+
+const {
   title,
-  description = "Maintain London - Your trusted partner for high-end home renovations, extensions, and property development in Southwest London and Surrey."
+  description = "Maintain London - Premium home renovations, luxury kitchens, bathrooms and extensions in Southwest London and Surrey. 500+ projects completed. Call 020 3886 2023 for a free consultation.",
+  ogImage = '/images/og-default.jpg',
+  ogType = 'website',
+  canonicalPath,
+  noindex = false,
+  breadcrumbs = [],
+  schema,
 } = Astro.props;
+
+const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}${Astro.url.pathname}`;
+const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
+
+// Build breadcrumb JSON-LD
+const breadcrumbSchema = breadcrumbs.length > 0 ? JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": breadcrumbs.map((crumb, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": crumb.name,
+    "item": `${siteUrl}${crumb.url}`
+  }))
+}) : null;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content={description} />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Primary Meta Tags -->
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/Icons/Stacked.png" />
+
+    <!-- Theme -->
+    <meta name="theme-color" content="#AEDE4A" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:site_name" content="Maintain London" />
+    <meta property="og:locale" content="en_GB" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <!-- Geo Tags (for local SEO / GEO) -->
+    <meta name="geo.region" content="GB-SRY" />
+    <meta name="geo.placename" content="Walton-on-Thames" />
+    <meta name="geo.position" content="51.3868;-0.4131" />
+    <meta name="ICBM" content="51.3868, -0.4131" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://api.web3forms.com" />
+    <link rel="dns-prefetch" href="https://www.google.com" />
+
+    <!-- Breadcrumb Schema -->
+    {breadcrumbSchema && (
+      <script type="application/ld+json" set:html={breadcrumbSchema} />
+    )}
+
+    <!-- Page-specific Schema -->
+    {schema && (
+      <script type="application/ld+json" set:html={schema} />
+    )}
+
+    <!-- Speakable Schema (Voice Search / AEO) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "speakable": {
+          "@type": "SpeakableSpecification",
+          "cssSelector": ["h1", ".speakable", "[data-speakable]"]
+        }
+      }
+    </script>
   </head>
   <body class="bg-white">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-brand-green focus:text-white focus:rounded-md">
+      Skip to main content
+    </a>
     <slot />
   </body>
 </html>
@@ -33,15 +130,38 @@ const {
     --accent: 74, 178, 89;
     --accent-light: 163, 230, 174;
   }
-  
+
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
-  
+
   body {
     margin: 0;
     padding: 0;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-display: swap;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
+  }
+
+  /* Reduce CLS — reserve space for images */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Click-to-call styling for mobile */
+  a[href^="tel:"] {
+    white-space: nowrap;
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    outline: 2px solid #AEDE4A;
+    outline-offset: 2px;
   }
 </style>

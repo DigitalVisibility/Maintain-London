@@ -4,7 +4,15 @@ import Navigation from '../../components/Navigation.astro';
 import Footer from '../../components/Footer.astro';
 ---
 
-<Layout title="Build Cost Calculator - Maintain London | Instant Project Estimates">
+<Layout
+  title="Renovation Cost Calculator London | Instant Estimates"
+  description="Get an instant estimate for your home renovation project in London. Calculate costs for kitchens, bathrooms, extensions and full renovations with Maintain London's free tool."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Resources", url: "/resources/cost-calculator" },
+    { name: "Cost Calculator", url: "/resources/cost-calculator" }
+  ]}
+>
   <Navigation />
   
   <!-- Hero Section -->

@@ -4,7 +4,15 @@ import Navigation from '../../components/Navigation.astro';
 import Footer from '../../components/Footer.astro';
 ---
 
-<Layout title="Renovation Guides - Maintain London | Expert Resources">
+<Layout
+  title="Renovation Guides - Maintain London | Expert Resources"
+  description="Free home renovation guides from Maintain London. Learn about kitchen design, bathroom renovations, extensions, planning permission, and budgeting for your project."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Resources", url: "/resources/guides" },
+    { name: "Guides", url: "/resources/guides" }
+  ]}
+>
   <Navigation />
   
   <!-- Hero Section -->

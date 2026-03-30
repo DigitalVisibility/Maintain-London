@@ -4,7 +4,14 @@ import Navigation from '../components/Navigation.astro';
 import Footer from '../components/Footer.astro';
 ---
 
-<Layout title="About Maintain London - Premium Home Renovations in Southwest London">
+<Layout
+  title="About Maintain London | Premium Renovation Company Since 2015"
+  description="Learn about Maintain London's 500+ completed luxury renovations across Southwest London and Surrey. Our 25+ expert team delivers 98% client satisfaction on homes valued at £1m+."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "About", url: "/about" }
+  ]}
+>
   <Navigation />
   
   <!-- Hero Section -->
@@ -35,10 +42,14 @@ import Footer from '../components/Footer.astro';
           </p>
         </div>
         <div class="mt-8 lg:mt-0">
-          <img 
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"
-            alt="Maintain London team collaborating on a renovation project"
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800"
+            alt="Maintain London team collaborating on a luxury home renovation project in Southwest London"
             class="rounded-lg shadow-lg"
+            width="800"
+            height="534"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       </div>
@@ -166,10 +177,14 @@ import Footer from '../components/Footer.astro';
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="text-center">
           <div class="relative">
-            <img 
-              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80"
-              alt="Tom Dixon - Managing Director"
+            <img
+              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=384"
+              alt="Tom Dixon - Managing Director of Maintain London"
               class="w-48 h-48 rounded-full mx-auto object-cover"
+              width="192"
+              height="192"
+              loading="lazy"
+              decoding="async"
             />
           </div>
           <h3 class="mt-6 text-xl font-bold text-gray-900">Tom Dixon</h3>
@@ -181,10 +196,14 @@ import Footer from '../components/Footer.astro';
 
         <div class="text-center">
           <div class="relative">
-            <img 
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80"
-              alt="Head of Design"
+            <img
+              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=384"
+              alt="Head of Design at Maintain London"
               class="w-48 h-48 rounded-full mx-auto object-cover"
+              width="192"
+              height="192"
+              loading="lazy"
+              decoding="async"
             />
           </div>
           <h3 class="mt-6 text-xl font-bold text-gray-900">Head of Design</h3>
@@ -196,10 +215,14 @@ import Footer from '../components/Footer.astro';
 
         <div class="text-center">
           <div class="relative">
-            <img 
-              src="https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&q=80"
-              alt="Operations Director"
+            <img
+              src="https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&q=80&w=384"
+              alt="Operations Director at Maintain London"
               class="w-48 h-48 rounded-full mx-auto object-cover"
+              width="192"
+              height="192"
+              loading="lazy"
+              decoding="async"
             />
           </div>
           <h3 class="mt-6 text-xl font-bold text-gray-900">Operations Director</h3>

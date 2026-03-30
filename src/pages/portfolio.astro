@@ -18,7 +18,14 @@ const activeCategory = searchParams.get('category') || 'all';
 const featuredProject = projects.find(p => p.id === 'chesterton-road') || projects[0];
 ---
 
-<Layout title="Our Portfolio - Maintain London | Premium Home Renovations">
+<Layout
+  title="Portfolio | Luxury Home Renovation Projects London & Surrey"
+  description="View Maintain London's portfolio of 500+ completed luxury renovation projects across Southwest London and Surrey. Kitchens, bathrooms, extensions and full property transformations."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Portfolio", url: "/portfolio" }
+  ]}
+>
   <Navigation />
   
   <!-- Hero Section -->

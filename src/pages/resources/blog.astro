@@ -4,7 +4,15 @@ import Navigation from '../../components/Navigation.astro';
 import Footer from '../../components/Footer.astro';
 ---
 
-<Layout title="Blog - Maintain London | Renovation Insights & Tips">
+<Layout
+  title="Blog - Maintain London | Renovation Insights & Tips"
+  description="Expert renovation insights, design tips, and project guides from Maintain London. Stay informed on luxury home renovation trends in Southwest London."
+  breadcrumbs={[
+    { name: "Home", url: "/" },
+    { name: "Resources", url: "/resources/blog" },
+    { name: "Blog", url: "/resources/blog" }
+  ]}
+>
   <Navigation />
   
   <!-- Hero Section -->
