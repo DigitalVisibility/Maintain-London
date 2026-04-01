@@ -1,0 +1,116 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import DiaryForm from '../../../../../components/project-hub/DiaryForm';
+import { queryOne, queryAll } from '../../../../../lib/db';
+import type {
+  Project, Supplier, DiaryEntry, EntryPersonnel, EntryActivity,
+  EntryDelay, EntryVariation, EntryMaterialRequired, EntryEquipmentHire,
+  EntryDelivery, EntryFile,
+} from '../../../../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const { id, entryId } = Astro.params;
+const user = Astro.locals.user;
+
+const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+if (!project) return Astro.redirect('/project-hub/');
+
+const entry = await queryOne<DiaryEntry>(env.DB, 'SELECT * FROM diary_entries WHERE id = ?', [entryId]);
+if (!entry) return Astro.redirect(`/project-hub/project/${id}/diary/`);
+
+// Load all sub-records
+const [personnel, activities, delays, variations, materials, equipment, deliveries, files] = await Promise.all([
+  queryAll<EntryPersonnel>(env.DB, 'SELECT * FROM entry_personnel WHERE entry_id = ?', [entryId]),
+  queryAll<EntryActivity>(env.DB, 'SELECT * FROM entry_activities WHERE entry_id = ?', [entryId]),
+  queryAll<EntryDelay>(env.DB, 'SELECT * FROM entry_delays WHERE entry_id = ?', [entryId]),
+  queryAll<EntryVariation>(env.DB, 'SELECT * FROM entry_variations WHERE entry_id = ?', [entryId]),
+  queryAll<EntryMaterialRequired>(env.DB, 'SELECT * FROM entry_materials_required WHERE entry_id = ?', [entryId]),
+  queryAll<EntryEquipmentHire>(env.DB, 'SELECT * FROM entry_equipment_hire WHERE entry_id = ?', [entryId]),
+  queryAll<EntryDelivery>(env.DB, 'SELECT * FROM entry_deliveries WHERE entry_id = ?', [entryId]),
+  queryAll<EntryFile>(env.DB, 'SELECT * FROM entry_files WHERE entry_id = ?', [entryId]),
+]);
+
+const supplierRows = await queryAll<Supplier>(env.DB, 'SELECT * FROM suppliers ORDER BY name');
+const supplierNames = supplierRows.map((s) => s.name);
+
+const initialData = {
+  date: entry.date,
+  start_time: entry.start_time,
+  end_time: entry.end_time,
+  site_manager: entry.site_manager,
+  notes: entry.notes ?? '',
+  status: entry.status,
+  weather_temp: entry.weather_temp,
+  weather_wind: entry.weather_wind,
+  weather_humidity: entry.weather_humidity,
+  weather_condition: entry.weather_condition,
+  weather_icon: entry.weather_icon,
+  personnel: personnel.map((p) => ({
+    name: p.name,
+    role: p.role,
+    hours: p.hours ?? ('' as any),
+    company: p.company ?? '',
+  })),
+  activities: activities.map((a) => ({
+    task: a.task,
+    description: a.description ?? '',
+    status: a.status,
+  })),
+  delays: delays.map((d) => ({
+    task: d.task,
+    reason: d.reason,
+    hours_lost: d.hours_lost ?? ('' as any),
+  })),
+  variations: variations.map((v) => ({
+    description: v.description,
+    hours_required: v.hours_required ?? ('' as any),
+  })),
+  materials_required: materials.map((m) => ({
+    supplier: m.supplier,
+    items: m.items,
+    date_required: m.date_required ?? '',
+  })),
+  equipment_hire: equipment.map((e) => ({
+    equipment: e.equipment,
+    supplier: e.supplier,
+  })),
+  deliveries: deliveries.map((d) => ({
+    supplier: d.supplier,
+    notes: d.notes ?? '',
+  })),
+};
+
+const dateStr = new Date(entry.date + 'T00:00:00').toLocaleDateString('en-GB', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<HubLayout title={`${dateStr} — ${project.name}`}>
+  <div class="max-w-4xl mx-auto">
+    <!-- Back link -->
+    <a href={`/project-hub/project/${id}/diary/`} class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+      Site Diary
+    </a>
+
+    <h1 class="text-2xl font-bold text-gray-900 font-display mb-6">{dateStr}</h1>
+
+    <DiaryForm
+      client:load
+      projectId={id!}
+      project={project}
+      entryId={entryId}
+      initialData={initialData}
+      initialFiles={files}
+      suppliers={supplierNames}
+      userName={user?.name}
+    />
+  </div>
+</HubLayout>

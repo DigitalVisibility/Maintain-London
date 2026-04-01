@@ -1,0 +1,131 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../../../layouts/HubLayout.astro';
+import { queryOne, queryAll } from '../../../../lib/db';
+import type { Project, DiaryEntry } from '../../../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const { id } = Astro.params;
+
+const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+if (!project) return Astro.redirect('/project-hub/');
+
+const recentEntries = await queryAll<DiaryEntry>(
+  env.DB,
+  'SELECT * FROM diary_entries WHERE project_id = ? ORDER BY date DESC LIMIT 5',
+  [id]
+);
+
+const totalEntries = await queryOne<{ count: number }>(
+  env.DB,
+  'SELECT COUNT(*) as count FROM diary_entries WHERE project_id = ?',
+  [id]
+);
+---
+
+<HubLayout title={project.name}>
+  <div class="max-w-6xl mx-auto">
+    <!-- Back link -->
+    <a href="/project-hub/" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+      All Projects
+    </a>
+
+    <!-- Project header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 font-display">{project.name}</h1>
+          <p class="text-gray-500 mt-1">{project.address}, {project.postcode}</p>
+          {project.client_name && (
+            <p class="text-sm text-gray-400 mt-1">Client: {project.client_name}</p>
+          )}
+        </div>
+        <div class="flex items-center gap-3">
+          <a
+            href={`/project-hub/project/${id}/report`}
+            class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md text-sm transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4 2a1 1 0 10-2 0v3a1 1 0 102 0v-3z" clip-rule="evenodd" />
+            </svg>
+            Reports
+          </a>
+          <a
+            href={`/project-hub/project/${id}/diary/new`}
+            class="inline-flex items-center gap-2 px-4 py-2 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md text-sm transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            New Diary Entry
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div class="text-2xl font-bold text-gray-900">{totalEntries?.count ?? 0}</div>
+        <div class="text-sm text-gray-500">Total Entries</div>
+      </div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div class="text-2xl font-bold text-gray-900 capitalize">{project.status}</div>
+        <div class="text-sm text-gray-500">Project Status</div>
+      </div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 col-span-2 sm:col-span-1">
+        <div class="text-2xl font-bold text-gray-900">
+          {recentEntries.length > 0 ? new Date(recentEntries[0].date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
+        </div>
+        <div class="text-sm text-gray-500">Last Entry</div>
+      </div>
+    </div>
+
+    <!-- Recent entries -->
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-semibold text-gray-900">Recent Entries</h2>
+      <a href={`/project-hub/project/${id}/diary/`} class="text-sm text-[#AEDE4A] hover:text-[#83B81A] font-medium transition-colors">
+        View all
+      </a>
+    </div>
+
+    {recentEntries.length > 0 ? (
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="divide-y divide-gray-100">
+          {recentEntries.map((entry) => {
+            const dateObj = new Date(entry.date + 'T00:00:00');
+            return (
+              <a
+                href={`/project-hub/project/${id}/diary/${entry.id}`}
+                class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600">
+                    {dateObj.getDate()}
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">
+                      {dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </div>
+                    <div class="text-xs text-gray-500">{entry.start_time} – {entry.end_time} · {entry.site_manager}</div>
+                  </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010 1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    ) : (
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <p class="text-sm text-gray-500">No diary entries yet. Create your first one to get started.</p>
+      </div>
+    )}
+  </div>
+</HubLayout>

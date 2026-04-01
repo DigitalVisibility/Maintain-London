@@ -1,0 +1,23 @@
+name = "maintain-london"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "./dist"
+
+# Cloudflare D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "maintain-london-db"
+database_id = "ef370f17-a325-4c4f-a69e-b65fce344a14"
+
+# Cloudflare R2 Bucket (photo/file storage)
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "maintain-london-files"
+
+# Cloudflare KV (used by @astrojs/cloudflare for sessions)
+[[kv_namespaces]]
+binding = "SESSION"
+id = "2a700acb29224559b22c7bb01f039c9c"
+
+[vars]
+# BETTER_AUTH_SECRET — set in Cloudflare Dashboard > Pages > Settings > Environment Variables (do NOT commit secrets)
+BETTER_AUTH_URL = "https://maintainlondon.co.uk"

@@ -1,0 +1,96 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import DiaryForm from '../../../../../components/project-hub/DiaryForm';
+import { queryOne, queryAll } from '../../../../../lib/db';
+import type {
+  Project, Supplier, DiaryEntry, EntryPersonnel, EntryActivity,
+  EntryDelay, EntryVariation, EntryMaterialRequired, EntryEquipmentHire,
+  EntryDelivery,
+} from '../../../../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const { id } = Astro.params;
+const user = Astro.locals.user;
+
+const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+if (!project) return Astro.redirect('/project-hub/');
+
+const supplierRows = await queryAll<Supplier>(env.DB, 'SELECT * FROM suppliers ORDER BY name');
+const supplierNames = supplierRows.map((s) => s.name);
+
+// Load yesterday's entry for "Copy yesterday" feature
+let yesterdayData: Record<string, unknown> | null = null;
+try {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  const yEntry = await queryOne<DiaryEntry>(
+    env.DB,
+    'SELECT * FROM diary_entries WHERE project_id = ? AND date = ?',
+    [id, yesterdayStr]
+  );
+
+  if (yEntry) {
+    const [personnel, activities, delays, variations, materials, equipment, deliveries] = await Promise.all([
+      queryAll<EntryPersonnel>(env.DB, 'SELECT * FROM entry_personnel WHERE entry_id = ?', [yEntry.id]),
+      queryAll<EntryActivity>(env.DB, 'SELECT * FROM entry_activities WHERE entry_id = ?', [yEntry.id]),
+      queryAll<EntryDelay>(env.DB, 'SELECT * FROM entry_delays WHERE entry_id = ?', [yEntry.id]),
+      queryAll<EntryVariation>(env.DB, 'SELECT * FROM entry_variations WHERE entry_id = ?', [yEntry.id]),
+      queryAll<EntryMaterialRequired>(env.DB, 'SELECT * FROM entry_materials_required WHERE entry_id = ?', [yEntry.id]),
+      queryAll<EntryEquipmentHire>(env.DB, 'SELECT * FROM entry_equipment_hire WHERE entry_id = ?', [yEntry.id]),
+      queryAll<EntryDelivery>(env.DB, 'SELECT * FROM entry_deliveries WHERE entry_id = ?', [yEntry.id]),
+    ]);
+
+    yesterdayData = {
+      site_manager: yEntry.site_manager,
+      start_time: yEntry.start_time,
+      end_time: yEntry.end_time,
+      personnel: personnel.map((p) => ({
+        name: p.name, role: p.role, hours: p.hours ?? '', company: p.company ?? '',
+      })),
+      activities: activities.map((a) => ({
+        task: a.task, description: a.description ?? '', status: a.status === 'complete' ? 'active' : a.status,
+      })),
+      delays: [],
+      variations: variations.map((v) => ({
+        description: v.description, hours_required: v.hours_required ?? '',
+      })),
+      materials_required: materials.map((m) => ({
+        supplier: m.supplier, items: m.items, date_required: '',
+      })),
+      equipment_hire: equipment.map((e) => ({
+        equipment: e.equipment, supplier: e.supplier,
+      })),
+      deliveries: [],
+    };
+  }
+} catch {
+  // Non-critical — yesterday's data is optional
+}
+---
+
+<HubLayout title={`New Entry — ${project.name}`}>
+  <div class="max-w-4xl mx-auto">
+    <!-- Back link -->
+    <a href={`/project-hub/project/${id}/diary/`} class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+      Site Diary
+    </a>
+
+    <h1 class="text-2xl font-bold text-gray-900 font-display mb-6">New Diary Entry</h1>
+
+    <DiaryForm
+      client:load
+      projectId={id!}
+      project={project}
+      suppliers={supplierNames}
+      userName={user?.name}
+      yesterdayData={yesterdayData}
+    />
+  </div>
+</HubLayout>

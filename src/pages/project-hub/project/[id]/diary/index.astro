@@ -1,0 +1,51 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../../../../layouts/HubLayout.astro';
+import EntryList from '../../../../../components/project-hub/EntryList';
+import { queryOne, queryAll } from '../../../../../lib/db';
+import type { Project, DiaryEntry } from '../../../../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const { id } = Astro.params;
+
+const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+if (!project) return Astro.redirect('/project-hub/');
+
+const entries = await queryAll<DiaryEntry>(
+  env.DB,
+  'SELECT * FROM diary_entries WHERE project_id = ? ORDER BY date DESC',
+  [id]
+);
+---
+
+<HubLayout title={`Diary — ${project.name}`}>
+  <div class="max-w-4xl mx-auto">
+    <!-- Back link -->
+    <a href={`/project-hub/project/${id}/`} class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+      {project.name}
+    </a>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 font-display">Site Diary</h1>
+        <p class="text-gray-500 text-sm mt-1">{entries.length} entr{entries.length === 1 ? 'y' : 'ies'}</p>
+      </div>
+      <a
+        href={`/project-hub/project/${id}/diary/new`}
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md text-sm transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        New Entry
+      </a>
+    </div>
+
+    <EntryList entries={entries} projectId={id!} client:load />
+  </div>
+</HubLayout>

@@ -1,0 +1,131 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../layouts/HubLayout.astro';
+import { queryAll, queryOne } from '../../lib/db';
+import type { Project } from '../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const user = Astro.locals.user;
+
+// Fetch active projects
+let projects: Project[] = [];
+let stats = { entriesThisWeek: 0, photosThisWeek: 0, delaysThisWeek: 0 };
+try {
+  projects = await queryAll<Project>(
+    env.DB,
+    'SELECT * FROM projects WHERE status = ? ORDER BY updated_at DESC',
+    ['active']
+  );
+
+  // Dashboard stats: this week's data
+  const now = new Date();
+  const day = now.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  const weekStart = monday.toISOString().split('T')[0];
+
+  const entriesRow = await queryOne<{ count: number }>(
+    env.DB,
+    'SELECT COUNT(*) as count FROM diary_entries WHERE date >= ?',
+    [weekStart]
+  );
+  const photosRow = await queryOne<{ count: number }>(
+    env.DB,
+    `SELECT COUNT(*) as count FROM entry_files WHERE created_at >= ? AND mime_type LIKE 'image/%'`,
+    [weekStart]
+  );
+  const delaysRow = await queryOne<{ count: number }>(
+    env.DB,
+    `SELECT COUNT(*) as count FROM entry_delays WHERE created_at >= ?`,
+    [weekStart]
+  );
+
+  stats = {
+    entriesThisWeek: entriesRow?.count ?? 0,
+    photosThisWeek: photosRow?.count ?? 0,
+    delaysThisWeek: delaysRow?.count ?? 0,
+  };
+} catch {
+  // DB may not be initialised yet during local dev
+}
+---
+
+<HubLayout title="Dashboard">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 font-display">
+          Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">
+          {projects.length > 0
+            ? `You have ${projects.length} active project${projects.length === 1 ? '' : 's'}`
+            : 'No active projects yet'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Weekly Stats -->
+    {(stats.entriesThisWeek > 0 || stats.photosThisWeek > 0 || stats.delaysThisWeek > 0) && (
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div class="text-2xl font-bold text-gray-900 font-display">{stats.entriesThisWeek}</div>
+          <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Entries This Week</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div class="text-2xl font-bold text-gray-900 font-display">{stats.photosThisWeek}</div>
+          <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Photos Taken</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+          <div class={`text-2xl font-bold font-display ${stats.delaysThisWeek > 0 ? 'text-red-500' : 'text-gray-900'}`}>{stats.delaysThisWeek}</div>
+          <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Delays Logged</div>
+        </div>
+      </div>
+    )}
+
+    <!-- Project grid -->
+    {projects.length > 0 ? (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {projects.map((project) => (
+          <a
+            href={`/project-hub/project/${project.id}/`}
+            class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-brand-green/50 transition-all group"
+          >
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-lg bg-brand-green/10 flex items-center justify-center text-brand-green group-hover:bg-brand-green/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                </svg>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 capitalize">
+                {project.status}
+              </span>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-1 group-hover:text-brand-green transition-colors">
+              {project.name}
+            </h3>
+            <p class="text-sm text-gray-500 mb-2">{project.address}</p>
+            {project.client_name && (
+              <p class="text-xs text-gray-400">Client: {project.client_name}</p>
+            )}
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">No projects yet</h3>
+        <p class="text-sm text-gray-500 mb-4">
+          Projects will appear here once an admin creates them.
+        </p>
+      </div>
+    )}
+  </div>
+</HubLayout>

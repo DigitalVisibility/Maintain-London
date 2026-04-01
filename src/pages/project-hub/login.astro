@@ -1,0 +1,25 @@
+---
+export const prerender = false;
+
+import LoginForm from '../../components/project-hub/LoginForm';
+
+// If already logged in, redirect to dashboard
+if (Astro.locals.session) {
+  return Astro.redirect('/project-hub/');
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Sign In | Project Hub | Maintain London</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#AEDE4A" />
+  </head>
+  <body class="bg-gray-50 font-sans">
+    <LoginForm client:load />
+  </body>
+</html>
