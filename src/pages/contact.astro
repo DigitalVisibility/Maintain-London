@@ -12,6 +12,44 @@ import Footer from '../components/Footer.astro';
     { name: "Home", url: "/" },
     { name: "Contact", url: "/contact" }
   ]}
+  schema={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What areas do you cover?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We primarily serve Southwest London and Surrey, focusing on properties valued at £1m+. Our service area includes Walton-on-Thames, Richmond, Chelsea, Hampstead, and surrounding areas."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does a typical renovation take?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Project timelines vary depending on scope and complexity. A typical kitchen renovation might take 4-6 weeks, while a full house renovation could take 3-6 months. We'll provide a detailed timeline during consultation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you handle all necessary permits?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, we manage all aspects of planning permission and building regulations approval as part of our comprehensive project management service."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is your typical process?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We begin with a consultation, followed by design and planning. Once approved, we handle all aspects of construction, with regular updates throughout. Each project concludes with a detailed homeowner's pack."
+        }
+      }
+    ]
+  })}
 >
   <Navigation />
   

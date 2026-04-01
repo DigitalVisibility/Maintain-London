@@ -13,6 +13,48 @@ import Footer from '../../components/Footer.astro';
     { name: "Resources", url: "/resources/cost-calculator" },
     { name: "Cost Calculator", url: "/resources/cost-calculator" }
   ]}
+  schema={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Calculate Your Home Renovation Cost in London",
+    "description": "Use Maintain London's free cost calculator to get an instant estimate for your extension, loft conversion, refurbishment, or new build project in London and Surrey.",
+    "totalTime": "PT30S",
+    "tool": [
+      { "@type": "HowToTool", "name": "Maintain London Cost Calculator" }
+    ],
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": 1,
+        "name": "Choose your project type",
+        "text": "Select from Extension, Loft Conversion, Refurbishment, or New Build to see the relevant options for your project."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 2,
+        "name": "Enter your project details",
+        "text": "Select your location (Inner London, Outer London, Surrey, etc.), property type, build quality (Standard, Good, or Excellent), and procurement route."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 3,
+        "name": "Set your floor area",
+        "text": "Use the slider to set your project's floor area in square metres. Extensions range from 20-200m², loft conversions 15-80m², refurbishments 50-300m², and new builds 100-500m²."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 4,
+        "name": "Add kitchens and bathrooms",
+        "text": "Select how many new kitchens and bathrooms are included in your project for a more accurate estimate."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 5,
+        "name": "Get your instant estimate",
+        "text": "Click Calculate to see your estimated build cost. The figure is based on current London and Surrey construction rates and accounts for location, quality, and property type multipliers."
+      }
+    ]
+  })}
 >
   <Navigation />
   
