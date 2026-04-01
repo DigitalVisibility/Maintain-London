@@ -4,9 +4,11 @@ export const prerender = false;
 import HubLayout from '../../../../layouts/HubLayout.astro';
 import { queryOne, queryAll } from '../../../../lib/db';
 import type { Project, DiaryEntry } from '../../../../types/diary';
+import EditProjectButton from '../../../../components/project-hub/EditProjectButton';
 
 const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
+const user = Astro.locals.user;
 
 const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
 if (!project) return Astro.redirect('/project-hub/');
@@ -44,7 +46,21 @@ const totalEntries = await queryOne<{ count: number }>(
             <p class="text-sm text-gray-400 mt-1">Client: {project.client_name}</p>
           )}
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
+          {user?.role === 'admin' && (
+            <EditProjectButton
+              client:load
+              project={{
+                id: project.id,
+                name: project.name,
+                address: project.address,
+                postcode: project.postcode,
+                client_name: project.client_name || '',
+                client_email: project.client_email || '',
+                status: project.status,
+              }}
+            />
+          )}
           <a
             href={`/project-hub/project/${id}/report`}
             class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md text-sm transition-colors"

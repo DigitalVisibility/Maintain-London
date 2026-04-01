@@ -4,6 +4,7 @@ export const prerender = false;
 import HubLayout from '../../layouts/HubLayout.astro';
 import { queryAll, queryOne } from '../../lib/db';
 import type { Project } from '../../types/diary';
+import NewProjectButton from '../../components/project-hub/NewProjectButton';
 
 const { env } = Astro.locals.runtime;
 const user = Astro.locals.user;
@@ -66,6 +67,9 @@ try {
             : 'No active projects yet'}
         </p>
       </div>
+      {user?.role === 'admin' && (
+        <NewProjectButton client:load />
+      )}
     </div>
 
     <!-- Weekly Stats -->

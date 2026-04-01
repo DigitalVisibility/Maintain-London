@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { useEffect } from 'react';
 import { $isOnline, $pendingSyncCount, $isSyncing, $syncStatus, $lastSyncAt } from '../../stores/offline';
-import { getSyncQueueCount, processQueue, requestEntrySync, requestPhotoSync } from '../../lib/offline';
+import { getSyncQueueCount, processQueue } from '../../lib/offline';
 
 export default function OfflineBanner() {
   const isOnline = useStore($isOnline);
@@ -52,16 +52,10 @@ export default function OfflineBanner() {
     $isSyncing.set(true);
 
     try {
-      // Try Background Sync first, fall back to manual
-      try {
-        await requestEntrySync();
-        await requestPhotoSync();
-      } catch {
-        // Background Sync not supported — sync manually
-        const result = await processQueue();
-        if (result.synced > 0) {
-          $lastSyncAt.set(new Date().toISOString());
-        }
+      // Always process queue directly for immediate feedback
+      const result = await processQueue();
+      if (result.synced > 0) {
+        $lastSyncAt.set(new Date().toISOString());
       }
 
       const remaining = await getSyncQueueCount();
