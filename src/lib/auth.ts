@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { D1Dialect } from 'kysely-d1';
 
 /**
  * Create a Better-Auth instance bound to the current request's D1 database.
@@ -6,7 +7,10 @@ import { betterAuth } from 'better-auth';
  */
 export function createAuth(db: D1Database, secret: string, baseURL: string) {
   return betterAuth({
-    database: db,
+    database: {
+      dialect: new D1Dialect({ database: db }),
+      type: 'sqlite',
+    },
     baseURL,
     basePath: '/api/auth',
     secret,
