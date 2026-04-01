@@ -10,7 +10,7 @@
 --     -d '{"name":"Tom Admin","email":"admin@maintainlondon.co.uk","password":"CHANGE_THIS_PASSWORD"}'
 --
 -- Then promote to admin:
---   wrangler d1 execute maintain-london-db --command "UPDATE users SET role = 'admin' WHERE email = 'admin@maintainlondon.co.uk'"
+--   wrangler d1 execute maintain-london-db --command "UPDATE user SET role = 'admin' WHERE email = 'admin@maintainlondon.co.uk'"
 
 -- Seed a sample project (replace with real data after deployment)
 INSERT OR IGNORE INTO projects (id, name, address, postcode, lat, lng, client_name, status, created_at, updated_at)

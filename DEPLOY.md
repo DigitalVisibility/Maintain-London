@@ -87,7 +87,7 @@ curl -X POST https://maintainlondon.co.uk/api/auth/sign-up/email \
 
 # Promote to admin role
 wrangler d1 execute maintain-london-db --remote \
-  --command "UPDATE users SET role = 'admin' WHERE email = 'admin@maintainlondon.co.uk'"
+  --command "UPDATE user SET role = 'admin' WHERE email = 'admin@maintainlondon.co.uk'"
 ```
 
 ## Step 6: Verify
@@ -109,7 +109,7 @@ wrangler d1 execute maintain-london-db --remote \
 ```bash
 # They sign up at /project-hub/login, then promote if needed:
 wrangler d1 execute maintain-london-db --remote \
-  --command "UPDATE users SET role = 'manager' WHERE email = 'user@example.com'"
+  --command "UPDATE user SET role = 'manager' WHERE email = 'user@example.com'"
 ```
 
 ### Add a new project

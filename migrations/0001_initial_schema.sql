@@ -1,8 +1,8 @@
 -- Maintain London Project Hub: Initial Schema
 -- Run with: wrangler d1 execute maintain-london-db --file=./migrations/0001_initial_schema.sql
 
--- Better-Auth tables (managed by better-auth, but we define the structure)
-CREATE TABLE IF NOT EXISTS users (
+-- Better-Auth tables (singular names to match better-auth defaults)
+CREATE TABLE IF NOT EXISTS user (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   emailVerified INTEGER NOT NULL DEFAULT 0,
@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
   updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS sessions (
+CREATE TABLE IF NOT EXISTS session (
   id TEXT PRIMARY KEY,
-  userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,
   expiresAt TEXT NOT NULL,
   ipAddress TEXT,
@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS accounts (
+CREATE TABLE IF NOT EXISTS account (
   id TEXT PRIMARY KEY,
-  userId TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
   accountId TEXT NOT NULL,
   providerId TEXT NOT NULL,
   accessToken TEXT,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS verifications (
+CREATE TABLE IF NOT EXISTS verification (
   id TEXT PRIMARY KEY,
   identifier TEXT NOT NULL,
   value TEXT NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS projects (
   client_name TEXT,
   client_email TEXT,
   status TEXT NOT NULL DEFAULT 'active',
-  created_by TEXT REFERENCES users(id),
+  created_by TEXT REFERENCES user(id),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE TABLE IF NOT EXISTS diary_entries (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES projects(id),
-  created_by TEXT NOT NULL REFERENCES users(id),
+  created_by TEXT NOT NULL REFERENCES user(id),
   date TEXT NOT NULL,
   start_time TEXT NOT NULL,
   end_time TEXT NOT NULL,
@@ -191,5 +191,5 @@ CREATE INDEX IF NOT EXISTS idx_materials_entry ON entry_materials_required(entry
 CREATE INDEX IF NOT EXISTS idx_equipment_entry ON entry_equipment_hire(entry_id);
 CREATE INDEX IF NOT EXISTS idx_deliveries_entry ON entry_deliveries(entry_id);
 CREATE INDEX IF NOT EXISTS idx_files_entry ON entry_files(entry_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
-CREATE INDEX IF NOT EXISTS idx_sessions_userId ON sessions(userId);
+CREATE INDEX IF NOT EXISTS idx_session_token ON session(token);
+CREATE INDEX IF NOT EXISTS idx_session_userId ON session(userId);
