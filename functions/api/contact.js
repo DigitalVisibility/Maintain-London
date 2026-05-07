@@ -44,54 +44,40 @@ Submitted at: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' }
 IP Address: ${request.headers.get('CF-Connecting-IP') || 'Unknown'}
 `;
 
-    // Send email using Cloudflare's MailChannels
-    const emailResponse = await fetch('https://api.mailchannels.net/tx/v1/send', {
+    // Send email using Resend
+    const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        personalizations: [
-          {
-            to: [{ email: 'darrangoulding@gmail.com', name: 'Darran Goulding' }],
-            reply_to: { email: data.email, name: data.name }
-          }
-        ],
-        from: {
-          email: 'noreply@maintainlondon.co.uk',
-          name: 'Maintain London Website'
-        },
+        from: 'Maintain London Website <noreply@mail.maintainlondon.co.uk>',
+        to: ['support@digitalvisibility.com'],
+        reply_to: `${data.name} <${data.email}>`,
         subject: emailSubject,
-        content: [
-          {
-            type: 'text/plain',
-            value: emailBody
-          },
-          {
-            type: 'text/html',
-            value: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #AEDE4A;">New Contact Form Submission</h2>
-                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <p><strong>Name:</strong> ${data.name}</p>
-                  <p><strong>Email:</strong> <a href="mailto:${data.email}">${data.email}</a></p>
-                  <p><strong>Phone:</strong> ${data.phone || 'Not provided'}</p>
-                  <p><strong>Service Interest:</strong> ${data.service || 'Not specified'}</p>
-                  <p><strong>Budget Range:</strong> ${data.budget || 'Not specified'}</p>
-                </div>
-                <div style="background: white; padding: 20px; border-left: 4px solid #AEDE4A;">
-                  <h3>Message:</h3>
-                  <p style="white-space: pre-wrap;">${data.message}</p>
-                </div>
-                <hr style="margin: 30px 0;">
-                <p style="color: #666; font-size: 12px;">
-                  Submitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}<br>
-                  IP: ${request.headers.get('CF-Connecting-IP') || 'Unknown'}
-                </p>
-              </div>
-            `
-          }
-        ]
+        text: emailBody,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #AEDE4A;">New Contact Form Submission</h2>
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Name:</strong> ${data.name}</p>
+              <p><strong>Email:</strong> <a href="mailto:${data.email}">${data.email}</a></p>
+              <p><strong>Phone:</strong> ${data.phone || 'Not provided'}</p>
+              <p><strong>Service Interest:</strong> ${data.service || 'Not specified'}</p>
+              <p><strong>Budget Range:</strong> ${data.budget || 'Not specified'}</p>
+            </div>
+            <div style="background: white; padding: 20px; border-left: 4px solid #AEDE4A;">
+              <h3>Message:</h3>
+              <p style="white-space: pre-wrap;">${data.message}</p>
+            </div>
+            <hr style="margin: 30px 0;">
+            <p style="color: #666; font-size: 12px;">
+              Submitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}<br>
+              IP: ${request.headers.get('CF-Connecting-IP') || 'Unknown'}
+            </p>
+          </div>
+        `
       })
     });
 
