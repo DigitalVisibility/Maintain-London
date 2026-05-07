@@ -141,21 +141,7 @@ import Footer from '../components/Footer.astro';
           <!-- Success/Error Messages -->
           <div id="form-message" class="hidden mb-6 p-4 rounded-md"></div>
           
-          <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" class="space-y-6">
-            <!-- Web3Forms Access Key -->
-            <input type="hidden" name="access_key" value="65a2b968-ba5d-4918-8511-54c6ee3ed376">
-            
-            <!-- Redirect URL after successful submission -->
-            <input type="hidden" name="redirect" value="https://maintainlondon.co.uk/thank-you/">
-            
-            <!-- Email destination -->
-            <input type="hidden" name="email" value="admin@maintainlondon.co.uk">
-            
-            <!-- Subject line -->
-            <input type="hidden" name="subject" value="New Contact Form Submission from Maintain London Website">
-            
-            <!-- From name for better organization -->
-            <input type="hidden" name="from_name" value="Maintain London Website">
+          <form id="contact-form" class="space-y-6">
 
             <div>
               <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
@@ -248,8 +234,6 @@ import Footer from '../components/Footer.astro';
               </div>
             </div>
 
-            <!-- Honeypot field to prevent spam -->
-            <input type="checkbox" name="botcheck" id="" style="display: none;">
 
             <div>
               <button
@@ -319,15 +303,40 @@ import Footer from '../components/Footer.astro';
     const messageDiv = document.getElementById('form-message');
 
     if (form) {
-      form.addEventListener('submit', function(e) {
-        // Show loading state
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
         submitButton.disabled = true;
         submitText.textContent = 'Sending...';
         loadingSpinner.classList.remove('hidden');
         messageDiv.classList.add('hidden');
-        
-        // Let the form submit naturally to Web3Forms
-        // Web3Forms will handle the redirect to thank-you page
+
+        try {
+          const formData = new FormData(form);
+          const response = await fetch('/api/contact', {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            messageDiv.className = 'mb-6 p-4 rounded-md bg-green-50 text-green-800';
+            messageDiv.textContent = result.message;
+            form.reset();
+          } else {
+            messageDiv.className = 'mb-6 p-4 rounded-md bg-red-50 text-red-800';
+            messageDiv.textContent = result.error || 'Something went wrong. Please try again.';
+          }
+        } catch (err) {
+          messageDiv.className = 'mb-6 p-4 rounded-md bg-red-50 text-red-800';
+          messageDiv.textContent = 'Something went wrong. Please try again.';
+        } finally {
+          submitButton.disabled = false;
+          submitText.textContent = 'Send Message';
+          loadingSpinner.classList.add('hidden');
+          messageDiv.classList.remove('hidden');
+        }
       });
     }
   });
