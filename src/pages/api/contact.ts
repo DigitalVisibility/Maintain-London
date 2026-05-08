@@ -1,32 +1,33 @@
-export async function onRequestPost(context) {
-  const { request, env } = context;
-  
+import type { APIRoute } from 'astro';
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ locals, request }) => {
+  const { env } = locals.runtime;
+
   try {
-    // Parse form data
     const formData = await request.formData();
     const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      service: formData.get('service'),
-      message: formData.get('message'),
-      budget: formData.get('budget'),
-      privacy: formData.get('privacy')
+      name: formData.get('name')?.toString() || '',
+      email: formData.get('email')?.toString() || '',
+      phone: formData.get('phone')?.toString() || '',
+      service: formData.get('service')?.toString() || '',
+      message: formData.get('message')?.toString() || '',
+      budget: formData.get('budget')?.toString() || '',
+      privacy: formData.get('privacy')?.toString() || '',
     };
 
-    // Validate required fields
     if (!data.name || !data.email || !data.message || !data.privacy) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Please fill in all required fields and accept the privacy policy.' 
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return Response.json(
+        { success: false, error: 'Please fill in all required fields and accept the privacy policy.' },
+        { status: 400 }
+      );
     }
 
-    // Email content
     const emailSubject = `New Contact Form Submission from ${data.name}`;
+    const submittedAt = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' });
+    const ip = request.headers.get('CF-Connecting-IP') || 'Unknown';
+
     const emailBody = `
 New contact form submission from Maintain London website:
 
@@ -40,11 +41,10 @@ Message:
 ${data.message}
 
 ---
-Submitted at: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}
-IP Address: ${request.headers.get('CF-Connecting-IP') || 'Unknown'}
+Submitted at: ${submittedAt}
+IP Address: ${ip}
 `;
 
-    // Send email using Resend
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -73,55 +73,32 @@ IP Address: ${request.headers.get('CF-Connecting-IP') || 'Unknown'}
             </div>
             <hr style="margin: 30px 0;">
             <p style="color: #666; font-size: 12px;">
-              Submitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}<br>
-              IP: ${request.headers.get('CF-Connecting-IP') || 'Unknown'}
+              Submitted: ${submittedAt}<br>
+              IP: ${ip}
             </p>
           </div>
-        `
-      })
+        `,
+      }),
     });
 
     if (!emailResponse.ok) {
       const errorText = await emailResponse.text();
-      console.error('Email sending failed:', errorText);
-      throw new Error('Failed to send email');
+      console.error('Resend error:', errorText);
+      return Response.json(
+        { success: false, error: 'Sorry, there was an error sending your message. Please try again or contact us directly.' },
+        { status: 500 }
+      );
     }
 
-    // Return success response
-    return new Response(JSON.stringify({ 
-      success: true, 
-      message: 'Thank you for your message. We\'ll get back to you soon!' 
-    }), {
-      status: 200,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      }
+    return Response.json({
+      success: true,
+      message: "Thank you for your message. We'll get back to you soon!",
     });
-
   } catch (error) {
     console.error('Contact form error:', error);
-    
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Sorry, there was an error sending your message. Please try again or contact us directly.' 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return Response.json(
+      { success: false, error: 'Sorry, there was an error sending your message. Please try again or contact us directly.' },
+      { status: 500 }
+    );
   }
-}
-
-// Handle OPTIONS requests for CORS
-export async function onRequestOptions() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    }
-  });
-} 
+};
