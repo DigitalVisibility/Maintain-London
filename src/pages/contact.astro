@@ -234,6 +234,12 @@ import Footer from '../components/Footer.astro';
               </div>
             </div>
 
+            <div aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">
+              <label for="website">Website (leave blank)</label>
+              <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAADMu58mam7B1aHlY" data-theme="light"></div>
 
             <div>
               <button
@@ -294,50 +300,64 @@ import Footer from '../components/Footer.astro';
   <Footer />
 </Layout>
 
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('contact-form');
-    const submitButton = document.getElementById('submit-button');
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
+    const submitButton = document.getElementById('submit-button') as HTMLButtonElement | null;
     const submitText = document.getElementById('submit-text');
     const loadingSpinner = document.getElementById('loading-spinner');
     const messageDiv = document.getElementById('form-message');
 
-    if (form) {
-      form.addEventListener('submit', async function(e) {
-        e.preventDefault();
+    if (!form || !submitButton || !submitText || !loadingSpinner || !messageDiv) return;
 
-        submitButton.disabled = true;
-        submitText.textContent = 'Sending...';
-        loadingSpinner.classList.remove('hidden');
-        messageDiv.classList.add('hidden');
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
 
-        try {
-          const formData = new FormData(form);
-          const response = await fetch('/api/contact', {
-            method: 'POST',
-            body: formData
-          });
+      const turnstileToken = (form.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement | null)?.value;
+      if (!turnstileToken) {
+        messageDiv.className = 'mb-6 p-4 rounded-md bg-red-50 text-red-800';
+        messageDiv.textContent = 'Please wait for the security check to complete, then try again.';
+        messageDiv.classList.remove('hidden');
+        return;
+      }
 
-          const result = await response.json();
+      submitButton.disabled = true;
+      submitText.textContent = 'Sending...';
+      loadingSpinner.classList.remove('hidden');
+      messageDiv.classList.add('hidden');
 
-          if (result.success) {
-            messageDiv.className = 'mb-6 p-4 rounded-md bg-green-50 text-green-800';
-            messageDiv.textContent = result.message;
-            form.reset();
-          } else {
-            messageDiv.className = 'mb-6 p-4 rounded-md bg-red-50 text-red-800';
-            messageDiv.textContent = result.error || 'Something went wrong. Please try again.';
-          }
-        } catch (err) {
+      try {
+        const formData = new FormData(form);
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          messageDiv.className = 'mb-6 p-4 rounded-md bg-green-50 text-green-800';
+          messageDiv.textContent = result.message;
+          form.reset();
+        } else {
           messageDiv.className = 'mb-6 p-4 rounded-md bg-red-50 text-red-800';
-          messageDiv.textContent = 'Something went wrong. Please try again.';
-        } finally {
-          submitButton.disabled = false;
-          submitText.textContent = 'Send Message';
-          loadingSpinner.classList.add('hidden');
-          messageDiv.classList.remove('hidden');
+          messageDiv.textContent = result.error || 'Something went wrong. Please try again.';
         }
-      });
-    }
+      } catch (err) {
+        messageDiv.className = 'mb-6 p-4 rounded-md bg-red-50 text-red-800';
+        messageDiv.textContent = 'Something went wrong. Please try again.';
+      } finally {
+        const turnstile = (window as any).turnstile;
+        if (turnstile && typeof turnstile.reset === 'function') {
+          turnstile.reset();
+        }
+        submitButton.disabled = false;
+        submitText.textContent = 'Send Message';
+        loadingSpinner.classList.add('hidden');
+        messageDiv.classList.remove('hidden');
+      }
+    });
   });
 </script>
