@@ -117,7 +117,7 @@ IP Address: ${ip}
       },
       body: JSON.stringify({
         from: 'Maintain London Website <noreply@mail.maintainlondon.co.uk>',
-        to: ['support@digitalvisibility.com'],
+        to: ['admin@maintainlondon.co.uk'],
         reply_to: `${data.name} <${data.email}>`,
         subject: emailSubject,
         text: emailBody,
