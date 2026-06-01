@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../layouts/HubLayout.astro';
+import TeamManager from '../../components/project-hub/TeamManager';
+import { can } from '../../lib/capabilities';
+
+// Only people who can manage users may see this page.
+if (!can(Astro.locals.role, 'manage_users')) {
+  return Astro.redirect('/project-hub/');
+}
+---
+
+<HubLayout title="Team & Clients">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 font-display mb-6">Team &amp; Clients</h1>
+    <TeamManager client:load />
+  </div>
+</HubLayout>

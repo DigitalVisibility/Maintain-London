@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
   const invites = await queryAll(
     env.DB,
-    `SELECT id, email, name, role, project_id, status, expires_at, created_at
+    `SELECT id, email, name, role, project_id, token, status, expires_at, created_at
        FROM invitations WHERE org_id = ? AND status = 'pending' ORDER BY created_at DESC`,
     [orgId]
   );
