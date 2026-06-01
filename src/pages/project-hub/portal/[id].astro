@@ -1,0 +1,70 @@
+---
+export const prerender = false;
+
+import PortalLayout from '../../../layouts/PortalLayout.astro';
+import ApprovalsInbox from '../../../components/project-hub/ApprovalsInbox';
+import MessageThread from '../../../components/project-hub/MessageThread';
+import { queryOne, queryAll } from '../../../lib/db';
+import type { Project, DiaryEntry } from '../../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const user = Astro.locals.user;
+const { id } = Astro.params;
+
+// The client must be attached to this project.
+const link = user
+  ? await queryOne(env.DB, 'SELECT 1 AS ok FROM project_clients WHERE project_id = ? AND user_id = ?', [id, user.id])
+  : null;
+if (!link) return Astro.redirect('/project-hub/portal');
+
+const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+if (!project) return Astro.redirect('/project-hub/portal');
+
+// Only days the contractor has released to the client.
+const released = await queryAll<DiaryEntry>(
+  env.DB,
+  `SELECT id, date, status FROM diary_entries
+     WHERE project_id = ? AND client_released = 1 ORDER BY date DESC`,
+  [id]
+);
+
+function fmt(date: string) {
+  return new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+---
+
+<PortalLayout title={project.name}>
+  <a href="/project-hub/portal" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">&larr; All projects</a>
+  <h1 class="text-2xl font-bold text-gray-900 mb-1">{project.name}</h1>
+  <p class="text-gray-500 text-sm mb-6">{project.address}, {project.postcode}</p>
+
+  <!-- Released updates -->
+  <section class="mb-8">
+    <h2 class="text-sm font-semibold text-gray-900 mb-3">Daily updates</h2>
+    {released.length > 0 ? (
+      <div class="space-y-2">
+        {released.map((e) => (
+          <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+            <div class="text-sm font-medium text-gray-900">{fmt(e.date)}</div>
+            <a href={`/api/reports/summary?project_id=${id}&type=daily&entry_id=${e.id}&audience=client`} target="_blank" rel="noopener"
+              class="text-sm font-medium text-[#83B81A] hover:underline">View summary →</a>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="bg-white rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">No updates released yet.</div>
+    )}
+  </section>
+
+  <!-- Approvals -->
+  <section class="mb-8">
+    <h2 class="text-sm font-semibold text-gray-900 mb-3">Approvals</h2>
+    <ApprovalsInbox client:load projectId={id!} mode="client" canDecide={true} />
+  </section>
+
+  <!-- Messages -->
+  <section>
+    <h2 class="text-sm font-semibold text-gray-900 mb-3">Messages</h2>
+    <MessageThread client:load projectId={id!} meUserId={user?.id} />
+  </section>
+</PortalLayout>

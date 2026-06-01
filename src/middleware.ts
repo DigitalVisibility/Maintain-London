@@ -60,5 +60,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/project-hub/login');
   }
 
+  // Clients only ever see their portal — keep them out of the management UI.
+  if (isHubPage && sessionData && context.locals.role === 'client'
+      && !pathname.startsWith('/project-hub/portal')) {
+    return context.redirect('/project-hub/portal');
+  }
+
   return next();
 });

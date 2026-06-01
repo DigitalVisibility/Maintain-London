@@ -1,0 +1,42 @@
+---
+export const prerender = false;
+
+import PortalLayout from '../../../layouts/PortalLayout.astro';
+import { queryAll } from '../../../lib/db';
+import type { Project } from '../../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const user = Astro.locals.user;
+
+// The projects this client is attached to.
+const projects = user
+  ? await queryAll<Project>(
+      env.DB,
+      `SELECT p.* FROM projects p
+         JOIN project_clients pc ON pc.project_id = p.id
+        WHERE pc.user_id = ? ORDER BY p.updated_at DESC`,
+      [user.id]
+    )
+  : [];
+---
+
+<PortalLayout title="Your Projects">
+  <h1 class="text-2xl font-bold text-gray-900 mb-1">Welcome{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+  <p class="text-gray-500 text-sm mb-6">Your project updates and approvals.</p>
+
+  {projects.length > 0 ? (
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {projects.map((p) => (
+        <a href={`/project-hub/portal/${p.id}`} class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-all">
+          <h3 class="font-semibold text-gray-900">{p.name}</h3>
+          <p class="text-sm text-gray-500 mt-1">{p.address}</p>
+          <span class="inline-flex items-center mt-3 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 capitalize">{p.status}</span>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <div class="bg-white rounded-lg border border-gray-200 p-10 text-center text-sm text-gray-500">
+      No projects shared with you yet. Your contractor will release updates here.
+    </div>
+  )}
+</PortalLayout>
