@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { useEffect } from 'react';
-import { $isOnline, $pendingSyncCount, $isSyncing, $syncStatus, $lastSyncAt } from '../../stores/offline';
+import { $isOnline, $pendingSyncCount, $isSyncing, $syncStatus, $lastSyncAt, verifyConnectivity } from '../../stores/offline';
 import { getSyncQueueCount, processQueue } from '../../lib/offline';
 
 export default function OfflineBanner() {
@@ -10,18 +10,20 @@ export default function OfflineBanner() {
   const syncStatus = useStore($syncStatus);
   const lastSyncAt = useStore($lastSyncAt);
 
-  // Poll sync queue count
+  // Poll sync queue count + re-verify real connectivity (self-corrects a stale
+  // "offline" reading from the unreliable navigator.onLine flag).
   useEffect(() => {
-    async function updateCount() {
+    async function tick() {
       try {
         const count = await getSyncQueueCount();
         $pendingSyncCount.set(count);
       } catch {
         // IDB may not be available
       }
+      verifyConnectivity();
     }
-    updateCount();
-    const interval = setInterval(updateCount, 5000);
+    tick();
+    const interval = setInterval(tick, 10000);
     return () => clearInterval(interval);
   }, []);
 

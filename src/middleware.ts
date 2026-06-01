@@ -13,7 +13,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Data APIs (weather, entries, photos, projects, reports, …) need the session
   // resolved onto locals.user so each endpoint can authorise the request.
-  const isDataAPI = pathname.startsWith('/api/') && !isAuthAPI;
+  // /api/ping is a public connectivity check — no session lookup needed.
+  const isDataAPI = pathname.startsWith('/api/') && !isAuthAPI && pathname !== '/api/ping';
 
   // Anything else (marketing pages, login, /api/auth/*) needs no handling here.
   if (!isHubPage && !isDataAPI) {

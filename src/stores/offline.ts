@@ -33,9 +33,28 @@ export const $syncStatus = computed(
   }
 );
 
+/**
+ * Confirm real connectivity by pinging the server. `navigator.onLine` is
+ * unreliable (it reports false negatives on some networks/VPNs), so we trust an
+ * actual request: if it succeeds we're online regardless of what the flag says.
+ */
+export async function verifyConnectivity(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/ping', { method: 'GET', cache: 'no-store' });
+    $isOnline.set(res.ok);
+    return res.ok;
+  } catch {
+    $isOnline.set(false);
+    return false;
+  }
+}
+
 // ── Init: listen for online/offline events ──
 
 if (typeof window !== 'undefined') {
-  window.addEventListener('online', () => $isOnline.set(true));
-  window.addEventListener('offline', () => $isOnline.set(false));
+  // Re-verify on both events rather than trusting the flag directly.
+  window.addEventListener('online', () => { verifyConnectivity(); });
+  window.addEventListener('offline', () => { verifyConnectivity(); });
+  // Confirm actual connectivity on load (don't trust navigator.onLine alone).
+  verifyConnectivity();
 }
