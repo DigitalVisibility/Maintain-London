@@ -10,7 +10,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isHubPage =
     pathname.startsWith('/project-hub') &&
     !pathname.startsWith('/project-hub/login') &&
-    !pathname.startsWith('/project-hub/accept');
+    !pathname.startsWith('/project-hub/accept') &&
+    !pathname.startsWith('/project-hub/approve');
 
   // Better-Auth's own endpoints handle their auth internally — leave them alone.
   const isAuthAPI = pathname.startsWith('/api/auth');

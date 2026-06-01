@@ -1,0 +1,30 @@
+---
+export const prerender = false;
+
+import ApproveByToken from '../../components/project-hub/ApproveByToken';
+
+const token = Astro.url.searchParams.get('token') ?? '';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Approval | Project Hub</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center px-4">
+      <div class="w-full max-w-md">
+        <div class="text-center mb-6">
+          <img src="/images/Icons/Stacked.png" alt="Project Hub" class="h-14 w-auto mx-auto mb-3" />
+        </div>
+        {token
+          ? <ApproveByToken client:load token={token} />
+          : <div class="bg-white rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">No approval token provided.</div>}
+      </div>
+    </div>
+  </body>
+</html>
