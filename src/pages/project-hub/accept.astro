@@ -1,0 +1,31 @@
+---
+export const prerender = false;
+
+import AcceptInviteForm from '../../components/project-hub/AcceptInviteForm';
+
+const token = Astro.url.searchParams.get('token') ?? '';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Accept Invitation | Project Hub</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center px-4">
+      <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+          <img src="/images/Icons/Stacked.png" alt="Project Hub" class="h-16 w-auto mx-auto mb-4" />
+          <h1 class="text-2xl font-bold text-gray-900" style="font-family:'Inter Variable',system-ui,sans-serif">Project Hub</h1>
+        </div>
+        {token
+          ? <AcceptInviteForm client:load token={token} />
+          : <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center text-sm text-gray-500">No invitation token provided.</div>}
+      </div>
+    </div>
+  </body>
+</html>

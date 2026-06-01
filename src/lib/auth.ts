@@ -32,6 +32,9 @@ export function createAuth(db: D1Database, secret: string, baseURL: string) {
           type: 'string',
           defaultValue: 'operative',
           required: false,
+          // Never settable via sign-up — the real role is assigned server-side
+          // from the invitation when an account is accepted.
+          input: false,
         },
         phone: {
           type: 'string',

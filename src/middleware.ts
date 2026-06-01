@@ -5,9 +5,12 @@ import { resolveActiveOrg, ACTIVE_ORG_COOKIE } from './lib/org';
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
 
-  // Protected Hub pages (not the login page itself)
+  // Protected Hub pages (not the login or invite-accept pages, which must be
+  // reachable while signed out).
   const isHubPage =
-    pathname.startsWith('/project-hub') && !pathname.startsWith('/project-hub/login');
+    pathname.startsWith('/project-hub') &&
+    !pathname.startsWith('/project-hub/login') &&
+    !pathname.startsWith('/project-hub/accept');
 
   // Better-Auth's own endpoints handle their auth internally — leave them alone.
   const isAuthAPI = pathname.startsWith('/api/auth');
