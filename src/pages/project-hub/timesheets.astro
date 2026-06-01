@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../layouts/HubLayout.astro';
+import Timesheets from '../../components/project-hub/Timesheets';
+import { can } from '../../lib/capabilities';
+
+if (!can(Astro.locals.role, 'view_costs')) {
+  return Astro.redirect('/project-hub/');
+}
+---
+
+<HubLayout title="Timesheets">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 font-display mb-1">Timesheets</h1>
+    <p class="text-gray-500 text-sm mb-6">Hours worked per worker (payroll) and per project (billing), with clock-in locations.</p>
+    <Timesheets client:load />
+  </div>
+</HubLayout>

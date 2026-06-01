@@ -22,6 +22,7 @@ const orgLogo = org?.logo_url || '/images/Icons/Stacked.png';
 const brandColor = org?.brand_color || '#AEDE4A';
 const orgRole = Astro.locals.role ?? user?.role ?? 'operative';
 const canManageUsers = can(orgRole, 'manage_users');
+const canViewCosts = can(orgRole, 'view_costs');
 ---
 
 <!doctype html>
@@ -101,6 +102,23 @@ const canManageUsers = can(orgRole, 'manage_users');
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
               Team &amp; Clients
+            </a>
+          )}
+
+          {canViewCosts && (
+            <a
+              href="/project-hub/timesheets"
+              class:list={[
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                currentPath.startsWith('/project-hub/timesheets')
+                  ? 'bg-brand-green/20 text-brand-green'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white',
+              ]}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+              </svg>
+              Timesheets
             </a>
           )}
 
