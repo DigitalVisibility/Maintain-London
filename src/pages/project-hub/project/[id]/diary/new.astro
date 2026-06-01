@@ -14,10 +14,11 @@ const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
 const user = Astro.locals.user;
 
+const orgId = Astro.locals.org?.id;
 const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
-if (!project) return Astro.redirect('/project-hub/');
+if (!project || project.org_id !== orgId) return Astro.redirect('/project-hub/');
 
-const supplierRows = await queryAll<Supplier>(env.DB, 'SELECT * FROM suppliers ORDER BY name');
+const supplierRows = await queryAll<Supplier>(env.DB, 'SELECT * FROM suppliers WHERE org_id = ? ORDER BY name', [orgId ?? '']);
 const supplierNames = supplierRows.map((s) => s.name);
 
 // Load yesterday's entry for "Copy yesterday" feature

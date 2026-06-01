@@ -14,8 +14,9 @@ const { env } = Astro.locals.runtime;
 const { id, entryId } = Astro.params;
 const user = Astro.locals.user;
 
+const orgId = Astro.locals.org?.id;
 const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
-if (!project) return Astro.redirect('/project-hub/');
+if (!project || project.org_id !== orgId) return Astro.redirect('/project-hub/');
 
 const entry = await queryOne<DiaryEntry>(env.DB, 'SELECT * FROM diary_entries WHERE id = ?', [entryId]);
 if (!entry) return Astro.redirect(`/project-hub/project/${id}/diary/`);
@@ -32,7 +33,7 @@ const [personnel, activities, delays, variations, materials, equipment, deliveri
   queryAll<EntryFile>(env.DB, 'SELECT * FROM entry_files WHERE entry_id = ?', [entryId]),
 ]);
 
-const supplierRows = await queryAll<Supplier>(env.DB, 'SELECT * FROM suppliers ORDER BY name');
+const supplierRows = await queryAll<Supplier>(env.DB, 'SELECT * FROM suppliers WHERE org_id = ? ORDER BY name', [orgId ?? '']);
 const supplierNames = supplierRows.map((s) => s.name);
 
 const initialData = {

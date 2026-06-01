@@ -3,23 +3,26 @@ export const prerender = false;
 
 import HubLayout from '../../layouts/HubLayout.astro';
 import { queryAll, queryOne } from '../../lib/db';
+import { can } from '../../lib/capabilities';
 import type { Project } from '../../types/diary';
 import NewProjectButton from '../../components/project-hub/NewProjectButton';
 
 const { env } = Astro.locals.runtime;
 const user = Astro.locals.user;
+const orgId = Astro.locals.org?.id ?? '';
+const canManageProjects = can(Astro.locals.role, 'manage_projects');
 
-// Fetch active projects
+// Fetch active projects for the active organisation
 let projects: Project[] = [];
 let stats = { entriesThisWeek: 0, photosThisWeek: 0, delaysThisWeek: 0 };
 try {
   projects = await queryAll<Project>(
     env.DB,
-    'SELECT * FROM projects WHERE status = ? ORDER BY updated_at DESC',
-    ['active']
+    'SELECT * FROM projects WHERE org_id = ? AND status = ? ORDER BY updated_at DESC',
+    [orgId, 'active']
   );
 
-  // Dashboard stats: this week's data
+  // Dashboard stats: this week's data, scoped to this org's projects
   const now = new Date();
   const day = now.getDay();
   const mondayOffset = day === 0 ? -6 : 1 - day;
@@ -29,18 +32,23 @@ try {
 
   const entriesRow = await queryOne<{ count: number }>(
     env.DB,
-    'SELECT COUNT(*) as count FROM diary_entries WHERE date >= ?',
-    [weekStart]
+    `SELECT COUNT(*) as count FROM diary_entries
+      WHERE date >= ? AND project_id IN (SELECT id FROM projects WHERE org_id = ?)`,
+    [weekStart, orgId]
   );
   const photosRow = await queryOne<{ count: number }>(
     env.DB,
-    `SELECT COUNT(*) as count FROM entry_files WHERE created_at >= ? AND mime_type LIKE 'image/%'`,
-    [weekStart]
+    `SELECT COUNT(*) as count FROM entry_files
+      WHERE created_at >= ? AND mime_type LIKE 'image/%'
+        AND entry_id IN (SELECT e.id FROM diary_entries e JOIN projects p ON p.id = e.project_id WHERE p.org_id = ?)`,
+    [weekStart, orgId]
   );
   const delaysRow = await queryOne<{ count: number }>(
     env.DB,
-    `SELECT COUNT(*) as count FROM entry_delays WHERE created_at >= ?`,
-    [weekStart]
+    `SELECT COUNT(*) as count FROM entry_delays
+      WHERE created_at >= ?
+        AND entry_id IN (SELECT e.id FROM diary_entries e JOIN projects p ON p.id = e.project_id WHERE p.org_id = ?)`,
+    [weekStart, orgId]
   );
 
   stats = {
@@ -67,7 +75,7 @@ try {
             : 'No active projects yet'}
         </p>
       </div>
-      {user?.role === 'admin' && (
+      {canManageProjects && (
         <NewProjectButton client:load />
       )}
     </div>

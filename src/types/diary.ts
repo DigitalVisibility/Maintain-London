@@ -11,10 +11,39 @@ export interface User {
   updatedAt: string;
 }
 
+/** A tenant: one business running on the platform. */
+export interface Organisation {
+  id: string;
+  name: string;
+  slug?: string;
+  brand_color: string;
+  logo_url?: string;
+  email_from?: string;
+  created_at: string;
+}
+
+/** Which user belongs to which org, and their role in that org. */
+export interface Membership {
+  id: string;
+  user_id: string;
+  org_id: string;
+  role: UserRole | 'owner';
+  created_at: string;
+}
+
+/** A membership joined with its organisation (for switchers/resolution). */
+export interface MembershipWithOrg extends Membership {
+  org_name: string;
+  org_slug?: string;
+  brand_color: string;
+  logo_url?: string;
+}
+
 export type ProjectStatus = 'active' | 'completed' | 'on_hold';
 
 export interface Project {
   id: string;
+  org_id?: string;
   name: string;
   address: string;
   postcode: string;

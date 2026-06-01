@@ -1,21 +1,24 @@
 import type { APIRoute } from 'astro';
-import { createAuth } from '../../../lib/auth';
 import { queryAll, execute, generateId, now } from '../../../lib/db';
 import { geocodePostcode } from '../../../lib/geocode';
+import { can } from '../../../lib/capabilities';
 import type { Project } from '../../../types/diary';
 
 export const prerender = false;
 
-/** GET /api/projects — list all projects */
-export const GET: APIRoute = async ({ locals, request }) => {
+/** GET /api/projects — list projects in the active organisation */
+export const GET: APIRoute = async ({ locals }) => {
   const { env } = locals.runtime;
-  const auth = createAuth(env.DB, env.BETTER_AUTH_SECRET, env.BETTER_AUTH_URL);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return new Response('Unauthorized', { status: 401 });
+  const user = locals.user;
+  if (!user) return new Response('Unauthorized', { status: 401 });
+
+  const orgId = locals.org?.id;
+  if (!orgId) return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } });
 
   const projects = await queryAll<Project>(
     env.DB,
-    'SELECT * FROM projects ORDER BY updated_at DESC'
+    'SELECT * FROM projects WHERE org_id = ? ORDER BY updated_at DESC',
+    [orgId]
   );
 
   return new Response(JSON.stringify(projects), {
@@ -23,13 +26,20 @@ export const GET: APIRoute = async ({ locals, request }) => {
   });
 };
 
-/** POST /api/projects — create a new project (admin only) */
+/** POST /api/projects — create a new project in the active organisation */
 export const POST: APIRoute = async ({ locals, request }) => {
   const { env } = locals.runtime;
-  const auth = createAuth(env.DB, env.BETTER_AUTH_SECRET, env.BETTER_AUTH_URL);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return new Response('Unauthorized', { status: 401 });
-  if (session.user.role !== 'admin') return new Response('Forbidden', { status: 403 });
+  const user = locals.user;
+  if (!user) return new Response('Unauthorized', { status: 401 });
+  if (!can(locals.role, 'manage_projects')) return new Response('Forbidden', { status: 403 });
+
+  const orgId = locals.org?.id;
+  if (!orgId) {
+    return new Response(JSON.stringify({ error: 'No active organisation' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   const body = await request.json() as Partial<Project>;
   if (!body.name || !body.address || !body.postcode) {
@@ -48,10 +58,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
   await execute(
     env.DB,
-    `INSERT INTO projects (id, name, address, postcode, lat, lng, client_name, client_email, status, created_by, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO projects (id, org_id, name, address, postcode, lat, lng, client_name, client_email, status, created_by, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
+      orgId,
       body.name,
       body.address,
       body.postcode,
@@ -60,7 +71,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
       body.client_name ?? null,
       body.client_email ?? null,
       body.status ?? 'active',
-      session.user.id,
+      user.id,
       timestamp,
       timestamp,
     ]

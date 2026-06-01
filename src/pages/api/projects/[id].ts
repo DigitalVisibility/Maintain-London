@@ -1,24 +1,25 @@
 import type { APIRoute } from 'astro';
-import { createAuth } from '../../../lib/auth';
 import { queryOne, execute, now } from '../../../lib/db';
 import { geocodePostcode } from '../../../lib/geocode';
+import { can } from '../../../lib/capabilities';
 import type { Project } from '../../../types/diary';
 
 export const prerender = false;
 
-/** GET /api/projects/:id — get single project */
-export const GET: APIRoute = async ({ params, locals, request }) => {
+/** Load a project only if it belongs to the request's active org. */
+async function loadOwnedProject(env: any, id: string | undefined, orgId: string | undefined) {
+  if (!id || !orgId) return null;
+  const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+  if (!project || project.org_id !== orgId) return null;
+  return project;
+}
+
+/** GET /api/projects/:id — get single project (within the active org) */
+export const GET: APIRoute = async ({ params, locals }) => {
   const { env } = locals.runtime;
-  const auth = createAuth(env.DB, env.BETTER_AUTH_SECRET, env.BETTER_AUTH_URL);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return new Response('Unauthorized', { status: 401 });
+  if (!locals.user) return new Response('Unauthorized', { status: 401 });
 
-  const project = await queryOne<Project>(
-    env.DB,
-    'SELECT * FROM projects WHERE id = ?',
-    [params.id]
-  );
-
+  const project = await loadOwnedProject(env, params.id, locals.org?.id);
   if (!project) return new Response('Not found', { status: 404 });
 
   return new Response(JSON.stringify(project), {
@@ -26,19 +27,13 @@ export const GET: APIRoute = async ({ params, locals, request }) => {
   });
 };
 
-/** PUT /api/projects/:id — update project (admin only) */
+/** PUT /api/projects/:id — update project */
 export const PUT: APIRoute = async ({ params, locals, request }) => {
   const { env } = locals.runtime;
-  const auth = createAuth(env.DB, env.BETTER_AUTH_SECRET, env.BETTER_AUTH_URL);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return new Response('Unauthorized', { status: 401 });
-  if (session.user.role !== 'admin') return new Response('Forbidden', { status: 403 });
+  if (!locals.user) return new Response('Unauthorized', { status: 401 });
+  if (!can(locals.role, 'manage_projects')) return new Response('Forbidden', { status: 403 });
 
-  const existing = await queryOne<Project>(
-    env.DB,
-    'SELECT * FROM projects WHERE id = ?',
-    [params.id]
-  );
+  const existing = await loadOwnedProject(env, params.id, locals.org?.id);
   if (!existing) return new Response('Not found', { status: 404 });
 
   const body = await request.json() as Partial<Project>;
@@ -84,13 +79,14 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
   });
 };
 
-/** DELETE /api/projects/:id — delete project (admin only) */
-export const DELETE: APIRoute = async ({ params, locals, request }) => {
+/** DELETE /api/projects/:id — delete project */
+export const DELETE: APIRoute = async ({ params, locals }) => {
   const { env } = locals.runtime;
-  const auth = createAuth(env.DB, env.BETTER_AUTH_SECRET, env.BETTER_AUTH_URL);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return new Response('Unauthorized', { status: 401 });
-  if (session.user.role !== 'admin') return new Response('Forbidden', { status: 403 });
+  if (!locals.user) return new Response('Unauthorized', { status: 401 });
+  if (!can(locals.role, 'manage_projects')) return new Response('Forbidden', { status: 403 });
+
+  const existing = await loadOwnedProject(env, params.id, locals.org?.id);
+  if (!existing) return new Response('Not found', { status: 404 });
 
   await execute(env.DB, 'DELETE FROM projects WHERE id = ?', [params.id]);
 
