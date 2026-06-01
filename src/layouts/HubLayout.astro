@@ -4,7 +4,7 @@ import '@fontsource/plus-jakarta-sans/latin-400.css';
 import '@fontsource/plus-jakarta-sans/latin-600.css';
 import '@fontsource/plus-jakarta-sans/latin-700.css';
 import OfflineBanner from '../components/project-hub/OfflineBanner';
-import { can } from '../lib/capabilities';
+import { hasCap } from '../lib/capabilities';
 
 interface Props {
   title: string;
@@ -21,8 +21,8 @@ const orgName = org?.name ?? 'Maintain London';
 const orgLogo = org?.logo_url || '/images/Icons/Stacked.png';
 const brandColor = org?.brand_color || '#AEDE4A';
 const orgRole = Astro.locals.role ?? user?.role ?? 'operative';
-const canManageUsers = can(orgRole, 'manage_users');
-const canViewCosts = can(orgRole, 'view_costs');
+const canManageUsers = hasCap(Astro.locals, 'manage_users');
+const canViewCosts = hasCap(Astro.locals, 'view_costs');
 ---
 
 <!doctype html>

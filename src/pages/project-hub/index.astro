@@ -3,14 +3,14 @@ export const prerender = false;
 
 import HubLayout from '../../layouts/HubLayout.astro';
 import { queryAll, queryOne } from '../../lib/db';
-import { can } from '../../lib/capabilities';
+import { hasCap } from '../../lib/capabilities';
 import type { Project } from '../../types/diary';
 import NewProjectButton from '../../components/project-hub/NewProjectButton';
 
 const { env } = Astro.locals.runtime;
 const user = Astro.locals.user;
 const orgId = Astro.locals.org?.id ?? '';
-const canManageProjects = can(Astro.locals.role, 'manage_projects');
+const canManageProjects = hasCap(Astro.locals, 'manage_projects');
 
 // Fetch active projects for the active organisation
 let projects: Project[] = [];

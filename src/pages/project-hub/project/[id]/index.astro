@@ -3,7 +3,7 @@ export const prerender = false;
 
 import HubLayout from '../../../../layouts/HubLayout.astro';
 import { queryOne, queryAll } from '../../../../lib/db';
-import { can } from '../../../../lib/capabilities';
+import { hasCap } from '../../../../lib/capabilities';
 import type { Project, DiaryEntry } from '../../../../types/diary';
 import EditProjectButton from '../../../../components/project-hub/EditProjectButton';
 import ApprovalsPanel from '../../../../components/project-hub/ApprovalsPanel';
@@ -14,10 +14,10 @@ const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
 const user = Astro.locals.user;
 const orgId = Astro.locals.org?.id;
-const canManageProjects = can(Astro.locals.role, 'manage_projects');
-const canRequestWorks = can(Astro.locals.role, 'request_works');
-const canApproveWorks = can(Astro.locals.role, 'approve_works');
-const canClock = can(Astro.locals.role, 'clock_time');
+const canManageProjects = hasCap(Astro.locals, 'manage_projects');
+const canRequestWorks = hasCap(Astro.locals, 'request_works');
+const canApproveWorks = hasCap(Astro.locals, 'approve_works');
+const canClock = hasCap(Astro.locals, 'clock_time');
 
 const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
 if (!project || project.org_id !== orgId) return Astro.redirect('/project-hub/');

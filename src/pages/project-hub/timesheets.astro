@@ -3,9 +3,9 @@ export const prerender = false;
 
 import HubLayout from '../../layouts/HubLayout.astro';
 import Timesheets from '../../components/project-hub/Timesheets';
-import { can } from '../../lib/capabilities';
+import { hasCap } from '../../lib/capabilities';
 
-if (!can(Astro.locals.role, 'view_costs')) {
+if (!hasCap(Astro.locals, 'view_costs')) {
   return Astro.redirect('/project-hub/');
 }
 ---

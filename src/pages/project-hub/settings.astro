@@ -2,8 +2,11 @@
 export const prerender = false;
 
 import HubLayout from '../../layouts/HubLayout.astro';
+import RoleAccess from '../../components/project-hub/RoleAccess';
+import { hasCap } from '../../lib/capabilities';
 
 const user = Astro.locals.user;
+const canManageUsers = hasCap(Astro.locals, 'manage_users');
 ---
 
 <HubLayout title="Settings">
@@ -67,6 +70,13 @@ const user = Astro.locals.user;
         Install Project Hub
       </button>
     </div>
+
+    <!-- Role access (managers/owners) -->
+    {canManageUsers && (
+      <div class="mb-6">
+        <RoleAccess client:load />
+      </div>
+    )}
 
     <!-- Danger Zone -->
     <div class="bg-white rounded-lg shadow-sm border border-red-200 p-5">

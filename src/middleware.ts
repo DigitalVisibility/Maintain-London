@@ -1,6 +1,8 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createAuth } from './lib/auth';
 import { resolveActiveOrg, ACTIVE_ORG_COOKIE } from './lib/org';
+import { effectiveCapabilities, type CapabilityOverride } from './lib/capabilities';
+import { queryAll } from './lib/db';
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
@@ -51,6 +53,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
       context.locals.org = resolved.org;
       context.locals.role = resolved.role;
       context.locals.memberships = resolved.memberships;
+
+      // Effective capabilities = defaults + this org's role overrides.
+      const overrides = await queryAll<CapabilityOverride>(
+        env.DB,
+        'SELECT role, capability, enabled FROM role_capabilities WHERE org_id = ?',
+        [resolved.org.id]
+      ).catch(() => [] as CapabilityOverride[]);
+      context.locals.capabilities = effectiveCapabilities(resolved.role, overrides);
     }
   }
 

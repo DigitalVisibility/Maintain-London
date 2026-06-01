@@ -17,5 +17,7 @@ declare namespace App {
     role?: string | null;
     /** All orgs the user belongs to (for the org switcher). */
     memberships?: import('./types/diary').MembershipWithOrg[];
+    /** Effective capabilities for the user in the active org (defaults + overrides). */
+    capabilities?: string[];
   }
 }

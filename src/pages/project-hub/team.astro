@@ -3,10 +3,10 @@ export const prerender = false;
 
 import HubLayout from '../../layouts/HubLayout.astro';
 import TeamManager from '../../components/project-hub/TeamManager';
-import { can } from '../../lib/capabilities';
+import { hasCap } from '../../lib/capabilities';
 
 // Only people who can manage users may see this page.
-if (!can(Astro.locals.role, 'manage_users')) {
+if (!hasCap(Astro.locals, 'manage_users')) {
   return Astro.redirect('/project-hub/');
 }
 ---

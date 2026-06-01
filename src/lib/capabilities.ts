@@ -58,3 +58,28 @@ export function capabilitiesFor(role: string | undefined | null): Capability[] {
   if (!role || !(role in ROLE_CAPABILITIES)) return [];
   return ROLE_CAPABILITIES[role as Role];
 }
+
+export const ALL_CAPABILITIES = ALL;
+
+/** A per-org override of a role's capability (deviation from the defaults). */
+export interface CapabilityOverride { role: string; capability: string; enabled: number; }
+
+/**
+ * Effective capabilities for a role = built-in defaults, with the org's
+ * overrides applied (enabled=1 adds, enabled=0 removes).
+ */
+export function effectiveCapabilities(role: string | undefined | null, overrides: CapabilityOverride[] = []): Capability[] {
+  const set = new Set<Capability>(capabilitiesFor(role));
+  for (const o of overrides) {
+    if (o.role !== role) continue;
+    if (o.enabled) set.add(o.capability as Capability);
+    else set.delete(o.capability as Capability);
+  }
+  return [...set];
+}
+
+/** Capability check against an already-resolved effective list (with fallback to defaults). */
+export function hasCap(locals: { capabilities?: string[]; role?: string | null }, capability: Capability): boolean {
+  if (locals.capabilities) return locals.capabilities.includes(capability);
+  return can(locals.role, capability);
+}
