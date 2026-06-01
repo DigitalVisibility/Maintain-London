@@ -193,10 +193,17 @@ export async function processQueue(): Promise<{ synced: number; failed: number }
       if (res.ok) {
         await removeSyncItem(item.id);
         synced++;
+      } else if (res.status >= 400 && res.status < 500) {
+        // Client error (conflict, validation, auth) — retrying will never
+        // succeed, so drop it from the queue rather than looping forever.
+        await removeSyncItem(item.id);
+        failed++;
       } else {
+        // Server (5xx) / transient — keep it queued for a later retry.
         failed++;
       }
     } catch {
+      // Network failure — keep it queued.
       failed++;
     }
   }

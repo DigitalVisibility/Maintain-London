@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '@nanostores/react';
 import PersonnelManager from './PersonnelManager';
 import ActivityTable from './ActivityTable';
@@ -127,7 +127,10 @@ function Section({
   );
 }
 
-export default function DiaryForm({ projectId, project, entryId, initialData, initialFiles, suppliers, userName, yesterdayData }: Props) {
+export default function DiaryForm({ projectId, project, entryId: initialEntryId, initialData, initialFiles, suppliers, userName, yesterdayData }: Props) {
+  // Tracked in state so that once a brand-new entry is created (incl. via
+  // auto-save) we switch to editing it instead of re-creating duplicates.
+  const [entryId, setEntryId] = useState<string | undefined>(initialEntryId);
   const isEdit = !!entryId;
   const [files, setFiles] = useState<EntryFile[]>(initialFiles ?? []);
   const isOnline = useStore($isOnline);
@@ -159,14 +162,17 @@ export default function DiaryForm({ projectId, project, entryId, initialData, in
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
-  // Auto-save draft every 30 seconds
+  // Auto-save draft every 30 seconds. Use a ref so the interval always calls
+  // the latest handleSave (which knows the current entryId) — otherwise a stale
+  // closure would keep POSTing a new entry that already exists (409 loop).
+  const handleSaveRef = useRef<(isAutoSave?: boolean) => void>();
   useEffect(() => {
     if (form.status !== 'draft') return;
     const timer = setInterval(() => {
-      handleSave(true);
+      handleSaveRef.current?.(true);
     }, 30000);
     return () => clearInterval(timer);
-  }, [form]);
+  }, [form.status]);
 
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -285,26 +291,42 @@ export default function DiaryForm({ projectId, project, entryId, initialData, in
 
     // Online: save directly
     try {
-      const res = await fetch(url, {
+      let res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to save');
+      // Creating but an entry for this project+date already exists → adopt it
+      // and update it instead of erroring/duplicating.
+      if (!isEdit && res.status === 409) {
+        const existingId = await findExistingEntryId(form.date);
+        if (existingId) {
+          res = await fetch(`/api/entries/${existingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) adoptEntry(existingId);
+        }
       }
 
-      const data = await res.json();
-      setSaveStatus('saved');
-
-      if (!isEdit && !isAutoSave) {
-        // Redirect to the new entry
-        window.location.href = `/project-hub/project/${projectId}/diary/${data.id}`;
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveStatus('saved');
+        // First successful create → switch to edit mode so we stop re-creating.
+        if (!isEdit && data?.id) adoptEntry(data.id);
+      } else {
+        // The server received the request and rejected it (validation, conflict,
+        // permissions). Retrying won't help, so do NOT queue it offline.
+        setSaveStatus('error');
+        if (!isAutoSave) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || 'Failed to save entry');
+        }
       }
     } catch (err: any) {
-      // Network error — queue for later
+      // True network failure (fetch threw) — queue for background sync.
       try {
         const queueId = entryId || `offline-${Date.now()}`;
         await queueEntrySave(queueId, url, method, payload);
@@ -322,6 +344,31 @@ export default function DiaryForm({ projectId, project, entryId, initialData, in
       setSaving(false);
     }
   }
+
+  // Switch the form into "edit" mode for a now-persisted entry and keep the URL
+  // in sync so a refresh re-opens the same entry rather than the blank /new page.
+  function adoptEntry(id: string) {
+    setEntryId(id);
+    if (typeof window !== 'undefined' && window.location.pathname.endsWith('/diary/new')) {
+      window.history.replaceState({}, '', `/project-hub/project/${projectId}/diary/${id}`);
+    }
+  }
+
+  // Find an existing entry id for this project on a given date (for the
+  // one-entry-per-day conflict case).
+  async function findExistingEntryId(date: string): Promise<string | null> {
+    try {
+      const res = await fetch(`/api/entries?project_id=${projectId}`);
+      if (!res.ok) return null;
+      const list = await res.json();
+      return Array.isArray(list) ? (list.find((e: any) => e.date === date)?.id ?? null) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Keep the auto-save interval pointed at the latest handleSave closure.
+  handleSaveRef.current = handleSave;
 
   function copyYesterday() {
     if (!yesterdayData) return;
