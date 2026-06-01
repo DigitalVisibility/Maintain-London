@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createAuth } from '../../../lib/auth';
 import { queryOne, execute, now } from '../../../lib/db';
+import { geocodePostcode } from '../../../lib/geocode';
 import type { Project } from '../../../types/diary';
 
 export const prerender = false;
@@ -43,6 +44,21 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
   const body = await request.json() as Partial<Project>;
   const timestamp = now();
 
+  const newPostcode = body.postcode ?? existing.postcode;
+  const postcodeChanged = !!body.postcode && body.postcode.trim() !== existing.postcode?.trim();
+
+  // Re-geocode if the postcode changed, or if coordinates were never set.
+  // Explicit lat/lng in the request body still win, if provided.
+  let lat = body.lat ?? existing.lat ?? null;
+  let lng = body.lng ?? existing.lng ?? null;
+  if (body.lat == null && body.lng == null && (postcodeChanged || existing.lat == null || existing.lng == null)) {
+    const geo = await geocodePostcode(newPostcode);
+    if (geo) {
+      lat = geo.lat;
+      lng = geo.lng;
+    }
+  }
+
   await execute(
     env.DB,
     `UPDATE projects SET
@@ -52,9 +68,9 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
     [
       body.name ?? existing.name,
       body.address ?? existing.address,
-      body.postcode ?? existing.postcode,
-      body.lat ?? existing.lat ?? null,
-      body.lng ?? existing.lng ?? null,
+      newPostcode,
+      lat,
+      lng,
       body.client_name ?? existing.client_name ?? null,
       body.client_email ?? existing.client_email ?? null,
       body.status ?? existing.status,

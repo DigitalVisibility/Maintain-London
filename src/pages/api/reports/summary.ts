@@ -22,6 +22,8 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const projectId = url.searchParams.get('project_id');
   const type = url.searchParams.get('type') || 'daily';
+  // audience=client → only released entries, filtered to client-visible content
+  const clientOnly = url.searchParams.get('audience') === 'client';
 
   if (!projectId) {
     return Response.json({ error: 'project_id is required' }, { status: 400 });
@@ -43,7 +45,14 @@ export const GET: APIRoute = async ({ locals, url }) => {
       return Response.json({ error: 'Entry not found' }, { status: 404 });
     }
 
-    const html = generateEntryReportHTML(entry, project);
+    if (clientOnly && entry.client_released !== 1) {
+      return Response.json(
+        { error: 'This entry has not been released to the client yet.' },
+        { status: 403 }
+      );
+    }
+
+    const html = generateEntryReportHTML(entry, project, { clientOnly });
     return new Response(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
@@ -71,9 +80,20 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     // Load full data for each entry
     const fullEntries = await Promise.all(entries.map((e) => loadFullEntry(env.DB, e.id)));
-    const validEntries = fullEntries.filter((e): e is DiaryEntryFull => e !== null);
+    let validEntries = fullEntries.filter((e): e is DiaryEntryFull => e !== null);
 
-    const html = generateWeeklyReportHTML(validEntries, project, weekOf);
+    // For client reports, only include days that have been released.
+    if (clientOnly) {
+      validEntries = validEntries.filter((e) => e.client_released === 1);
+      if (validEntries.length === 0) {
+        return Response.json(
+          { error: 'No entries for this week have been released to the client yet.' },
+          { status: 403 }
+        );
+      }
+    }
+
+    const html = generateWeeklyReportHTML(validEntries, project, weekOf, { clientOnly });
     return new Response(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });

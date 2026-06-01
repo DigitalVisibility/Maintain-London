@@ -2,6 +2,7 @@ interface DelayItem {
   task: string;
   reason: string;
   hours_lost: number | '';
+  client_visible?: boolean;
 }
 
 interface Props {

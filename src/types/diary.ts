@@ -45,6 +45,12 @@ export interface DiaryEntry {
   weather_icon?: string;
   notes?: string;
   status: EntryStatus;
+  /** 1 once the day has been vetted & released for the client to see */
+  client_released?: number;
+  client_released_at?: string;
+  /** Per-field client visibility for the entry header (0 = hidden) */
+  weather_visible?: number;
+  notes_visible?: number;
   created_at: string;
   updated_at: string;
   synced_at?: string;
@@ -59,6 +65,7 @@ export interface EntryPersonnel {
   role: PersonnelRole;
   hours?: number;
   company?: string;
+  client_visible?: number;
   created_at: string;
 }
 
@@ -70,6 +77,7 @@ export interface EntryActivity {
   task: string;
   description?: string;
   status: ActivityStatus;
+  client_visible?: number;
   created_at: string;
 }
 
@@ -79,6 +87,7 @@ export interface EntryDelay {
   task: string;
   reason: string;
   hours_lost?: number;
+  client_visible?: number;
   created_at: string;
 }
 
@@ -87,6 +96,7 @@ export interface EntryVariation {
   entry_id: string;
   description: string;
   hours_required?: number;
+  client_visible?: number;
   created_at: string;
 }
 
@@ -96,6 +106,7 @@ export interface EntryMaterialRequired {
   supplier: string;
   items: string;
   date_required?: string;
+  client_visible?: number;
   created_at: string;
 }
 
@@ -104,6 +115,7 @@ export interface EntryEquipmentHire {
   entry_id: string;
   equipment: string;
   supplier: string;
+  client_visible?: number;
   created_at: string;
 }
 
@@ -112,6 +124,7 @@ export interface EntryDelivery {
   entry_id: string;
   supplier: string;
   notes?: string;
+  client_visible?: number;
   created_at: string;
 }
 
@@ -127,6 +140,7 @@ export interface EntryFile {
   size_bytes?: number;
   caption?: string;
   linked_to?: string;
+  client_visible?: number;
   created_at: string;
 }
 

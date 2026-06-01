@@ -27,6 +27,29 @@ export const GET: APIRoute = async ({ locals, params }) => {
   return new Response(object.body, { headers });
 };
 
+/** PATCH /api/photos/{r2Key} — update file metadata (currently client visibility) */
+export const PATCH: APIRoute = async ({ locals, params, request }) => {
+  const { env } = locals.runtime;
+  const user = locals.user;
+  if (!user) return new Response('Unauthorized', { status: 401 });
+
+  const key = params.key;
+  if (!key) return Response.json({ error: 'Key is required' }, { status: 400 });
+
+  const body = await request.json().catch(() => ({})) as { client_visible?: boolean | number };
+  if (body.client_visible === undefined) {
+    return Response.json({ error: 'client_visible is required' }, { status: 400 });
+  }
+
+  await execute(
+    env.DB,
+    'UPDATE entry_files SET client_visible = ? WHERE r2_key = ?',
+    [body.client_visible ? 1 : 0, key]
+  );
+
+  return Response.json({ status: 'updated', client_visible: body.client_visible ? 1 : 0 });
+};
+
 /** DELETE /api/photos/{r2Key} — delete a file from R2 and D1 */
 export const DELETE: APIRoute = async ({ locals, params }) => {
   const { env } = locals.runtime;

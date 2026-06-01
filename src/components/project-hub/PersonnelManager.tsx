@@ -5,6 +5,7 @@ interface PersonnelItem {
   role: PersonnelRole;
   hours: number | '';
   company: string;
+  client_visible?: boolean;
 }
 
 interface Props {

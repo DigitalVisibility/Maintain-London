@@ -33,8 +33,38 @@ function weatherEmoji(condition: string): string {
   return map[condition?.toLowerCase()] || '🌤️';
 }
 
+/** Report generation options */
+export interface ReportOptions {
+  /** When true, include ONLY items/photos the user has marked client-visible. */
+  clientOnly?: boolean;
+}
+
+/**
+ * Return a copy of an entry filtered to client-visible content only.
+ * Sub-items and files marked client_visible = 1 are kept; weather and notes
+ * are kept only when their entry-level visibility flag is set.
+ */
+function clientFilterEntry(entry: DiaryEntryFull): DiaryEntryFull {
+  const visible = <T extends { client_visible?: number }>(rows: T[]) =>
+    rows.filter((r) => r.client_visible === 1);
+  return {
+    ...entry,
+    personnel: visible(entry.personnel),
+    activities: visible(entry.activities),
+    delays: visible(entry.delays),
+    variations: visible(entry.variations),
+    materials_required: visible(entry.materials_required),
+    equipment_hire: visible(entry.equipment_hire),
+    deliveries: visible(entry.deliveries),
+    files: visible(entry.files),
+    weather_condition: entry.weather_visible === 1 ? entry.weather_condition : undefined,
+    notes: entry.notes_visible === 1 ? entry.notes : undefined,
+  };
+}
+
 /** Generate HTML for a single diary entry report */
-export function generateEntryReportHTML(entry: DiaryEntryFull, project: Project): string {
+export function generateEntryReportHTML(entryInput: DiaryEntryFull, project: Project, options: ReportOptions = {}): string {
+  const entry = options.clientOnly ? clientFilterEntry(entryInput) : entryInput;
   const operatives = entry.personnel.filter((p) => p.role === 'operative');
   const visitors = entry.personnel.filter((p) => p.role === 'visitor');
   const totalHours = operatives.reduce((sum, p) => sum + (p.hours || 0), 0);
@@ -255,7 +285,8 @@ export function generateEntryReportHTML(entry: DiaryEntryFull, project: Project)
 }
 
 /** Generate HTML for a weekly summary report (multiple entries) */
-export function generateWeeklyReportHTML(entries: DiaryEntryFull[], project: Project, weekOf: string): string {
+export function generateWeeklyReportHTML(entriesInput: DiaryEntryFull[], project: Project, weekOf: string, options: ReportOptions = {}): string {
+  const entries = options.clientOnly ? entriesInput.map(clientFilterEntry) : entriesInput;
   const totalOperativeHours = entries.reduce(
     (sum, e) => sum + e.personnel.filter((p) => p.role === 'operative').reduce((s, p) => s + (p.hours || 0), 0),
     0

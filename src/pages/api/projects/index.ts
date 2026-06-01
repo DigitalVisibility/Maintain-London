@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createAuth } from '../../../lib/auth';
 import { queryAll, execute, generateId, now } from '../../../lib/db';
+import { geocodePostcode } from '../../../lib/geocode';
 import type { Project } from '../../../types/diary';
 
 export const prerender = false;
@@ -41,6 +42,10 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const id = generateId();
   const timestamp = now();
 
+  // Auto-geocode the postcode so weather can auto-populate. If the lookup
+  // fails (bad postcode / service down) we store nulls and carry on.
+  const geo = await geocodePostcode(body.postcode);
+
   await execute(
     env.DB,
     `INSERT INTO projects (id, name, address, postcode, lat, lng, client_name, client_email, status, created_by, created_at, updated_at)
@@ -50,8 +55,8 @@ export const POST: APIRoute = async ({ locals, request }) => {
       body.name,
       body.address,
       body.postcode,
-      body.lat ?? null,
-      body.lng ?? null,
+      body.lat ?? geo?.lat ?? null,
+      body.lng ?? geo?.lng ?? null,
       body.client_name ?? null,
       body.client_email ?? null,
       body.status ?? 'active',

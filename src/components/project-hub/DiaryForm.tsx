@@ -16,22 +16,26 @@ import { queueEntrySave, requestEntrySync, getSyncQueueCount } from '../../lib/o
 interface VariationItem {
   description: string;
   hours_required: number | '';
+  client_visible?: boolean;
 }
 
 interface MaterialItem {
   supplier: string;
   items: string;
   date_required: string;
+  client_visible?: boolean;
 }
 
 interface EquipmentItem {
   equipment: string;
   supplier: string;
+  client_visible?: boolean;
 }
 
 interface DeliveryItem {
   supplier: string;
   notes: string;
+  client_visible?: boolean;
 }
 
 interface FormData {
@@ -53,6 +57,9 @@ interface FormData {
   weather_humidity: number | null;
   weather_condition: string | null;
   weather_icon: string | null;
+  client_released: boolean;
+  weather_visible: boolean;
+  notes_visible: boolean;
 }
 
 interface Props {
@@ -144,6 +151,9 @@ export default function DiaryForm({ projectId, project, entryId, initialData, in
     weather_humidity: initialData?.weather_humidity ?? null,
     weather_condition: initialData?.weather_condition ?? null,
     weather_icon: initialData?.weather_icon ?? null,
+    client_released: initialData?.client_released ?? false,
+    weather_visible: initialData?.weather_visible ?? false,
+    notes_visible: initialData?.notes_visible ?? false,
   });
 
   const [saving, setSaving] = useState(false);
@@ -161,6 +171,69 @@ export default function DiaryForm({ projectId, project, entryId, initialData, in
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setSaveStatus('idle');
+  }
+
+  // ── Client-visibility (vetting) helpers ──
+  // Item arrays in form state that support per-item client visibility.
+  type VisibleArrayKey =
+    | 'personnel' | 'activities' | 'delays' | 'variations'
+    | 'materials_required' | 'equipment_hire' | 'deliveries';
+
+  function toggleItemVisible(field: VisibleArrayKey, index: number) {
+    setForm((prev) => {
+      const arr = [...(prev[field] as { client_visible?: boolean }[])];
+      arr[index] = { ...arr[index], client_visible: !arr[index].client_visible };
+      return { ...prev, [field]: arr } as FormData;
+    });
+    setSaveStatus('idle');
+  }
+
+  function setAllItemsVisible(visible: boolean) {
+    const keys: VisibleArrayKey[] = [
+      'personnel', 'activities', 'delays', 'variations',
+      'materials_required', 'equipment_hire', 'deliveries',
+    ];
+    setForm((prev) => {
+      const next = { ...prev };
+      for (const k of keys) {
+        next[k] = (prev[k] as { client_visible?: boolean }[]).map((item) => ({
+          ...item,
+          client_visible: visible,
+        })) as any;
+      }
+      next.weather_visible = visible && prev.weather_condition !== null;
+      next.notes_visible = visible && !!prev.notes;
+      return next;
+    });
+    // Photos are persisted separately — flip them all too.
+    files.forEach((f) => {
+      if (f.mime_type.startsWith('image/') && !!f.client_visible !== visible) {
+        togglePhotoVisible(f);
+      }
+    });
+    setSaveStatus('idle');
+  }
+
+  // Photos aren't part of the form save (they use the upload/delete API),
+  // so their visibility flag is persisted immediately via PATCH.
+  async function togglePhotoVisible(file: EntryFile) {
+    const next = !file.client_visible;
+    setFiles((prev) =>
+      prev.map((f) => (f.id === file.id ? { ...f, client_visible: next ? 1 : 0 } : f))
+    );
+    try {
+      const res = await fetch(`/api/photos/${encodeURIComponent(file.r2_key)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_visible: next }),
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch {
+      // Revert on failure
+      setFiles((prev) =>
+        prev.map((f) => (f.id === file.id ? { ...f, client_visible: next ? 0 : 1 } : f))
+      );
+    }
   }
 
   const handleWeatherLoaded = useCallback((data: WeatherData) => {
@@ -287,6 +360,39 @@ export default function DiaryForm({ projectId, project, entryId, initialData, in
   const equipmentSuppliers = suppliers.filter((s) =>
     ['HSS Hire', 'Sunbelt Rentals', 'Speedy Hire', 'Brandon Hire Station'].includes(s) || true
   );
+
+  // ── Vetting panel data ──
+  const imageFiles = files.filter((f) => f.mime_type.startsWith('image/'));
+  const vettingCats: {
+    key: VisibleArrayKey;
+    label: string;
+    isFilled: (item: any) => boolean;
+    describe: (item: any) => string;
+  }[] = [
+    { key: 'personnel', label: 'Personnel', isFilled: (p) => !!p.name?.trim(),
+      describe: (p) => `${p.name}${p.role === 'visitor' ? ' — visitor' : p.hours ? ` — ${p.hours}h` : ''}` },
+    { key: 'activities', label: 'Activities', isFilled: (a) => !!a.task?.trim(),
+      describe: (a) => a.task },
+    { key: 'delays', label: 'Delays', isFilled: (d) => !!d.task?.trim() && !!d.reason?.trim(),
+      describe: (d) => `${d.task} — ${d.reason}` },
+    { key: 'variations', label: 'Variations', isFilled: (v) => !!v.description?.trim(),
+      describe: (v) => v.description },
+    { key: 'materials_required', label: 'Materials Required', isFilled: (m) => !!m.supplier && !!m.items?.trim(),
+      describe: (m) => `${m.items} (${m.supplier})` },
+    { key: 'equipment_hire', label: 'Equipment Hire', isFilled: (e) => !!e.equipment?.trim() && !!e.supplier,
+      describe: (e) => `${e.equipment} (${e.supplier})` },
+    { key: 'deliveries', label: 'Deliveries', isFilled: (d) => !!d.supplier,
+      describe: (d) => `${d.supplier}${d.notes ? ` — ${d.notes}` : ''}` },
+  ];
+
+  const visibleCount =
+    vettingCats.reduce(
+      (sum, cat) => sum + (form[cat.key] as { client_visible?: boolean }[]).filter((i) => i.client_visible).length,
+      0
+    ) +
+    (form.weather_visible ? 1 : 0) +
+    (form.notes_visible ? 1 : 0) +
+    imageFiles.filter((f) => f.client_visible).length;
 
   return (
     <form
@@ -552,6 +658,136 @@ export default function DiaryForm({ projectId, project, entryId, initialData, in
           rows={4}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent resize-y"
         />
+      </Section>
+
+      {/* Client Visibility / Vetting */}
+      <Section
+        title="Client Visibility"
+        badge={visibleCount}
+        icon={
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7zM12 15a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+          </svg>
+        }
+      >
+        <p className="text-sm text-gray-500 mb-3">
+          Choose exactly what the client sees. Items are <strong>hidden by default</strong> — tick what you want to share,
+          then release the day. Nothing reaches the client until you release it, and you can change this any time.
+        </p>
+
+        {/* Master release toggle */}
+        <label className={`flex items-start gap-3 p-3 rounded-md border mb-4 cursor-pointer transition-colors ${form.client_released ? 'border-[#AEDE4A] bg-[#AEDE4A]/10' : 'border-gray-200 bg-gray-50'}`}>
+          <input
+            type="checkbox"
+            checked={form.client_released}
+            onChange={(e) => updateField('client_released', e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#83B81A] focus:ring-[#AEDE4A]"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-gray-900">Release this day to the client</span>
+            <span className="block text-xs text-gray-500">
+              {form.client_released
+                ? 'The ticked items below are visible in the client report.'
+                : 'While off, the client report for this day is blocked entirely.'}
+            </span>
+          </span>
+        </label>
+
+        {/* Quick actions */}
+        <div className="flex items-center gap-3 mb-4">
+          <button type="button" onClick={() => setAllItemsVisible(true)} className="text-xs font-medium text-[#83B81A] hover:underline">
+            Show everything
+          </button>
+          <span className="text-gray-300">|</span>
+          <button type="button" onClick={() => setAllItemsVisible(false)} className="text-xs font-medium text-gray-500 hover:underline">
+            Hide everything
+          </button>
+        </div>
+
+        {/* Entry-level fields */}
+        <div className="space-y-1 mb-3">
+          <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">Summary fields</div>
+          <label className="flex items-center gap-2 py-1 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={form.weather_visible}
+              disabled={form.weather_condition === null}
+              onChange={(e) => updateField('weather_visible', e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-[#83B81A] focus:ring-[#AEDE4A] disabled:opacity-40"
+            />
+            Weather {form.weather_condition === null && <span className="text-xs text-gray-400">(none recorded)</span>}
+          </label>
+          <label className="flex items-center gap-2 py-1 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={form.notes_visible}
+              disabled={!form.notes}
+              onChange={(e) => updateField('notes_visible', e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-[#83B81A] focus:ring-[#AEDE4A] disabled:opacity-40"
+            />
+            Notes {!form.notes && <span className="text-xs text-gray-400">(empty)</span>}
+          </label>
+        </div>
+
+        {/* Per-item checkboxes by category */}
+        {vettingCats.map((cat) => {
+          const rows = (form[cat.key] as any[])
+            .map((item, idx) => ({ item, idx }))
+            .filter(({ item }) => cat.isFilled(item));
+          if (rows.length === 0) return null;
+          return (
+            <div key={cat.key} className="space-y-1 mb-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">{cat.label}</div>
+              {rows.map(({ item, idx }) => (
+                <label key={idx} className="flex items-center gap-2 py-1 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={!!item.client_visible}
+                    onChange={() => toggleItemVisible(cat.key, idx)}
+                    className="h-4 w-4 rounded border-gray-300 text-[#83B81A] focus:ring-[#AEDE4A]"
+                  />
+                  <span className="truncate">{cat.describe(item)}</span>
+                </label>
+              ))}
+            </div>
+          );
+        })}
+
+        {/* Photos */}
+        <div className="space-y-2">
+          <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">Photos</div>
+          {!entryId ? (
+            <p className="text-sm text-gray-400 italic">Save this entry first to manage photo visibility.</p>
+          ) : imageFiles.length === 0 ? (
+            <p className="text-sm text-gray-400 italic">No photos uploaded.</p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {imageFiles.map((file) => (
+                <button
+                  type="button"
+                  key={file.id}
+                  onClick={() => togglePhotoVisible(file)}
+                  className={`relative aspect-square rounded-md overflow-hidden border-2 transition-colors ${file.client_visible ? 'border-[#AEDE4A]' : 'border-transparent opacity-60'}`}
+                  title={file.client_visible ? 'Visible to client — click to hide' : 'Hidden — click to show client'}
+                >
+                  <img
+                    src={`/api/photos/${encodeURIComponent(file.r2_key)}`}
+                    alt={file.caption || file.filename}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <span className={`absolute top-1 right-1 h-5 w-5 rounded-full flex items-center justify-center ${file.client_visible ? 'bg-[#AEDE4A] text-gray-900' : 'bg-gray-700/70 text-white'}`}>
+                    {file.client_visible ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg>
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </Section>
 
       {/* Save bar */}

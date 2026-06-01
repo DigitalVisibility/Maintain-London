@@ -9,6 +9,7 @@ type ReportType = 'daily' | 'weekly';
 
 export default function ReportPreview({ projectId, entries }: Props) {
   const [reportType, setReportType] = useState<ReportType>('daily');
+  const [audience, setAudience] = useState<'internal' | 'client'>('internal');
   const [selectedEntryId, setSelectedEntryId] = useState<string>(entries[0]?.id || '');
   const [weekOf, setWeekOf] = useState<string>(getLastMonday());
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,7 @@ export default function ReportPreview({ projectId, entries }: Props) {
     setReportHTML(null);
 
     const params = new URLSearchParams({ project_id: projectId, type: reportType });
+    if (audience === 'client') params.set('audience', 'client');
     if (reportType === 'daily') {
       params.set('entry_id', selectedEntryId);
     } else {
@@ -105,6 +107,36 @@ export default function ReportPreview({ projectId, entries }: Props) {
           >
             Weekly Summary
           </button>
+        </div>
+
+        {/* Audience selector */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Audience</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setAudience('internal'); setReportHTML(null); }}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                audience === 'internal' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Internal (full)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAudience('client'); setReportHTML(null); }}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                audience === 'client' ? 'bg-[#AEDE4A] text-gray-900' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Client (vetted only)
+            </button>
+          </div>
+          <p className="mt-1.5 text-xs text-gray-500">
+            {audience === 'client'
+              ? 'Shows only released days and the items/photos you ticked as client-visible. This is exactly what the client receives.'
+              : 'Full internal record — every item and photo, regardless of client visibility.'}
+          </p>
         </div>
 
         {/* Daily: select entry */}

@@ -47,38 +47,48 @@ const initialData = {
   weather_humidity: entry.weather_humidity,
   weather_condition: entry.weather_condition,
   weather_icon: entry.weather_icon,
+  client_released: entry.client_released === 1,
+  weather_visible: entry.weather_visible === 1,
+  notes_visible: entry.notes_visible === 1,
   personnel: personnel.map((p) => ({
     name: p.name,
     role: p.role,
     hours: p.hours ?? ('' as any),
     company: p.company ?? '',
+    client_visible: p.client_visible === 1,
   })),
   activities: activities.map((a) => ({
     task: a.task,
     description: a.description ?? '',
     status: a.status,
+    client_visible: a.client_visible === 1,
   })),
   delays: delays.map((d) => ({
     task: d.task,
     reason: d.reason,
     hours_lost: d.hours_lost ?? ('' as any),
+    client_visible: d.client_visible === 1,
   })),
   variations: variations.map((v) => ({
     description: v.description,
     hours_required: v.hours_required ?? ('' as any),
+    client_visible: v.client_visible === 1,
   })),
   materials_required: materials.map((m) => ({
     supplier: m.supplier,
     items: m.items,
     date_required: m.date_required ?? '',
+    client_visible: m.client_visible === 1,
   })),
   equipment_hire: equipment.map((e) => ({
     equipment: e.equipment,
     supplier: e.supplier,
+    client_visible: e.client_visible === 1,
   })),
   deliveries: deliveries.map((d) => ({
     supplier: d.supplier,
     notes: d.notes ?? '',
+    client_visible: d.client_visible === 1,
   })),
 };
 

@@ -4,6 +4,7 @@ interface ActivityItem {
   task: string;
   description: string;
   status: ActivityStatus;
+  client_visible?: boolean;
 }
 
 interface Props {
