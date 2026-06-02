@@ -1,7 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createAuth } from './lib/auth';
-import { resolveActiveOrg, ACTIVE_ORG_COOKIE } from './lib/org';
-import { effectiveCapabilities, type CapabilityOverride } from './lib/capabilities';
+import { resolveActiveOrg, loadOrg, isPlatformAdmin, ACTIVE_ORG_COOKIE } from './lib/org';
+import { effectiveCapabilities, ALL_CAPABILITIES, type CapabilityOverride } from './lib/capabilities';
 import { queryAll } from './lib/db';
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -46,21 +46,36 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.user = sessionData.user as App.Locals['user'];
     context.locals.session = sessionData.session as App.Locals['session'];
 
-    // Resolve the active organisation (tenant) for this request.
     const cookieOrg = context.cookies.get(ACTIVE_ORG_COOKIE)?.value;
-    const resolved = await resolveActiveOrg(env.DB, sessionData.user.id, cookieOrg);
-    if (resolved) {
-      context.locals.org = resolved.org;
-      context.locals.role = resolved.role;
-      context.locals.memberships = resolved.memberships;
+    const platformAdmin = await isPlatformAdmin(env.DB, sessionData.user.id);
+    context.locals.isPlatformAdmin = platformAdmin;
 
-      // Effective capabilities = defaults + this org's role overrides.
-      const overrides = await queryAll<CapabilityOverride>(
-        env.DB,
-        'SELECT role, capability, enabled FROM role_capabilities WHERE org_id = ?',
-        [resolved.org.id]
-      ).catch(() => [] as CapabilityOverride[]);
-      context.locals.capabilities = effectiveCapabilities(resolved.role, overrides);
+    if (platformAdmin) {
+      // Agency super-admin: full access to whichever org they've entered (no
+      // membership required). With no org selected they use the agency dashboard.
+      if (cookieOrg) {
+        const org = await loadOrg(env.DB, cookieOrg);
+        if (org) {
+          context.locals.org = org;
+          context.locals.role = 'owner';
+          context.locals.capabilities = [...ALL_CAPABILITIES];
+        }
+      }
+    } else {
+      // Normal user: scoped to the orgs they're a member of.
+      const resolved = await resolveActiveOrg(env.DB, sessionData.user.id, cookieOrg);
+      if (resolved) {
+        context.locals.org = resolved.org;
+        context.locals.role = resolved.role;
+        context.locals.memberships = resolved.memberships;
+
+        const overrides = await queryAll<CapabilityOverride>(
+          env.DB,
+          'SELECT role, capability, enabled FROM role_capabilities WHERE org_id = ?',
+          [resolved.org.id]
+        ).catch(() => [] as CapabilityOverride[]);
+        context.locals.capabilities = effectiveCapabilities(resolved.role, overrides);
+      }
     }
   }
 
@@ -74,6 +89,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (isHubPage && sessionData && context.locals.role === 'client'
       && !pathname.startsWith('/project-hub/portal')) {
     return context.redirect('/project-hub/portal');
+  }
+
+  // Platform admins live on the agency dashboard until they enter a business.
+  if (isHubPage && context.locals.isPlatformAdmin && !context.locals.org
+      && !pathname.startsWith('/project-hub/agency')) {
+    return context.redirect('/project-hub/agency');
   }
 
   return next();

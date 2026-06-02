@@ -19,5 +19,7 @@ declare namespace App {
     memberships?: import('./types/diary').MembershipWithOrg[];
     /** Effective capabilities for the user in the active org (defaults + overrides). */
     capabilities?: string[];
+    /** Platform (agency) super-admin — oversees all organisations. */
+    isPlatformAdmin?: boolean;
   }
 }

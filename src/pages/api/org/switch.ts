@@ -15,18 +15,23 @@ export const POST: APIRoute = async ({ locals, request, cookies }) => {
   if (!user) return new Response('Unauthorized', { status: 401 });
 
   const body = await request.json().catch(() => ({})) as { org_id?: string };
+
+  // No org_id → exit to the agency dashboard (clear the active org).
   if (!body.org_id) {
-    return Response.json({ error: 'org_id is required' }, { status: 400 });
+    cookies.delete(ACTIVE_ORG_COOKIE, { path: '/' });
+    return Response.json({ success: true, exited: true });
   }
 
-  // Verify membership before switching.
-  const membership = await queryOne<{ id: string }>(
-    env.DB,
-    'SELECT id FROM memberships WHERE user_id = ? AND org_id = ?',
-    [user.id, body.org_id]
-  );
-  if (!membership) {
-    return Response.json({ error: 'Not a member of that organisation' }, { status: 403 });
+  // Platform admins can enter any organisation; everyone else must be a member.
+  if (!locals.isPlatformAdmin) {
+    const membership = await queryOne<{ id: string }>(
+      env.DB,
+      'SELECT id FROM memberships WHERE user_id = ? AND org_id = ?',
+      [user.id, body.org_id]
+    );
+    if (!membership) {
+      return Response.json({ error: 'Not a member of that organisation' }, { status: 403 });
+    }
   }
 
   cookies.set(ACTIVE_ORG_COOKIE, body.org_id, {
