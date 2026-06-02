@@ -4,6 +4,7 @@ import '@fontsource/plus-jakarta-sans/latin-400.css';
 import '@fontsource/plus-jakarta-sans/latin-600.css';
 import '@fontsource/plus-jakarta-sans/latin-700.css';
 import OfflineBanner from '../components/project-hub/OfflineBanner';
+import SignOutButton from '../components/project-hub/SignOutButton';
 import { hasCap } from '../lib/capabilities';
 
 interface Props {
@@ -149,14 +150,11 @@ const canViewCosts = hasCap(Astro.locals, 'view_costs');
               <div class="text-xs text-gray-400 truncate capitalize">{orgRole}</div>
             </div>
           </div>
-          <form method="POST" action="/api/auth/sign-out" class="mt-3">
-            <button
-              type="submit"
-              class="w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors"
-            >
+          <div class="mt-3">
+            <SignOutButton client:load className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors">
               Sign Out
-            </button>
-          </form>
+            </SignOutButton>
+          </div>
         </div>
       </aside>
 
