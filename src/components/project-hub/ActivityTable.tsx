@@ -1,6 +1,9 @@
 import type { ActivityStatus } from '../../types/diary';
+import { generateId } from '../../lib/ids';
 
 interface ActivityItem {
+  /** Stable across saves — see lib/diary-children.ts. */
+  id?: string;
   task: string;
   description: string;
   status: ActivityStatus;
@@ -22,7 +25,7 @@ const STATUS_OPTIONS: { value: ActivityStatus; label: string; color: string }[] 
 
 export default function ActivityTable({ activities, onChange }: Props) {
   function addActivity() {
-    onChange([...activities, { task: '', description: '', status: 'active' }]);
+    onChange([...activities, { id: generateId(), task: '', description: '', status: 'active' }]);
   }
 
   function updateActivity(index: number, field: keyof ActivityItem, value: string) {

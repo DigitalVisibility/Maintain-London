@@ -1,11 +1,6 @@
 /** D1 query helpers for the Project Hub */
 
-/** Generate a unique ID (URL-safe, 21 chars) */
-export function generateId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const bytes = crypto.getRandomValues(new Uint8Array(21));
-  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
-}
+export { generateId } from './ids';
 
 /** Get current ISO datetime string */
 export function now(): string {

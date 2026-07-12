@@ -12,14 +12,20 @@ import type { DelayItem } from './DelayTable';
 import type { WeatherData, Project, EntryFile } from '../../types/diary';
 import { $isOnline, $pendingSyncCount } from '../../stores/offline';
 import { queueEntrySave, requestEntrySync, getSyncQueueCount } from '../../lib/offline';
+import { generateId } from '../../lib/ids';
 
+// Row ids are minted here, in the form, and preserved by the server on save, so
+// that a variation or delivery keeps its identity across autosaves and can be
+// referenced by a photo. See lib/diary-children.ts.
 interface VariationItem {
+  id?: string;
   description: string;
   hours_required: number | '';
   client_visible?: boolean;
 }
 
 interface MaterialItem {
+  id?: string;
   supplier: string;
   items: string;
   date_required: string;
@@ -27,12 +33,14 @@ interface MaterialItem {
 }
 
 interface EquipmentItem {
+  id?: string;
   equipment: string;
   supplier: string;
   client_visible?: boolean;
 }
 
 interface DeliveryItem {
+  id?: string;
   supplier: string;
   notes: string;
   client_visible?: boolean;
@@ -890,7 +898,7 @@ function VariationsSection({
   onChange: (v: VariationItem[]) => void;
 }) {
   function add() {
-    onChange([...variations, { description: '', hours_required: '' }]);
+    onChange([...variations, { id: generateId(), description: '', hours_required: '' }]);
   }
   function update(i: number, field: keyof VariationItem, val: string | number) {
     const u = [...variations];
@@ -937,7 +945,7 @@ function MaterialsSection({
   suppliers: string[];
 }) {
   function add() {
-    onChange([...items, { supplier: '', items: '', date_required: '' }]);
+    onChange([...items, { id: generateId(), supplier: '', items: '', date_required: '' }]);
   }
   function update(i: number, field: keyof MaterialItem, val: string) {
     const u = [...items];
@@ -989,7 +997,7 @@ function EquipmentSection({
   suppliers: string[];
 }) {
   function add() {
-    onChange([...items, { equipment: '', supplier: '' }]);
+    onChange([...items, { id: generateId(), equipment: '', supplier: '' }]);
   }
   function update(i: number, field: keyof EquipmentItem, val: string) {
     const u = [...items];
@@ -1040,7 +1048,7 @@ function DeliveriesSection({
   suppliers: string[];
 }) {
   function add() {
-    onChange([...items, { supplier: '', notes: '' }]);
+    onChange([...items, { id: generateId(), supplier: '', notes: '' }]);
   }
   function update(i: number, field: keyof DeliveryItem, val: string) {
     const u = [...items];

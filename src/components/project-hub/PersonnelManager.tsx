@@ -1,6 +1,9 @@
 import type { EntryPersonnel, PersonnelRole } from '../../types/diary';
+import { generateId } from '../../lib/ids';
 
 interface PersonnelItem {
+  /** Stable across saves — see lib/diary-children.ts. */
+  id?: string;
   name: string;
   role: PersonnelRole;
   hours: number | '';
@@ -17,7 +20,7 @@ export type { PersonnelItem };
 
 export default function PersonnelManager({ personnel, onChange }: Props) {
   function addPerson(role: PersonnelRole) {
-    onChange([...personnel, { name: '', role, hours: '', company: '' }]);
+    onChange([...personnel, { id: generateId(), name: '', role, hours: '', company: '' }]);
   }
 
   function updatePerson(index: number, field: keyof PersonnelItem, value: string | number) {

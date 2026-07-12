@@ -1,18 +1,28 @@
 import type { APIRoute } from 'astro';
-import { generateId, now, queryAll, queryOne, execute, batch } from '../../../lib/db';
-import type { DiaryEntry, DiaryEntryFull } from '../../../types/diary';
+import { generateId, now, queryAll, batch } from '../../../lib/db';
+import { canAccessProject } from '../../../lib/access';
+import { hasCap, isStaff } from '../../../lib/capabilities';
+import { buildChildInserts } from '../../../lib/diary-children';
+import type { DiaryEntry } from '../../../types/diary';
 
 export const prerender = false;
 
 /** GET /api/entries?project_id=xxx — list entries for a project */
 export const GET: APIRoute = async ({ locals, url }) => {
   const { env } = locals.runtime;
-  const user = locals.user;
-  if (!user) return new Response('Unauthorized', { status: 401 });
+  if (!locals.user) return new Response('Unauthorized', { status: 401 });
+
+  // The raw diary is internal: clients see released days through the report,
+  // never the underlying entries.
+  if (!isStaff(locals.role)) return new Response('Forbidden', { status: 403 });
 
   const projectId = url.searchParams.get('project_id');
   if (!projectId) {
     return Response.json({ error: 'project_id is required' }, { status: 400 });
+  }
+
+  if (!(await canAccessProject(env.DB, locals, projectId))) {
+    return new Response('Forbidden', { status: 403 });
   }
 
   const entries = await queryAll<DiaryEntry>(
@@ -31,6 +41,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (!user) return new Response('Unauthorized', { status: 401 });
 
   const body = await request.json();
+
+  if (!hasCap(locals, 'edit_diary') || !(await canAccessProject(env.DB, locals, body.project_id))) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const entryId = generateId();
   const timestamp = now();
 
@@ -54,82 +69,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     ],
   });
 
-  // Personnel
-  if (Array.isArray(body.personnel)) {
-    for (const p of body.personnel) {
-      statements.push({
-        sql: `INSERT INTO entry_personnel (id, entry_id, name, role, hours, company, client_visible, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), entryId, p.name, p.role ?? 'operative', p.hours ?? null, p.company ?? null, p.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Activities
-  if (Array.isArray(body.activities)) {
-    for (const a of body.activities) {
-      statements.push({
-        sql: `INSERT INTO entry_activities (id, entry_id, task, description, status, client_visible, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), entryId, a.task, a.description ?? null, a.status ?? 'active', a.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Delays
-  if (Array.isArray(body.delays)) {
-    for (const d of body.delays) {
-      statements.push({
-        sql: `INSERT INTO entry_delays (id, entry_id, task, reason, hours_lost, client_visible, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), entryId, d.task, d.reason, d.hours_lost ?? null, d.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Variations
-  if (Array.isArray(body.variations)) {
-    for (const v of body.variations) {
-      statements.push({
-        sql: `INSERT INTO entry_variations (id, entry_id, description, hours_required, client_visible, created_at)
-              VALUES (?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), entryId, v.description, v.hours_required ?? null, v.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Materials required
-  if (Array.isArray(body.materials_required)) {
-    for (const m of body.materials_required) {
-      statements.push({
-        sql: `INSERT INTO entry_materials_required (id, entry_id, supplier, items, date_required, client_visible, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), entryId, m.supplier, m.items, m.date_required ?? null, m.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Equipment hire
-  if (Array.isArray(body.equipment_hire)) {
-    for (const e of body.equipment_hire) {
-      statements.push({
-        sql: `INSERT INTO entry_equipment_hire (id, entry_id, equipment, supplier, client_visible, created_at)
-              VALUES (?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), entryId, e.equipment, e.supplier, e.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Deliveries
-  if (Array.isArray(body.deliveries)) {
-    for (const d of body.deliveries) {
-      statements.push({
-        sql: `INSERT INTO entry_deliveries (id, entry_id, supplier, notes, client_visible, created_at)
-              VALUES (?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), entryId, d.supplier, d.notes ?? null, d.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
+  statements.push(...buildChildInserts(entryId, body, timestamp));
 
   try {
     await batch(env.DB, statements);
