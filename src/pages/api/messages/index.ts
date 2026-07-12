@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
-import { queryAll, execute, generateId, now } from '../../../lib/db';
+import { queryAll, queryOne, execute, generateId, now } from '../../../lib/db';
 import { canAccessProject } from '../../../lib/access';
+import { notifyNewMessage } from '../../../lib/notify';
+import type { Project } from '../../../types/diary';
 
 export const prerender = false;
 
@@ -33,11 +35,31 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (!(await canAccessProject(env.DB, locals, body.project_id))) return new Response('Forbidden', { status: 403 });
 
   const id = generateId();
+  const text = body.body.trim();
+
   await execute(
     env.DB,
     `INSERT INTO messages (id, org_id, project_id, user_id, author_name, author_role, body, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, locals.org?.id ?? null, body.project_id, user.id, user.name ?? null, locals.role ?? null, body.body.trim(), now()]
+    [id, locals.org?.id ?? null, body.project_id, user.id, user.name ?? null, locals.role ?? null, text, now()]
   );
+
+  // Tell the other side. Sending an email is slower than saving a message and
+  // must not hold up the reply box, so it runs after the response goes out —
+  // and it never throws, so a failed notification can't lose a saved message.
+  const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [body.project_id]);
+  if (project) {
+    const notify = notifyNewMessage(env, {
+      project,
+      body: text,
+      authorId: user.id,
+      authorName: user.name ?? null,
+      authorIsClient: locals.role === 'client',
+    });
+    const ctx = locals.runtime.ctx;
+    if (ctx?.waitUntil) ctx.waitUntil(notify);
+    else await notify;
+  }
+
   return Response.json({ id, success: true }, { status: 201 });
 };

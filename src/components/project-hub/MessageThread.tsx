@@ -6,17 +6,48 @@ interface Message {
 }
 interface Props { projectId: string; meUserId?: string; }
 
+/** How often an open thread checks for replies. */
+const POLL_MS = 20_000;
+
 export default function MessageThread({ projectId, meUserId }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const countRef = useRef(0);
 
   async function load() {
     const res = await fetch(`/api/messages?project_id=${projectId}`);
-    if (res.ok) setMessages(await res.json());
+    if (!res.ok) return;
+    const next: Message[] = await res.json();
+    setMessages(next);
+    countRef.current = next.length;
   }
-  useEffect(() => { load(); }, [projectId]);
+
+  /** Looking at the thread is reading it. */
+  async function markRead() {
+    await fetch('/api/messages/unread', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project_id: projectId }),
+    }).catch(() => {});
+  }
+
+  useEffect(() => {
+    load().then(markRead);
+
+    // The thread used to fetch once and then sit there, so a reply that arrived
+    // while you had the page open was invisible until you reloaded.
+    const timer = setInterval(async () => {
+      if (document.hidden) return;
+      const before = countRef.current;
+      await load();
+      if (countRef.current > before) markRead();
+    }, POLL_MS);
+
+    return () => clearInterval(timer);
+  }, [projectId]);
+
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   async function send(e: React.FormEvent) {
@@ -28,7 +59,7 @@ export default function MessageThread({ projectId, meUserId }: Props) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId, body: text.trim() }),
       });
-      if (res.ok) { setText(''); await load(); }
+      if (res.ok) { setText(''); await load(); await markRead(); }
     } finally { setBusy(false); }
   }
 

@@ -18,6 +18,36 @@ const projects = user
       [user.id]
     )
   : [];
+
+// Unread replies from the team, and approvals still waiting on this client.
+const unread: Record<string, number> = {};
+const awaiting: Record<string, number> = {};
+
+if (user) {
+  const unreadRows = await queryAll<{ project_id: string; unread: number }>(
+    env.DB,
+    `SELECT m.project_id, COUNT(*) AS unread
+       FROM messages m
+       LEFT JOIN message_reads r
+              ON r.project_id = m.project_id AND r.user_id = ?
+      WHERE m.project_id IN (SELECT project_id FROM project_clients WHERE user_id = ?)
+        AND m.user_id != ?
+        AND (r.last_read_at IS NULL OR m.created_at > r.last_read_at)
+      GROUP BY m.project_id`,
+    [user.id, user.id, user.id]
+  );
+  for (const row of unreadRows) unread[row.project_id] = row.unread;
+
+  const approvalRows = await queryAll<{ project_id: string; n: number }>(
+    env.DB,
+    `SELECT project_id, COUNT(*) AS n FROM approval_requests
+      WHERE status = 'pending' AND required_level = 'client'
+        AND project_id IN (SELECT project_id FROM project_clients WHERE user_id = ?)
+      GROUP BY project_id`,
+    [user.id]
+  );
+  for (const row of approvalRows) awaiting[row.project_id] = row.n;
+}
 ---
 
 <PortalLayout title="Your Projects">
@@ -30,7 +60,19 @@ const projects = user
         <a href={`/project-hub/portal/${p.id}`} class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-all">
           <h3 class="font-semibold text-gray-900">{p.name}</h3>
           <p class="text-sm text-gray-500 mt-1">{p.address}</p>
-          <span class="inline-flex items-center mt-3 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 capitalize">{p.status}</span>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 capitalize">{p.status}</span>
+            {unread[p.id] > 0 && (
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-500 text-white">
+                {unread[p.id]} new message{unread[p.id] === 1 ? '' : 's'}
+              </span>
+            )}
+            {awaiting[p.id] > 0 && (
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500 text-white">
+                {awaiting[p.id]} awaiting your approval
+              </span>
+            )}
+          </div>
         </a>
       ))}
     </div>
