@@ -77,12 +77,19 @@ export const POST: APIRoute = async ({ locals, request }) => {
   }
 
   const timestamp = now();
+
+  // Reading the thread clears the notification stamp as well as marking it read.
+  // The throttle means "we've told you and you haven't looked yet, so we won't
+  // nag" — not "we've told you, so shut up for half an hour regardless". Without
+  // this, you read a message, a genuinely new one arrives five minutes later, and
+  // it lands silently because the throttle is still running. That is precisely
+  // the failure this feature exists to prevent.
   await execute(
     env.DB,
-    `INSERT INTO message_reads (id, project_id, user_id, last_read_at, created_at)
-     VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO message_reads (id, project_id, user_id, last_read_at, last_notified_at, created_at)
+     VALUES (?, ?, ?, ?, NULL, ?)
      ON CONFLICT (project_id, user_id)
-     DO UPDATE SET last_read_at = excluded.last_read_at`,
+     DO UPDATE SET last_read_at = excluded.last_read_at, last_notified_at = NULL`,
     [generateId(), body.project_id, user.id, timestamp, timestamp]
   );
 

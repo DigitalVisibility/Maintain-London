@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
 import { queryAll, queryOne, execute, generateId, now } from '../../../lib/db';
-import { can } from '../../../lib/capabilities';
-import { sendEmail, emailLayout } from '../../../lib/email';
+import { can, hasCap } from '../../../lib/capabilities';
+import { canAccessProject } from '../../../lib/access';
+import { sendEmail, emailLayout, loadSender } from '../../../lib/email';
 
 export const prerender = false;
 
@@ -10,7 +11,14 @@ interface ProjectRow {
   approval_auto_limit: number; approval_manager_limit: number;
 }
 
-/** GET /api/approvals?project_id=&status= — list approval requests (active org) */
+/**
+ * GET /api/approvals?project_id=&status= — list approval requests.
+ *
+ * Scoping by org alone is not enough. A client is a *member* of the org, so an
+ * org-only filter let one client read another client's variations — descriptions
+ * and costs of works on someone else's house. Staff see the whole org; a client
+ * sees only the projects they are actually attached to.
+ */
 export const GET: APIRoute = async ({ locals, url }) => {
   const { env } = locals.runtime;
   if (!locals.user) return new Response('Unauthorized', { status: 401 });
@@ -19,10 +27,24 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const projectId = url.searchParams.get('project_id');
   const status = url.searchParams.get('status');
+  const isClient = locals.role === 'client';
+
+  if (projectId && !(await canAccessProject(env.DB, locals, projectId))) {
+    return new Response('Forbidden', { status: 403 });
+  }
 
   let sql = 'SELECT * FROM approval_requests WHERE org_id = ?';
   const params: unknown[] = [orgId];
-  if (projectId) { sql += ' AND project_id = ?'; params.push(projectId); }
+
+  if (projectId) {
+    sql += ' AND project_id = ?';
+    params.push(projectId);
+  } else if (isClient) {
+    // An unfiltered list must not become a window onto the whole business.
+    sql += ' AND project_id IN (SELECT project_id FROM project_clients WHERE user_id = ?)';
+    params.push(locals.user.id);
+  }
+
   if (status) { sql += ' AND status = ?'; params.push(status); }
   sql += ' ORDER BY created_at DESC';
 
@@ -39,9 +61,15 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const { env } = locals.runtime;
   const user = locals.user;
   if (!user) return new Response('Unauthorized', { status: 401 });
-  if (!can(locals.role, 'request_works') && !can(locals.role, 'approve_works')) {
+
+  // Raising works is a *site team* action. The old check let anyone with
+  // approve_works through — which includes clients, so a client could raise
+  // (and, under the auto limit, silently self-approve) works on someone else's
+  // project. Approving is not requesting.
+  if (!hasCap(locals, 'request_works')) {
     return new Response('Forbidden', { status: 403 });
   }
+
   const orgId = locals.org?.id;
   if (!orgId) return Response.json({ error: 'No active organisation' }, { status: 400 });
 
@@ -51,6 +79,10 @@ export const POST: APIRoute = async ({ locals, request }) => {
   };
   if (!body.project_id || !body.description?.trim()) {
     return Response.json({ error: 'project_id and description are required' }, { status: 400 });
+  }
+
+  if (!(await canAccessProject(env.DB, locals, body.project_id))) {
+    return new Response('Forbidden', { status: 403 });
   }
 
   const project = await queryOne<ProjectRow>(
@@ -153,9 +185,20 @@ async function notify(env: any, project: ProjectRow, info: {
        <p>${info.description}</p>
        <p>Tap below to approve or decline — no login needed.</p>`;
 
+  // Goes out as the business that owns the project, not as the platform.
+  const sender = await loadSender(env.DB, project.org_id);
+
   await sendEmail(env.RESEND_API_KEY, {
     to: recipients,
+    from: sender.from,
+    replyTo: sender.replyTo,
     subject: heading,
-    html: emailLayout({ heading, body: bodyHtml, ctaLabel: info.isEmergency ? 'Review' : 'Approve / Decline', ctaUrl: decideUrl }),
+    html: emailLayout({
+      sender,
+      heading,
+      body: bodyHtml,
+      ctaLabel: info.isEmergency ? 'Review' : 'Approve / Decline',
+      ctaUrl: decideUrl,
+    }),
   });
 }

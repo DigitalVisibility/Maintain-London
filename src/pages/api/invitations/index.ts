@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { queryAll, queryOne, execute, generateId, now } from '../../../lib/db';
 import { can, type Role } from '../../../lib/capabilities';
-import { sendEmail, emailLayout } from '../../../lib/email';
+import { sendEmail, emailLayout, senderFor } from '../../../lib/email';
 
 export const prerender = false;
 
@@ -69,13 +69,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
     [id, email, body.name ?? null, role, body.project_id ?? null, org.id, token, user.id, expires, timestamp]
   );
 
-  // Email the magic link.
+  // Email the magic link — from the business doing the inviting.
   const base = (env as any).BETTER_AUTH_URL || 'https://maintainlondon.co.uk';
   const acceptUrl = `${base}/project-hub/accept?token=${encodeURIComponent(token)}`;
+  const sender = senderFor(org);
   const emailed = await sendEmail((env as any).RESEND_API_KEY, {
     to: email,
+    from: sender.from,
+    replyTo: sender.replyTo,
     subject: `You've been invited to ${org.name} on Project Hub`,
     html: emailLayout({
+      sender,
       heading: `Join ${org.name} on Project Hub`,
       body: `<p>${user.name || 'A team member'} has invited you to ${org.name}'s Project Hub as <strong>${role}</strong>.</p>
              <p>Click below to set your password and get started. This link expires in ${INVITE_TTL_DAYS} days.</p>`,

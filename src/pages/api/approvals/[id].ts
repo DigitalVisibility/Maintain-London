@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { queryOne, execute, now } from '../../../lib/db';
-import { can } from '../../../lib/capabilities';
+import { hasCap } from '../../../lib/capabilities';
+import { canAccessProject } from '../../../lib/access';
 
 export const prerender = false;
 
@@ -23,9 +24,15 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     return Response.json({ error: 'Already decided' }, { status: 409 });
   }
 
-  // Authorisation: need approve_works; client-level decisions are reserved for
-  // the project's client (or an owner/admin acting on their behalf).
-  if (!can(locals.role, 'approve_works')) return new Response('Forbidden', { status: 403 });
+  // The org check alone was not enough. A client is a member of the org and has
+  // approve_works, so this let one client approve — or reject — thousands of
+  // pounds of work on *another* client's house. Deciding on a project requires
+  // access to that project.
+  if (!(await canAccessProject(env.DB, locals, req.project_id))) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  if (!hasCap(locals, 'approve_works')) return new Response('Forbidden', { status: 403 });
   if (req.required_level === 'client' && locals.role === 'manager') {
     return Response.json({ error: 'This needs the client to approve.' }, { status: 403 });
   }

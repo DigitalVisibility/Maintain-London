@@ -4,6 +4,7 @@ export const prerender = false;
 import HubLayout from '../../layouts/HubLayout.astro';
 import RoleAccess from '../../components/project-hub/RoleAccess';
 import ScheduleSettings from '../../components/project-hub/ScheduleSettings';
+import NotificationSettings from '../../components/project-hub/NotificationSettings';
 import SignOutButton from '../../components/project-hub/SignOutButton';
 import { hasCap } from '../../lib/capabilities';
 
@@ -77,6 +78,13 @@ const canManageUsers = hasCap(Astro.locals, 'manage_users');
     {canManageUsers && (
       <div class="mb-6">
         <ScheduleSettings client:load />
+      </div>
+    )}
+
+    <!-- Message notifications -->
+    {canManageUsers && (
+      <div class="mb-6">
+        <NotificationSettings client:load />
       </div>
     )}
 

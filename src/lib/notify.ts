@@ -12,11 +12,23 @@
  */
 
 import { queryAll, queryOne, execute, generateId, now } from './db';
-import { sendEmail, emailLayout } from './email';
+import { sendEmail, emailLayout, loadSender } from './email';
 import type { Project } from '../types/diary';
 
-/** Don't email the same person about the same thread more often than this. */
+/** In 'chase' mode, don't email the same person about a thread more often than this. */
 const QUIET_PERIOD_MINUTES = 30;
+
+/**
+ * How persistent a business wants its message alerts to be.
+ *
+ *  'once'  — the default. You're told a thread has something new, and not told
+ *            again until you've actually looked at it. Reading re-arms it, so the
+ *            next message notifies straight away. Quiet inbox; the unread badge
+ *            carries anything you miss.
+ *  'chase' — keep reminding while new messages keep arriving and you still
+ *            haven't read them, at most one email every 30 minutes.
+ */
+export type NotifyMode = 'once' | 'chase';
 
 export interface NotifyEnv {
   DB: D1Database;
@@ -92,14 +104,30 @@ export function withinQuietPeriod(lastNotifiedAt: string | null | undefined, now
   return nowMs - last < QUIET_PERIOD_MINUTES * 60_000;
 }
 
-/** As above, for a given user's thread. */
-async function alreadyNotified(db: D1Database, projectId: string, userId: string): Promise<boolean> {
+/**
+ * Should we stay quiet about this thread for this person?
+ *
+ * In 'once' mode, any outstanding stamp means quiet — we've told them and they
+ * haven't looked yet, so saying it again adds nothing. Marking the thread read
+ * clears the stamp, which is what re-arms the alert.
+ *
+ * In 'chase' mode the stamp expires after the quiet period, so a client who keeps
+ * messaging keeps getting through.
+ */
+async function stayQuiet(
+  db: D1Database,
+  projectId: string,
+  userId: string,
+  mode: NotifyMode
+): Promise<boolean> {
   const row = await queryOne<{ last_notified_at: string | null }>(
     db,
     'SELECT last_notified_at FROM message_reads WHERE project_id = ? AND user_id = ?',
     [projectId, userId]
   );
-  return withinQuietPeriod(row?.last_notified_at, Date.now());
+  if (!row?.last_notified_at) return false;
+
+  return mode === 'once' ? true : withinQuietPeriod(row.last_notified_at, Date.now());
 }
 
 /** Record that we've emailed this person about this thread. */
@@ -143,11 +171,23 @@ export async function notifyNewMessage(env: NotifyEnv, msg: NewMessage): Promise
     const recipients = await audienceFor(env.DB, msg.project, msg.authorId, msg.authorIsClient);
     if (recipients.length === 0) return;
 
+    const orgId = msg.project.org_id ?? null;
+
+    // The email goes out as the business that owns the project — never as the
+    // platform, and never as another tenant.
+    const [sender, org] = await Promise.all([
+      loadSender(env.DB, orgId),
+      queryOne<{ message_notify: string }>(
+        env.DB, 'SELECT message_notify FROM organisations WHERE id = ?', [orgId ?? '']
+      ),
+    ]);
+    const mode: NotifyMode = org?.message_notify === 'chase' ? 'chase' : 'once';
+
     const base = env.BETTER_AUTH_URL ?? 'https://maintainlondon.co.uk';
-    const from = msg.authorName || (msg.authorIsClient ? 'The client' : 'The team');
+    const author = msg.authorName || (msg.authorIsClient ? 'The client' : 'The team');
 
     for (const to of recipients) {
-      if (await alreadyNotified(env.DB, msg.project.id, to.id)) continue;
+      if (await stayQuiet(env.DB, msg.project.id, to.id, mode)) continue;
 
       const url = to.isClient
         ? `${base}/project-hub/portal/${msg.project.id}`
@@ -155,11 +195,14 @@ export async function notifyNewMessage(env: NotifyEnv, msg: NewMessage): Promise
 
       const sent = await sendEmail(env.RESEND_API_KEY, {
         to: to.email,
+        from: sender.from,
+        replyTo: sender.replyTo,
         subject: `New message on ${msg.project.name}`,
         html: emailLayout({
+          sender,
           heading: `New message on ${msg.project.name}`,
-          body: `<p style="margin:0 0 8px"><strong>${escapeHtml(from)}</strong> wrote:</p>
-                 <blockquote style="margin:0 0 14px;padding:10px 14px;border-left:3px solid #AEDE4A;background:#F9FAFB;color:#374151">
+          body: `<p style="margin:0 0 8px"><strong>${escapeHtml(author)}</strong> wrote:</p>
+                 <blockquote style="margin:0 0 14px;padding:10px 14px;border-left:3px solid ${sender.brandColor};background:#F9FAFB;color:#374151">
                    ${escapeHtml(preview(msg.body))}
                  </blockquote>
                  <p style="margin:0;color:#6B7280;font-size:13px">Reply in the project hub so the whole conversation stays in one place.</p>`,
@@ -169,7 +212,7 @@ export async function notifyNewMessage(env: NotifyEnv, msg: NewMessage): Promise
       });
 
       // Stamp only on a successful send, so a transient email failure doesn't
-      // silence the next half hour of notifications too.
+      // silence the alert about a message nobody was ever told about.
       if (sent) await stampNotified(env.DB, msg.project.id, to.id);
     }
   } catch (err) {

@@ -15,7 +15,7 @@
 import { generateId, now, queryAll, queryOne, execute } from './db';
 import { loadEntriesInPeriod } from './entries';
 import { draftSummary } from './ai';
-import { sendEmail, emailLayout } from './email';
+import { sendEmail, emailLayout, loadSender } from './email';
 import { uploadToR2 } from './r2';
 import { dayAfter } from './summary-schedule';
 import type { Project } from '../types/diary';
@@ -203,7 +203,13 @@ export async function approveAndSend(
 
   const portalUrl = `${env.BETTER_AUTH_URL ?? 'https://maintainlondon.co.uk'}/project-hub/portal/${project.id}`;
   const heading = summary.title || `Progress update — ${project.name}`;
+
+  // The client hears from *their* builder — the business that owns the project —
+  // not from the platform, and never from another tenant.
+  const sender = await loadSender(env.DB, project.org_id);
+
   const html = emailLayout({
+    sender,
     heading,
     body: `${paragraphs(summary.narrative)}
       <p style="color:#6B7280;font-size:13px">Covering ${summary.period_start} to ${summary.period_end}.</p>`,
@@ -223,6 +229,8 @@ export async function approveAndSend(
 
   const sent = await sendEmail(env.RESEND_API_KEY, {
     to: recipients,
+    from: sender.from,
+    replyTo: sender.replyTo,
     subject: heading,
     html,
   });
