@@ -1,4 +1,8 @@
+import { generateId } from '../../lib/ids';
+
 interface DelayItem {
+  /** Stable across saves — see lib/diary-children.ts. */
+  id?: string;
   task: string;
   reason: string;
   hours_lost: number | '';
@@ -14,7 +18,7 @@ export type { DelayItem };
 
 export default function DelayTable({ delays, onChange }: Props) {
   function addDelay() {
-    onChange([...delays, { task: '', reason: '', hours_lost: '' }]);
+    onChange([...delays, { id: generateId(), task: '', reason: '', hours_lost: '' }]);
   }
 
   function updateDelay(index: number, field: keyof DelayItem, value: string | number) {

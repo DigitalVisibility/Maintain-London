@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { queryAll, queryOne } from '../../../lib/db';
+import { canAccessProject } from '../../../lib/access';
 import { generateEntryReportHTML, generateWeeklyReportHTML } from '../../../lib/report-generator';
 import type {
   DiaryEntry, DiaryEntryFull, EntryPersonnel, EntryActivity,
@@ -22,12 +23,19 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const projectId = url.searchParams.get('project_id');
   const type = url.searchParams.get('type') || 'daily';
-  // audience=client → only released entries, filtered to client-visible content
-  const clientOnly = url.searchParams.get('audience') === 'client';
 
   if (!projectId) {
     return Response.json({ error: 'project_id is required' }, { status: 400 });
   }
+
+  if (!(await canAccessProject(env.DB, locals, projectId))) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  // audience=client → only released entries, filtered to client-visible content.
+  // A client always gets that view whatever they ask for: the audience is a
+  // property of who is asking, not a switch the caller gets to flip.
+  const clientOnly = locals.role === 'client' || url.searchParams.get('audience') === 'client';
 
   const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [projectId]);
   if (!project) {
@@ -41,7 +49,10 @@ export const GET: APIRoute = async ({ locals, url }) => {
     }
 
     const entry = await loadFullEntry(env.DB, entryId);
-    if (!entry) {
+    // The entry must belong to the project we authorised above — otherwise the
+    // project_id check could be satisfied with one project and the entry read
+    // from another.
+    if (!entry || entry.project_id !== projectId) {
       return Response.json({ error: 'Entry not found' }, { status: 404 });
     }
 
@@ -133,7 +144,10 @@ async function loadFullEntry(db: D1Database, entryId: string): Promise<DiaryEntr
 }
 
 function getWeekEnd(mondayDate: string): string {
-  const d = new Date(mondayDate + 'T00:00:00');
-  d.setDate(d.getDate() + 6);
+  // Work in UTC throughout. Parsing as local midnight and formatting back as
+  // UTC loses the last day of the week in any timezone ahead of UTC (BST), so
+  // Sunday's entry silently drops out of the weekly report.
+  const d = new Date(mondayDate + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + 6);
   return d.toISOString().split('T')[0];
 }

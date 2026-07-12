@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { generateId, now, execute } from '../../../lib/db';
 import { validateFile, buildR2Key, uploadToR2 } from '../../../lib/r2';
+import { canAccessEntry } from '../../../lib/access';
+import { hasCap } from '../../../lib/capabilities';
 import type { FileType } from '../../../types/diary';
 
 export const prerender = false;
@@ -37,6 +39,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
   }
   if (!entryId) {
     return Response.json({ error: 'entry_id is required' }, { status: 400 });
+  }
+
+  // The entry must exist and belong to a project this user may write to.
+  if (!hasCap(locals, 'edit_diary') || !(await canAccessEntry(env.DB, locals, entryId))) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   // Validate file type and size

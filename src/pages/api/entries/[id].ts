@@ -1,5 +1,8 @@
 import type { APIRoute } from 'astro';
-import { generateId, now, queryAll, queryOne, execute, batch } from '../../../lib/db';
+import { now, queryAll, queryOne, execute, batch } from '../../../lib/db';
+import { canAccessProject } from '../../../lib/access';
+import { hasCap, isStaff } from '../../../lib/capabilities';
+import { buildChildDeletes, buildChildInserts } from '../../../lib/diary-children';
 import type {
   DiaryEntry, DiaryEntryFull, EntryPersonnel, EntryActivity,
   EntryDelay, EntryVariation, EntryMaterialRequired, EntryEquipmentHire,
@@ -11,14 +14,21 @@ export const prerender = false;
 /** GET /api/entries/:id — get a full diary entry with all related data */
 export const GET: APIRoute = async ({ locals, params }) => {
   const { env } = locals.runtime;
-  const user = locals.user;
-  if (!user) return new Response('Unauthorized', { status: 401 });
+  if (!locals.user) return new Response('Unauthorized', { status: 401 });
+
+  // The raw diary is internal — it carries delays, hidden notes and unvetted
+  // content. Clients only ever see the released report.
+  if (!isStaff(locals.role)) return new Response('Forbidden', { status: 403 });
 
   const { id } = params;
   if (!id) return Response.json({ error: 'id is required' }, { status: 400 });
 
   const entry = await queryOne<DiaryEntry>(env.DB, 'SELECT * FROM diary_entries WHERE id = ?', [id]);
   if (!entry) return Response.json({ error: 'Entry not found' }, { status: 404 });
+
+  if (!(await canAccessProject(env.DB, locals, entry.project_id))) {
+    return new Response('Forbidden', { status: 403 });
+  }
 
   const [personnel, activities, delays, variations, materials, equipment, deliveries, files, project] =
     await Promise.all([
@@ -52,14 +62,17 @@ export const GET: APIRoute = async ({ locals, params }) => {
 /** PUT /api/entries/:id — update a diary entry (replace all sub-records) */
 export const PUT: APIRoute = async ({ locals, params, request }) => {
   const { env } = locals.runtime;
-  const user = locals.user;
-  if (!user) return new Response('Unauthorized', { status: 401 });
+  if (!locals.user) return new Response('Unauthorized', { status: 401 });
 
   const { id } = params;
   if (!id) return Response.json({ error: 'id is required' }, { status: 400 });
 
   const existing = await queryOne<DiaryEntry>(env.DB, 'SELECT * FROM diary_entries WHERE id = ?', [id]);
   if (!existing) return Response.json({ error: 'Entry not found' }, { status: 404 });
+
+  if (!hasCap(locals, 'edit_diary') || !(await canAccessProject(env.DB, locals, existing.project_id))) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   const body = await request.json();
   const timestamp = now();
@@ -91,84 +104,11 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
     ],
   });
 
-  // Delete + re-insert sub-records (simpler than diffing)
-  const subTables = [
-    'entry_personnel', 'entry_activities', 'entry_delays', 'entry_variations',
-    'entry_materials_required', 'entry_equipment_hire', 'entry_deliveries',
-  ];
-  for (const table of subTables) {
-    statements.push({ sql: `DELETE FROM ${table} WHERE entry_id = ?`, params: [id] });
-  }
-
-  // Re-insert personnel
-  if (Array.isArray(body.personnel)) {
-    for (const p of body.personnel) {
-      statements.push({
-        sql: `INSERT INTO entry_personnel (id, entry_id, name, role, hours, company, client_visible, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), id, p.name, p.role ?? 'operative', p.hours ?? null, p.company ?? null, p.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Re-insert activities
-  if (Array.isArray(body.activities)) {
-    for (const a of body.activities) {
-      statements.push({
-        sql: `INSERT INTO entry_activities (id, entry_id, task, description, status, client_visible, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), id, a.task, a.description ?? null, a.status ?? 'active', a.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Re-insert delays
-  if (Array.isArray(body.delays)) {
-    for (const d of body.delays) {
-      statements.push({
-        sql: `INSERT INTO entry_delays (id, entry_id, task, reason, hours_lost, client_visible, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), id, d.task, d.reason, d.hours_lost ?? null, d.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Re-insert variations
-  if (Array.isArray(body.variations)) {
-    for (const v of body.variations) {
-      statements.push({
-        sql: `INSERT INTO entry_variations (id, entry_id, description, hours_required, client_visible, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), id, v.description, v.hours_required ?? null, v.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Re-insert materials required
-  if (Array.isArray(body.materials_required)) {
-    for (const m of body.materials_required) {
-      statements.push({
-        sql: `INSERT INTO entry_materials_required (id, entry_id, supplier, items, date_required, client_visible, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), id, m.supplier, m.items, m.date_required ?? null, m.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Re-insert equipment hire
-  if (Array.isArray(body.equipment_hire)) {
-    for (const e of body.equipment_hire) {
-      statements.push({
-        sql: `INSERT INTO entry_equipment_hire (id, entry_id, equipment, supplier, client_visible, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), id, e.equipment, e.supplier, e.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
-
-  // Re-insert deliveries
-  if (Array.isArray(body.deliveries)) {
-    for (const d of body.deliveries) {
-      statements.push({
-        sql: `INSERT INTO entry_deliveries (id, entry_id, supplier, notes, client_visible, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        params: [generateId(), id, d.supplier, d.notes ?? null, d.client_visible ? 1 : 0, timestamp],
-      });
-    }
-  }
+  // Replace the sub-records wholesale (simpler than diffing), but carry each
+  // row's id across so photos and approvals that reference a variation or a
+  // delivery still point at it after the save.
+  statements.push(...buildChildDeletes(id));
+  statements.push(...buildChildInserts(id, body, timestamp));
 
   await batch(env.DB, statements);
   return Response.json({ id, status: 'updated' });
@@ -177,16 +117,23 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
 /** DELETE /api/entries/:id */
 export const DELETE: APIRoute = async ({ locals, params }) => {
   const { env } = locals.runtime;
-  const user = locals.user;
-  if (!user) return new Response('Unauthorized', { status: 401 });
+  if (!locals.user) return new Response('Unauthorized', { status: 401 });
 
-  // Only admins and managers can delete
-  if (user.role === 'operative') {
+  // Only admins and managers can delete. Check the role held in the active org,
+  // not the account-level one.
+  if (locals.role === 'client' || locals.role === 'operative') {
     return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
   }
 
   const { id } = params;
   if (!id) return Response.json({ error: 'id is required' }, { status: 400 });
+
+  const existing = await queryOne<DiaryEntry>(env.DB, 'SELECT * FROM diary_entries WHERE id = ?', [id]);
+  if (!existing) return Response.json({ error: 'Entry not found' }, { status: 404 });
+
+  if (!(await canAccessProject(env.DB, locals, existing.project_id))) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   // CASCADE deletes will remove all sub-records
   await execute(env.DB, 'DELETE FROM diary_entries WHERE id = ?', [id]);
