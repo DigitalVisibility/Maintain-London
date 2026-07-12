@@ -47,9 +47,20 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (!VALID_ROLES.includes(role)) {
     return Response.json({ error: 'Invalid role' }, { status: 400 });
   }
-  // Clients must be tied to a project (the one they'll see).
-  if (role === 'client' && !body.project_id) {
-    return Response.json({ error: 'A client invite needs a project' }, { status: 400 });
+  // Clients must be tied to a project (the one they'll see) — and it must be a
+  // project of *this* business. Without this check an admin could bind a client
+  // to another org's project id; once accepted, canAccessProject would then hand
+  // that client the other business's released content.
+  if (role === 'client') {
+    if (!body.project_id) {
+      return Response.json({ error: 'A client invite needs a project' }, { status: 400 });
+    }
+    const owned = await queryOne(
+      env.DB,
+      'SELECT 1 AS ok FROM projects WHERE id = ? AND org_id = ?',
+      [body.project_id, org.id]
+    );
+    if (!owned) return Response.json({ error: 'Unknown project' }, { status: 400 });
   }
   // Only owners/admins may mint owners/admins.
   if ((role === 'owner' || role === 'admin') && !can(locals.role, 'manage_users')) {

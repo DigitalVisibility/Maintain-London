@@ -1,12 +1,12 @@
 import type { APIRoute } from 'astro';
 import { queryAll, execute, generateId, now } from '../../../lib/db';
 import { geocodePostcode } from '../../../lib/geocode';
-import { can } from '../../../lib/capabilities';
+import { can, isStaff } from '../../../lib/capabilities';
 import type { Project } from '../../../types/diary';
 
 export const prerender = false;
 
-/** GET /api/projects — list projects in the active organisation */
+/** GET /api/projects — projects the caller may see in the active organisation */
 export const GET: APIRoute = async ({ locals }) => {
   const { env } = locals.runtime;
   const user = locals.user;
@@ -15,11 +15,23 @@ export const GET: APIRoute = async ({ locals }) => {
   const orgId = locals.org?.id;
   if (!orgId) return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } });
 
-  const projects = await queryAll<Project>(
-    env.DB,
-    'SELECT * FROM projects WHERE org_id = ? ORDER BY updated_at DESC',
-    [orgId]
-  );
+  // Staff see the whole org. A client is a *member* of the org, so an org-only
+  // filter would hand them every other client's project — names, addresses and
+  // client emails included. A client sees only the projects they're linked to.
+  const projects = isStaff(locals.role)
+    ? await queryAll<Project>(
+        env.DB,
+        'SELECT * FROM projects WHERE org_id = ? ORDER BY updated_at DESC',
+        [orgId]
+      )
+    : await queryAll<Project>(
+        env.DB,
+        `SELECT p.* FROM projects p
+           JOIN project_clients pc ON pc.project_id = p.id
+          WHERE p.org_id = ? AND pc.user_id = ?
+          ORDER BY p.updated_at DESC`,
+        [orgId, user.id]
+      );
 
   return new Response(JSON.stringify(projects), {
     headers: { 'Content-Type': 'application/json' },

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { queryAll, queryOne, execute, generateId, now } from '../../../lib/db';
-import { can } from '../../../lib/capabilities';
+import { can, isStaff } from '../../../lib/capabilities';
+import { canAccessProject } from '../../../lib/access';
 
 export const prerender = false;
 
@@ -24,6 +25,14 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const projectId = url.searchParams.get('project_id');
   if (projectId) {
+    // A timesheet exposes staff names, hours and clock-in/out GPS coordinates —
+    // internal, and a client has no business seeing it even for their own job.
+    // Staff only, and only for a project in their org.
+    if (!isStaff(locals.role)) return new Response('Forbidden', { status: 403 });
+    if (!(await canAccessProject(env.DB, locals, projectId))) {
+      return new Response('Forbidden', { status: 403 });
+    }
+
     const rows = await queryAll(
       env.DB,
       'SELECT * FROM time_sessions WHERE project_id = ? AND org_id = ? ORDER BY clock_in DESC LIMIT 100',

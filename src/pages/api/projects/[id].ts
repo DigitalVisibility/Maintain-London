@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { queryOne, execute, now } from '../../../lib/db';
 import { geocodePostcode } from '../../../lib/geocode';
 import { can } from '../../../lib/capabilities';
+import { canAccessProject } from '../../../lib/access';
 import type { Project } from '../../../types/diary';
 
 export const prerender = false;
@@ -14,10 +15,17 @@ async function loadOwnedProject(env: any, id: string | undefined, orgId: string 
   return project;
 }
 
-/** GET /api/projects/:id — get single project (within the active org) */
+/** GET /api/projects/:id — get a single project the caller may see. */
 export const GET: APIRoute = async ({ params, locals }) => {
   const { env } = locals.runtime;
   if (!locals.user) return new Response('Unauthorized', { status: 401 });
+
+  // Org membership is not access: a client belongs to the org but must be linked
+  // to *this* project. Without this a client can read any project by guessing an
+  // id — name, address, and the other client's email.
+  if (!(await canAccessProject(env.DB, locals, params.id))) {
+    return new Response('Not found', { status: 404 });
+  }
 
   const project = await loadOwnedProject(env, params.id, locals.org?.id);
   if (!project) return new Response('Not found', { status: 404 });

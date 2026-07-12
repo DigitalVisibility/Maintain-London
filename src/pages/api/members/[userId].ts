@@ -23,8 +23,18 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     'UPDATE memberships SET role = ? WHERE user_id = ? AND org_id = ?',
     [role, params.userId, orgId]
   );
-  // Keep the user's primary role in sync (used as a fallback).
-  await execute(env.DB, 'UPDATE user SET role = ? WHERE id = ?', [role, params.userId]);
+  // Keep the user's primary role in sync (used only as a fallback). Guard it to
+  // this org's members — the `user` table is shared across tenants, and an
+  // unscoped write here would let an admin of one business rewrite the role of a
+  // user who only belongs to another.
+  await execute(
+    env.DB,
+    `UPDATE user SET role = ?
+      WHERE id = ? AND EXISTS (
+        SELECT 1 FROM memberships WHERE user_id = ? AND org_id = ?
+      )`,
+    [role, params.userId, params.userId, orgId]
+  );
   return Response.json({ success: true });
 };
 
