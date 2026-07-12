@@ -162,24 +162,125 @@
 
 ## Phase 2+ (Post-MVP)
 
-These features are NOT in the MVP but are planned for future development:
+### Shipped since the MVP
 
-- [ ] **Client Portal** — Approval workflow (manager submits, ops approves client-visible content)
+- [x] **Client Portal** — Released-day updates, approvals inbox, message thread (`portal/[id].astro`)
+- [x] **Vetting & release** — Per-item + per-photo client visibility; a day is only visible once released
+- [x] **Approvals workflow** — Tiered auto / manager / client limits, emailed one-tap decide links (`approval_requests`)
+- [x] **Messaging** — Per-project thread, staff + client
+- [x] **Multi-tenancy** — Organisations, memberships, per-org branding
+- [x] **Per-role capability toggles** — Settings → Role access (`role_capabilities`)
+- [x] **Agency / platform super-admin tier** — Oversee all businesses
+- [x] **Time tracking** — Clock in/out with geo, breaks, timesheet reports
+- [x] **Email** — Resend, wired for invitations + approvals
+
+### Still outstanding
+
 - [ ] **Document Hub** — Central repository (contracts, quotes, invoices, drawings, manuals, handover packs)
 - [ ] **Weekly Summary Emails** — Auto-generated and sent to clients
 - [ ] **Gantt Chart** — Project schedule generated from scope of works
 - [ ] **Labour Cost Tracking** — Hours x rates for each operative
 - [ ] **Stage Payments** — Value of works completed tracking
-- [ ] **AI Agent Summaries** — Daily log -> client-friendly narrative via Claude API (infrastructure wired in Phase 1)
+- [ ] **AI Agent Summaries** — Daily log -> client-friendly narrative via Claude API
 - [ ] **Photo Auto-Tagging** — AI-powered descriptions for uploaded photos
 - [ ] **Email Notifications** — Entry submission alerts, delay warnings
 - [ ] **Multi-Editor** — Multiple concurrent editors on same diary entry
 
 ---
 
+## Client feedback — July 2026
+
+Feedback from the first live project, plus three hand-drawn wireframes (invoice
+summary, files grid, variations register). Several of these were already on the
+Phase 2+ list above; the sequencing below supersedes it. Cross-references are
+noted so nothing gets built twice.
+
+### Phase 0 — Fix what's broken ✅ COMPLETE
+
+- [x] **Photos never displayed.** R2 keys contain slashes; callers percent-encode
+      them and Astro's rest param does not decode `%2F`, so the serving route
+      404'd every image. Decode the key. (`api/photos/[...key].ts`)
+- [x] Same bug silently broke **photo client-visibility** (PATCH matched 0 rows,
+      D1 still reported success) and **photo deletes** (removed nothing).
+- [x] **Project authorisation.** Reports, photos and entries authenticated but
+      never authorised — a signed-in client could read another business's data by
+      changing an id in the URL, and could get the un-redacted internal report by
+      dropping `audience=client`. New `lib/access.ts` is the single answer to
+      "may this user touch this project?".
+- [x] **Stable child-row ids** (`lib/diary-children.ts`) — saving an entry used to
+      regenerate every child id, so nothing could reference a variation or a
+      delivery. Hard blocker for everything below.
+- [x] `getWeekEnd` dropped Sunday from the weekly report in any timezone ahead of UTC.
+
+### Phase 1 — Photos ✅ COMPLETE
+
+- [x] Photos on **Variations** and **Materials Delivered** rows (per-row attach,
+      `entry_files.linked_to`) — *client asked for this explicitly*
+- [x] Row photos render against their row in the report; the general Photos
+      section holds only the day's unattached photos
+- [x] Client portal shows released, ticked photos **inline** rather than only
+      behind a report link
+- [x] **No maximum photo count.** The client suggested a cap of 4/day; we
+      deliberately did not implement one — the day a problem is uncovered is the
+      day the record needs the most photos. Instead: unlimited upload, curated
+      client-visible selection, and a soft advisory above 10.
+
+### Phase 2 — Automation (the weekly summary)
+
+- [ ] Cron infrastructure — **sidecar Cloudflare Worker** (Pages does not support
+      cron triggers; this avoids touching the live deployment)
+- [ ] Friday 16:00: generate weekly summary → **Claude drafts the client-facing
+      narrative** → lands in an approval queue → one-click approve → email to
+      client + archive into the project's Progress file
+      *(supersedes "Weekly Summary Emails" + "AI Agent Summaries" above)*
+- [ ] **Message notifications** — email + unread badge, digested
+      *(supersedes "Email Notifications" above)*
+
+### Phase 3 — Variations → approvals → invoicing
+
+- [ ] Add net / VAT / total + status (Draft, Pending, Approved, Rejected) to diary
+      variations — per the variations-register wireframe
+- [ ] Raising a variation on site auto-creates an **approval request** through the
+      existing tiered engine (this is the workflow gap the client reported)
+- [ ] Variation register view (0001, 0002 …) with running totals
+- [ ] **Direct Xero / QuickBooks integration** (client's choice; package TBC).
+      Explicitly *not* IFTTT — no audit trail, breaks when a variation is edited.
+
+### Phase 4 — Financials & client portal build-out
+
+- [ ] Interim-valuation model per the invoice wireframe: revised contract sum =
+      quote + **approved** variations; value of work done = % complete × revised
+      sum; **next instalment = value of work done − paid to date**
+- [ ] Needs a new input: **% complete** per project
+- [ ] Client portal summary cards — variations awaiting approval, information
+      requested, invoices paid vs pending, schedule
+- [ ] Financials folder opens onto a high-level position, not a pile of documents
+      *(supersedes "Stage Payments" above)*
+- [ ] **No live-spreadsheet sync.** The client suggested it; two-way sync is a
+      conflict factory. Read-only export instead.
+
+### Phase 5 — Document Hub
+
+- [ ] Folder grid per wireframe: Drawings, Interior Finishes, Kitchen, Bathrooms,
+      Superseded, Contracts, Handovers, Progress Pics, Financials
+- [ ] **Files are currently diary-entry-scoped only** — there is no project-level
+      file concept. This is a real schema addition, not a UI change.
+      *(supersedes "Document Hub" above)*
+
+### Phase 6 — Schedules
+
+- [ ] Programme, procurement and financial schedules
+      *(supersedes "Gantt Chart" above)*
+
+---
+
 ## Database Schema
 
-12 tables in Cloudflare D1:
+23 tables in Cloudflare D1. The core diary set is below; multi-tenancy
+(`organisations`, `memberships`, `role_capabilities`), the client portal
+(`project_clients`, `approval_requests`, `messages`), auth (`user`, `session`,
+`account`, `verification`, `invitations`) and `time_sessions` are added by
+migrations 0004–0010.
 
 | Table | Purpose |
 |---|---|
@@ -209,11 +310,18 @@ Full schema: `migrations/0001_initial_schema.sql`
 |---|---|
 | Auth | Better-Auth email/password, httpOnly secure cookies |
 | Sessions | D1-stored, 7-day expiry, auto-refresh |
-| Roles | admin (full), manager (project-scoped), operative (own entries) |
-| API | Session cookie checked via middleware on all routes |
-| Files | R2 private by default, presigned URLs (1hr expiry) |
+| Roles | owner, admin, manager, operative, client — per organisation (`memberships`) |
+| Capabilities | `lib/capabilities.ts` + per-org overrides (`role_capabilities`) |
+| Authentication | Middleware resolves `locals.user` / `org` / `role` on every Hub page + data API |
+| **Authorisation** | **`lib/access.ts` — every data route must ask "may this user touch this project?". Staff: their org. Client: linked via `project_clients`, released + client-visible content only.** |
+| Files | R2 private; served only via `/api/photos/*`, which resolves the key through D1 first (so only keys we issued can be served) and re-checks release + visibility for clients |
 | Input | Parameterised D1 queries, input sanitisation |
 | Transport | HTTPS enforced (Cloudflare default) |
+
+> ⚠️ **A signed-in session is not authorisation.** Reports, photos and entries once
+> checked only that *someone* was logged in, which let a client of one business read
+> another's data by changing an id in the URL. Any new data route must call
+> `canAccessProject()` (or `canAccessEntry()` / `canReadFile()`) — not just `locals.user`.
 
 ---
 

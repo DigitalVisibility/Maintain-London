@@ -3,8 +3,18 @@ import type { EntryFile, FileType } from '../../types/diary';
 
 interface Props {
   entryId: string;
+  /** The entry's *whole* file list. The gallery shows only its own slice of it
+   *  (see `shown` below) but edits are applied to the full list, so the parent
+   *  can keep one array for every gallery on the page. */
   files: EntryFile[];
   fileType?: FileType;
+  /**
+   * Id of the row these photos belong to — a variation or a delivery. Omit for
+   * the entry's general photos, which belong to the day rather than to any row.
+   */
+  linkedTo?: string;
+  /** Tighter layout, for galleries embedded in a table row. */
+  compact?: boolean;
   onFilesChange: (files: EntryFile[]) => void;
 }
 
@@ -20,7 +30,14 @@ interface UploadingFile {
   error?: string;
 }
 
-export default function PhotoGallery({ entryId, files, fileType = 'photo', onFilesChange }: Props) {
+export default function PhotoGallery({
+  entryId,
+  files,
+  fileType = 'photo',
+  linkedTo,
+  compact = false,
+  onFilesChange,
+}: Props) {
   const [uploading, setUploading] = useState<UploadingFile[]>([]);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +84,7 @@ export default function PhotoGallery({ entryId, files, fileType = 'photo', onFil
         formData.append('file', file);
         formData.append('entry_id', entryId);
         formData.append('file_type', fileType);
+        if (linkedTo) formData.append('linked_to', linkedTo);
 
         const res = await fetch('/api/photos/upload', {
           method: 'POST',
@@ -94,7 +112,8 @@ export default function PhotoGallery({ entryId, files, fileType = 'photo', onFil
           mime_type: data.mime_type,
           size_bytes: data.size_bytes,
           caption: data.caption,
-          linked_to: null,
+          linked_to: linkedTo,
+          client_visible: 0,
           created_at: new Date().toISOString(),
         };
 
@@ -138,32 +157,41 @@ export default function PhotoGallery({ entryId, files, fileType = 'photo', onFil
     setUploading((prev) => prev.filter((u) => u.id !== uploadId));
   }
 
-  const imageFiles = files.filter((f) => f.mime_type.startsWith('image/'));
-  const docFiles = files.filter((f) => !f.mime_type.startsWith('image/'));
+  // This gallery's own slice: its file type, and either the row it's attached
+  // to or — for the day's general photos — the files attached to no row at all.
+  const shown = files.filter(
+    (f) => f.file_type === fileType && (linkedTo ? f.linked_to === linkedTo : !f.linked_to)
+  );
+  const imageFiles = shown.filter((f) => f.mime_type.startsWith('image/'));
+  const docFiles = shown.filter((f) => !f.mime_type.startsWith('image/'));
 
   return (
-    <div className="space-y-4">
+    <div className={compact ? 'space-y-2' : 'space-y-4'}>
       {/* Upload buttons */}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md text-sm transition-colors"
+          className={`inline-flex items-center gap-2 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md transition-colors ${
+            compact ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2.5 text-sm'
+          }`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className={compact ? 'h-4 w-4' : 'h-5 w-5'} viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
           </svg>
-          Take Photo
+          {compact ? 'Photo' : 'Take Photo'}
         </button>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md text-sm transition-colors"
+          className={`inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-md transition-colors ${
+            compact ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2.5 text-sm'
+          }`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className={compact ? 'h-4 w-4' : 'h-5 w-5'} viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
           </svg>
-          Upload Files
+          {compact ? 'Upload' : 'Upload Files'}
         </button>
 
         {/* Hidden file inputs */}
@@ -229,7 +257,7 @@ export default function PhotoGallery({ entryId, files, fileType = 'photo', onFil
 
       {/* Photo grid */}
       {imageFiles.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className={`grid gap-3 ${compact ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'}`}>
           {imageFiles.map((file) => (
             <div key={file.id} className="group relative aspect-square rounded-lg overflow-hidden bg-gray-100">
               <img
@@ -303,7 +331,7 @@ export default function PhotoGallery({ entryId, files, fileType = 'photo', onFil
       )}
 
       {/* Empty state */}
-      {files.length === 0 && uploading.length === 0 && (
+      {shown.length === 0 && uploading.length === 0 && !compact && (
         <div className="text-center py-6 text-sm text-gray-400">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto mb-2 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />

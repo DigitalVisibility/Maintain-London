@@ -62,6 +62,29 @@ function clientFilterEntry(entry: DiaryEntryFull): DiaryEntryFull {
   };
 }
 
+/** Images attached to a specific variation / delivery row. */
+function rowPhotos(entry: DiaryEntryFull, rowId: string) {
+  return entry.files.filter((f) => f.mime_type.startsWith('image/') && f.linked_to === rowId);
+}
+
+/** The day's general photos — the ones not attached to any row. */
+function generalPhotos(entry: DiaryEntryFull) {
+  return entry.files.filter((f) => f.mime_type.startsWith('image/') && !f.linked_to);
+}
+
+/** A small strip of thumbnails, for embedding inside a table cell. */
+function photoStrip(files: { r2_key: string; caption?: string; filename: string }[]): string {
+  if (files.length === 0) return '';
+  return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+    ${files
+      .map(
+        (f) =>
+          `<img src="/api/photos/${encodeURIComponent(f.r2_key)}" alt="${f.caption || f.filename}" style="width:64px;height:64px;object-fit:cover;border-radius:4px;border:1px solid #E5E7EB">`
+      )
+      .join('')}
+  </div>`;
+}
+
 /** Generate HTML for a single diary entry report */
 export function generateEntryReportHTML(entryInput: DiaryEntryFull, project: Project, options: ReportOptions = {}): string {
   const entry = options.clientOnly ? clientFilterEntry(entryInput) : entryInput;
@@ -223,7 +246,7 @@ export function generateEntryReportHTML(entryInput: DiaryEntryFull, project: Pro
     <div class="section-title">Variations</div>
     <table>
       <thead><tr><th>Description</th><th>Hours Required</th></tr></thead>
-      <tbody>${entry.variations.map((v) => `<tr><td>${v.description}</td><td>${v.hours_required ?? '—'}</td></tr>`).join('')}</tbody>
+      <tbody>${entry.variations.map((v) => `<tr><td>${v.description}${photoStrip(rowPhotos(entry, v.id))}</td><td>${v.hours_required ?? '—'}</td></tr>`).join('')}</tbody>
     </table>
   </div>` : ''}
 
@@ -253,16 +276,16 @@ export function generateEntryReportHTML(entryInput: DiaryEntryFull, project: Pro
     <div class="section-title">Materials Delivered</div>
     <table>
       <thead><tr><th>Supplier</th><th>Notes</th></tr></thead>
-      <tbody>${entry.deliveries.map((d) => `<tr><td>${d.supplier}</td><td>${d.notes || '—'}</td></tr>`).join('')}</tbody>
+      <tbody>${entry.deliveries.map((d) => `<tr><td>${d.supplier}${photoStrip(rowPhotos(entry, d.id))}</td><td>${d.notes || '—'}</td></tr>`).join('')}</tbody>
     </table>
   </div>` : ''}
 
-  <!-- Photos -->
-  ${entry.files.filter((f) => f.mime_type.startsWith('image/')).length > 0 ? `
+  <!-- Photos (the day's general photos; row-specific ones sit with their row above) -->
+  ${generalPhotos(entry).length > 0 ? `
   <div class="section">
-    <div class="section-title">Photos (${entry.files.filter((f) => f.mime_type.startsWith('image/')).length})</div>
+    <div class="section-title">Photos (${generalPhotos(entry).length})</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-      ${entry.files.filter((f) => f.mime_type.startsWith('image/')).map((f) => `<div style="aspect-ratio:1;overflow:hidden;border-radius:6px;border:1px solid #E5E7EB"><img src="/api/photos/${encodeURIComponent(f.r2_key)}" style="width:100%;height:100%;object-fit:cover" alt="${f.caption || f.filename}"></div>`).join('')}
+      ${generalPhotos(entry).map((f) => `<div style="aspect-ratio:1;overflow:hidden;border-radius:6px;border:1px solid #E5E7EB"><img src="/api/photos/${encodeURIComponent(f.r2_key)}" style="width:100%;height:100%;object-fit:cover" alt="${f.caption || f.filename}"></div>`).join('')}
     </div>
   </div>` : ''}
 

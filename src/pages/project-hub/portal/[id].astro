@@ -28,6 +28,28 @@ const released = await queryAll<DiaryEntry>(
   [id]
 );
 
+// The photos the contractor chose to show, on the days they released. The photo
+// endpoint re-checks both of those conditions, so a thumbnail URL can't be used
+// to reach anything that wasn't released.
+interface PortalPhoto { r2_key: string; caption?: string; filename: string; entry_id: string }
+const photos = await queryAll<PortalPhoto>(
+  env.DB,
+  `SELECT f.r2_key, f.caption, f.filename, f.entry_id
+     FROM entry_files f
+     JOIN diary_entries e ON e.id = f.entry_id
+    WHERE e.project_id = ? AND e.client_released = 1
+      AND f.client_visible = 1 AND f.mime_type LIKE 'image/%'
+    ORDER BY f.created_at`,
+  [id]
+);
+
+const photosByEntry = new Map<string, PortalPhoto[]>();
+for (const p of photos) {
+  const list = photosByEntry.get(p.entry_id) ?? [];
+  list.push(p);
+  photosByEntry.set(p.entry_id, list);
+}
+
 function fmt(date: string) {
   return new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 }
@@ -42,14 +64,30 @@ function fmt(date: string) {
   <section class="mb-8">
     <h2 class="text-sm font-semibold text-gray-900 mb-3">Daily updates</h2>
     {released.length > 0 ? (
-      <div class="space-y-2">
-        {released.map((e) => (
-          <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
-            <div class="text-sm font-medium text-gray-900">{fmt(e.date)}</div>
-            <a href={`/api/reports/summary?project_id=${id}&type=daily&entry_id=${e.id}&audience=client`} target="_blank" rel="noopener"
-              class="text-sm font-medium text-[#83B81A] hover:underline">View summary →</a>
-          </div>
-        ))}
+      <div class="space-y-3">
+        {released.map((e) => {
+          const dayPhotos = photosByEntry.get(e.id) ?? [];
+          return (
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+              <div class="flex items-center justify-between">
+                <div class="text-sm font-medium text-gray-900">{fmt(e.date)}</div>
+                <a href={`/api/reports/summary?project_id=${id}&type=daily&entry_id=${e.id}&audience=client`} target="_blank" rel="noopener"
+                  class="text-sm font-medium text-[#83B81A] hover:underline">View summary →</a>
+              </div>
+              {dayPhotos.length > 0 && (
+                <div class="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {dayPhotos.map((p) => (
+                    <a href={`/api/photos/${encodeURIComponent(p.r2_key)}`} target="_blank" rel="noopener"
+                      class="block aspect-square rounded-md overflow-hidden bg-gray-100 border border-gray-200 hover:opacity-90 transition-opacity">
+                      <img src={`/api/photos/${encodeURIComponent(p.r2_key)}`} alt={p.caption || p.filename}
+                        class="w-full h-full object-cover" loading="lazy" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     ) : (
       <div class="bg-white rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">No updates released yet.</div>

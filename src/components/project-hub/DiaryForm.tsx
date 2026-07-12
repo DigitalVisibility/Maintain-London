@@ -9,10 +9,18 @@ import PhotoGallery from './PhotoGallery';
 import type { PersonnelItem } from './PersonnelManager';
 import type { ActivityItem } from './ActivityTable';
 import type { DelayItem } from './DelayTable';
-import type { WeatherData, Project, EntryFile } from '../../types/diary';
+import type { WeatherData, Project, EntryFile, FileType } from '../../types/diary';
 import { $isOnline, $pendingSyncCount } from '../../stores/offline';
 import { queueEntrySave, requestEntrySync, getSyncQueueCount } from '../../lib/offline';
 import { generateId } from '../../lib/ids';
+
+/**
+ * Above this many client-visible photos we *advise* trimming the daily summary,
+ * but never enforce it. There is deliberately no maximum: the day a problem is
+ * uncovered is the day the record needs the most photos, and that is the worst
+ * possible moment to silently drop evidence.
+ */
+const CLIENT_PHOTO_ADVISORY = 10;
 
 // Row ids are minted here, in the form, and preserved by the server on save, so
 // that a variation or delivery keeps its identity across autosaves and can be
@@ -250,6 +258,24 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
     }
   }
 
+  /**
+   * Deleting a variation or delivery takes its photos with it — otherwise they
+   * would linger in R2 attached to a row that no longer exists, and show up in
+   * no gallery at all.
+   */
+  async function deleteFilesLinkedTo(rowId?: string) {
+    if (!rowId) return;
+    const orphaned = files.filter((f) => f.linked_to === rowId);
+    if (orphaned.length === 0) return;
+
+    setFiles((prev) => prev.filter((f) => f.linked_to !== rowId));
+    await Promise.all(
+      orphaned.map((f) =>
+        fetch(`/api/photos/${encodeURIComponent(f.r2_key)}`, { method: 'DELETE' }).catch(() => {})
+      )
+    );
+  }
+
   const handleWeatherLoaded = useCallback((data: WeatherData) => {
     setForm((prev) => ({
       ...prev,
@@ -418,6 +444,7 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
 
   // ── Vetting panel data ──
   const imageFiles = files.filter((f) => f.mime_type.startsWith('image/'));
+  const visiblePhotoCount = imageFiles.filter((f) => f.client_visible).length;
   const vettingCats: {
     key: VisibleArrayKey;
     label: string;
@@ -618,6 +645,10 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
         <VariationsSection
           variations={form.variations}
           onChange={(v) => updateField('variations', v)}
+          entryId={entryId}
+          files={files}
+          onFilesChange={setFiles}
+          onRemoveRow={deleteFilesLinkedTo}
         />
       </Section>
 
@@ -670,13 +701,18 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
           items={form.deliveries}
           onChange={(d) => updateField('deliveries', d)}
           suppliers={materialSuppliers}
+          entryId={entryId}
+          files={files}
+          onFilesChange={setFiles}
+          onRemoveRow={deleteFilesLinkedTo}
         />
       </Section>
 
-      {/* Photos & Files */}
+      {/* Photos & Files — the day's general photos. Photos attached to a
+          variation or a delivery live on those rows instead. */}
       <Section
         title="Photos & Files"
-        badge={files.length}
+        badge={files.filter((f) => !f.linked_to).length}
         icon={
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
@@ -810,7 +846,21 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
 
         {/* Photos */}
         <div className="space-y-2">
-          <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">Photos</div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">Photos</div>
+            {visiblePhotoCount > 0 && (
+              <div className="text-xs text-gray-400">{visiblePhotoCount} of {imageFiles.length} shown to client</div>
+            )}
+          </div>
+          {/* Guidance, not a limit. A day where something went wrong may genuinely
+              need a dozen photos, and the record should never be the thing we
+              trim to keep a summary tidy. */}
+          {visiblePhotoCount > CLIENT_PHOTO_ADVISORY && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+              {visiblePhotoCount} photos selected — that's a lot for a daily summary. Fine if the
+              day warrants it; otherwise consider trimming to the clearest few.
+            </p>
+          )}
           {!entryId ? (
             <p className="text-sm text-gray-400 italic">Save this entry first to manage photo visibility.</p>
           ) : imageFiles.length === 0 ? (
@@ -890,12 +940,76 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
 
 /* ── Inline sub-sections ── */
 
+/**
+ * Photos attached to a single variation or delivery row, rather than to the day
+ * as a whole. The row's id is minted in the form and preserved by the server, so
+ * a photo can be attached to a row that hasn't been saved yet — the link resolves
+ * on the next save. Uploads still need the entry itself to exist.
+ */
+function RowPhotos({
+  entryId,
+  rowId,
+  fileType,
+  files,
+  onFilesChange,
+}: {
+  entryId?: string;
+  rowId?: string;
+  fileType: FileType;
+  files: EntryFile[];
+  onFilesChange: (files: EntryFile[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  if (!entryId || !rowId) {
+    return <p className="mt-1.5 text-xs text-gray-400 italic">Save this entry first to attach photos.</p>;
+  }
+
+  const count = files.filter((f) => f.file_type === fileType && f.linked_to === rowId).length;
+
+  return (
+    <div className="mt-1.5">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-[#83B81A] transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+        </svg>
+        {count > 0 ? `${count} photo${count === 1 ? '' : 's'}` : 'Add photos'}
+        <span className="text-gray-300">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="mt-2 p-2 rounded-md bg-gray-50 border border-gray-200">
+          <PhotoGallery
+            entryId={entryId}
+            files={files}
+            fileType={fileType}
+            linkedTo={rowId}
+            compact
+            onFilesChange={onFilesChange}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VariationsSection({
   variations,
   onChange,
+  entryId,
+  files,
+  onFilesChange,
+  onRemoveRow,
 }: {
   variations: VariationItem[];
   onChange: (v: VariationItem[]) => void;
+  entryId?: string;
+  files: EntryFile[];
+  onFilesChange: (files: EntryFile[]) => void;
+  onRemoveRow: (rowId?: string) => void;
 }) {
   function add() {
     onChange([...variations, { id: generateId(), description: '', hours_required: '' }]);
@@ -906,6 +1020,7 @@ function VariationsSection({
     onChange(u);
   }
   function remove(i: number) {
+    onRemoveRow(variations[i]?.id);
     onChange(variations.filter((_, idx) => idx !== i));
   }
 
@@ -923,10 +1038,13 @@ function VariationsSection({
       ) : (
         <div className="space-y-2">
           {variations.map((v, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <input type="text" value={v.description} onChange={(e) => update(i, 'description', e.target.value)} placeholder="Description of variation" className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent" />
-              <input type="number" value={v.hours_required} onChange={(e) => update(i, 'hours_required', e.target.value ? Number(e.target.value) : '')} placeholder="Hrs" min="0" step="0.5" className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent" />
-              <button type="button" onClick={() => remove(i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+            <div key={v.id ?? i} className="rounded-md border border-gray-200 p-2">
+              <div className="flex items-start gap-2">
+                <input type="text" value={v.description} onChange={(e) => update(i, 'description', e.target.value)} placeholder="Description of variation" className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent" />
+                <input type="number" value={v.hours_required} onChange={(e) => update(i, 'hours_required', e.target.value ? Number(e.target.value) : '')} placeholder="Hrs" min="0" step="0.5" className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent" />
+                <button type="button" onClick={() => remove(i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+              </div>
+              <RowPhotos entryId={entryId} rowId={v.id} fileType="variation_doc" files={files} onFilesChange={onFilesChange} />
             </div>
           ))}
         </div>
@@ -1042,10 +1160,18 @@ function DeliveriesSection({
   items,
   onChange,
   suppliers,
+  entryId,
+  files,
+  onFilesChange,
+  onRemoveRow,
 }: {
   items: DeliveryItem[];
   onChange: (d: DeliveryItem[]) => void;
   suppliers: string[];
+  entryId?: string;
+  files: EntryFile[];
+  onFilesChange: (files: EntryFile[]) => void;
+  onRemoveRow: (rowId?: string) => void;
 }) {
   function add() {
     onChange([...items, { id: generateId(), supplier: '', notes: '' }]);
@@ -1056,6 +1182,7 @@ function DeliveriesSection({
     onChange(u);
   }
   function remove(i: number) {
+    onRemoveRow(items[i]?.id);
     onChange(items.filter((_, idx) => idx !== i));
   }
 
@@ -1073,14 +1200,17 @@ function DeliveriesSection({
       ) : (
         <div className="space-y-2">
           {items.map((d, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <div className="flex-1 sm:flex sm:gap-2 space-y-2 sm:space-y-0">
-                <div className="sm:w-48">
-                  <SupplierSelect value={d.supplier} onChange={(v) => update(i, 'supplier', v)} suppliers={suppliers} label="" />
+            <div key={d.id ?? i} className="rounded-md border border-gray-200 p-2">
+              <div className="flex items-start gap-2">
+                <div className="flex-1 sm:flex sm:gap-2 space-y-2 sm:space-y-0">
+                  <div className="sm:w-48">
+                    <SupplierSelect value={d.supplier} onChange={(v) => update(i, 'supplier', v)} suppliers={suppliers} label="" />
+                  </div>
+                  <input type="text" value={d.notes} onChange={(e) => update(i, 'notes', e.target.value)} placeholder="Delivery notes" className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent" />
                 </div>
-                <input type="text" value={d.notes} onChange={(e) => update(i, 'notes', e.target.value)} placeholder="Delivery notes" className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent" />
+                <button type="button" onClick={() => remove(i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
               </div>
-              <button type="button" onClick={() => remove(i)} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+              <RowPhotos entryId={entryId} rowId={d.id} fileType="delivery_note" files={files} onFilesChange={onFilesChange} />
             </div>
           ))}
         </div>
