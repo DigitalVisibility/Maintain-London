@@ -24,6 +24,9 @@ async function sweep(env: Env): Promise<Response> {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${env.CRON_SECRET}`,
+      // Load-bearing. Astro's CSRF guard (security.checkOrigin) rejects a
+      // cross-site POST that arrives with no Content-Type — it never reaches the
+      // route, and the sweep 403s silently. Don't "tidy" this header away.
       'Content-Type': 'application/json',
     },
   });
