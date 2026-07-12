@@ -225,15 +225,35 @@ noted so nothing gets built twice.
       day the record needs the most photos. Instead: unlimited upload, curated
       client-visible selection, and a soft advisory above 10.
 
-### Phase 2 — Automation (the weekly summary)
+### Phase 2a — Client update automation ✅ COMPLETE
 
-- [ ] Cron infrastructure — **sidecar Cloudflare Worker** (Pages does not support
-      cron triggers; this avoids touching the live deployment)
-- [ ] Friday 16:00: generate weekly summary → **Claude drafts the client-facing
-      narrative** → lands in an approval queue → one-click approve → email to
-      client + archive into the project's Progress file
+- [x] Cron infrastructure — **sidecar Cloudflare Worker** (`workers/summary-cron/`).
+      Pages has no cron triggers; the sidecar owns the clock and nothing else, so
+      the live deployment was never touched. It calls `POST /api/summaries/run`
+      with a shared secret; all the logic stays in the app.
+- [x] **Claude drafts the client-facing narrative** (`lib/ai.ts`, `claude-opus-4-8`)
+      so the update arrives *written* — something to scan and approve, not raw data
+      still to be written up. A failed draft still lands in the queue with the error
+      shown, to be written by hand rather than vanishing.
       *(supersedes "Weekly Summary Emails" + "AI Agent Summaries" above)*
-- [ ] **Message notifications** — email + unread badge, digested
+- [x] Approval queue → edit → approve → email the client → **archive the exact
+      HTML that was sent** to R2. Nothing reaches a client unapproved.
+- [x] **The schedule is configurable, not hard-coded.** Friday 16:00 is the
+      default, not the product's opinion: cadence is `manual · daily · weekly ·
+      fortnightly · monthly · milestone`, set per business and overridable per
+      project (payment terms are per contract, not per company).
+- [x] **Milestones** (`project_milestones`) — a completed milestone drafts an
+      update covering the work since the last one. Defined once here because this
+      is also what Phase 4's **stage payments** hang off; two parallel objects
+      would drift apart.
+- [x] Timezone-correct: schedules are wall-clock in the org's zone, so 4pm stays
+      4pm through the clock change. (Cron runs UTC — get this wrong and every
+      summer summary goes out an hour early.)
+
+### Phase 2b — Notifications (outstanding)
+
+- [ ] **Message notifications** — a new message currently notifies nobody. Email +
+      unread badge, digested so it doesn't become noise.
       *(supersedes "Email Notifications" above)*
 
 ### Phase 3 — Variations → approvals → invoicing

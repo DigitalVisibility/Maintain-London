@@ -1,0 +1,16 @@
+name = "maintain-london-summary-cron"
+main = "index.ts"
+compatibility_date = "2024-12-01"
+
+# Every 15 minutes. The sweep is idempotent — it fires a project's summary once
+# per scheduled occurrence — so a frequent tick just means the 4pm draft lands
+# close to 4pm rather than hours later, whatever time a business picks.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+HUB_URL = "https://maintainlondon.co.uk"
+
+# CRON_SECRET is a secret, not a var:
+#   wrangler secret put CRON_SECRET
+# It must match the CRON_SECRET set on the Pages project.

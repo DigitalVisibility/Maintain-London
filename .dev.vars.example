@@ -1,0 +1,12 @@
+# Local dev secrets for `astro dev` (copy to .dev.vars — that file is gitignored).
+# In production these are set on the Cloudflare Pages project, not here.
+
+# Claude — drafts the client-facing summary narrative.
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Resend — transactional email.
+RESEND_API_KEY=re_...
+
+# Shared secret the summary cron worker authenticates the sweep with.
+# Must match the CRON_SECRET set on the sidecar worker.
+CRON_SECRET=change-me

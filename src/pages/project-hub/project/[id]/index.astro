@@ -9,6 +9,9 @@ import EditProjectButton from '../../../../components/project-hub/EditProjectBut
 import ApprovalsPanel from '../../../../components/project-hub/ApprovalsPanel';
 import MessageThread from '../../../../components/project-hub/MessageThread';
 import ClockWidget from '../../../../components/project-hub/ClockWidget';
+import Milestones from '../../../../components/project-hub/Milestones';
+import SummaryQueue from '../../../../components/project-hub/SummaryQueue';
+import ScheduleSettings from '../../../../components/project-hub/ScheduleSettings';
 
 const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
@@ -18,6 +21,7 @@ const canManageProjects = hasCap(Astro.locals, 'manage_projects');
 const canRequestWorks = hasCap(Astro.locals, 'request_works');
 const canApproveWorks = hasCap(Astro.locals, 'approve_works');
 const canClock = hasCap(Astro.locals, 'clock_time');
+const canReleaseToClient = hasCap(Astro.locals, 'release_to_client');
 
 const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
 if (!project || project.org_id !== orgId) return Astro.redirect('/project-hub/');
@@ -157,6 +161,28 @@ const totalEntries = await queryOne<{ count: number }>(
     ) : (
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
         <p class="text-sm text-gray-500">No diary entries yet. Create your first one to get started.</p>
+      </div>
+    )}
+
+    <!-- Milestones — the stages this job is measured in. Completing one drafts a
+         client update, and is what a stage payment will later hang off. -->
+    <div class="mt-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Milestones</h2>
+      <Milestones client:load projectId={id!} />
+    </div>
+
+    <!-- Client updates: drafted for you, sent only once you approve -->
+    {canReleaseToClient && (
+      <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Client updates</h2>
+        <SummaryQueue client:load projectId={id!} />
+      </div>
+    )}
+
+    <!-- Schedule for this project (defaults to the business setting) -->
+    {canManageProjects && (
+      <div class="mt-6">
+        <ScheduleSettings client:load projectId={id!} />
       </div>
     )}
 

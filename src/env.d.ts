@@ -5,6 +5,12 @@ type Runtime = import('@astrojs/cloudflare').Runtime<{
   R2: R2Bucket;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
+  /** Resend — transactional email (invites, approvals, client summaries). */
+  RESEND_API_KEY?: string;
+  /** Claude — drafts the client-facing summary narrative. */
+  ANTHROPIC_API_KEY?: string;
+  /** Shared secret the summary cron worker authenticates with. */
+  CRON_SECRET?: string;
 }>;
 
 declare namespace App {

@@ -1,0 +1,21 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../layouts/HubLayout.astro';
+import SummaryQueue from '../../components/project-hub/SummaryQueue';
+import { hasCap } from '../../lib/capabilities';
+
+// Sending an update to the client is releasing to the client.
+if (!hasCap(Astro.locals, 'release_to_client')) return Astro.redirect('/project-hub/');
+---
+
+<HubLayout title="Client updates">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 font-display mb-1">Client updates</h1>
+    <p class="text-sm text-gray-500 mb-6">
+      Drafted from the site diary on your schedule, or when a milestone lands. Scan, tweak, send.
+    </p>
+
+    <SummaryQueue client:load />
+  </div>
+</HubLayout>
