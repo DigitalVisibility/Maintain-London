@@ -8,6 +8,18 @@ compatibility_date = "2024-12-01"
 [triggers]
 crons = ["*/15 * * * *"]
 
+# Retain logs, so a failing sweep can actually be diagnosed. Without this,
+# `wrangler tail` streams nothing — not even for a request you can see returning
+# a status code — and a silently failing cron looks identical to one that never
+# fired.
+[observability]
+enabled = true
+
+# workers.dev stays on deliberately: it exposes the manual trigger, which is how
+# you fire a sweep on demand instead of waiting for the next tick. The fetch
+# handler requires the same shared secret, so the URL is not a way in.
+preview_urls = false
+
 [vars]
 HUB_URL = "https://maintainlondon.co.uk"
 
