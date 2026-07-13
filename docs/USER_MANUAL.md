@@ -1,265 +1,265 @@
-# Project Hub — User & Operative Manual
+# Project Hub — Site Team Guide
 
-> **Version:** 1.0 (April 2026)
-> **For:** Site managers, operatives, and team members
+> **For:** Site managers and workers (operatives)
+> **Reading time:** About 15 minutes
+> **Updated:** July 2026
 
----
+This guide is for the people on site. It shows you how to fill in the daily diary,
+take photos, note extra work, and clock in and out. It uses simple steps. You do
+not need to be good with computers.
 
-## Table of Contents
+The Project Hub lives at:
 
-1. [Getting Started](#1-getting-started)
-2. [Logging In](#2-logging-in)
-3. [The Dashboard](#3-the-dashboard)
-4. [Viewing a Project](#4-viewing-a-project)
-5. [Creating a Diary Entry](#5-creating-a-diary-entry)
-6. [Editing a Diary Entry](#6-editing-a-diary-entry)
-7. [Taking & Uploading Photos](#7-taking--uploading-photos)
-8. [Generating Reports](#8-generating-reports)
-9. [Working Offline](#9-working-offline)
-10. [Installing the App on Your Phone](#10-installing-the-app-on-your-phone)
-11. [Settings](#11-settings)
-12. [Tips & Troubleshooting](#12-tips--troubleshooting)
+**https://maintainlondon.co.uk/project-hub/**
+
+It works on your phone. There are steps at the end to add it to your home screen so
+it opens like an app.
 
 ---
 
-## 1. Getting Started
+## Table of contents
 
-Project Hub is a web app for logging daily site activity. You can use it on your phone, tablet, or computer — no app store download needed.
-
-**What you'll need:**
-- A login (email + password) — your admin will create this for you
-- A modern web browser (Chrome, Safari, Edge, or Firefox)
-- Internet connection (the app also works offline — see Section 9)
-
-**Web address:** `https://maintainlondon.co.uk/project-hub/`
-
----
-
-## 2. Logging In
-
-1. Go to `https://maintainlondon.co.uk/project-hub/login`
-2. Enter your **email** and **password**
-3. Tap **Sign In**
-
-You'll stay logged in for 7 days. After that, you'll need to sign in again.
-
-**Forgot your password?** Contact your admin to reset it.
+1. [Log in](#1-log-in)
+2. [Find your job](#2-find-your-job)
+3. [Clock in and out](#3-clock-in-and-out)
+4. [Fill in the daily diary](#4-fill-in-the-daily-diary)
+5. [Take and add photos](#5-take-and-add-photos)
+6. [Note extra work (variations)](#6-note-extra-work-variations)
+7. [Note materials delivered](#7-note-materials-delivered)
+8. [Ask for something to be approved](#8-ask-for-something-to-be-approved)
+9. [Add files to a folder](#9-add-files-to-a-folder)
+10. [Update the plan (programme)](#10-update-the-plan-programme)
+11. [Messages](#11-messages)
+12. [Working with no signal](#12-working-with-no-signal)
+13. [Put the app on your phone](#13-put-the-app-on-your-phone)
+14. [Common questions](#14-common-questions)
 
 ---
 
-## 3. The Dashboard
+## 1. Log in
 
-After logging in, you'll see the **Dashboard**. This is your home screen.
+1. Open **https://maintainlondon.co.uk/project-hub/** on your phone.
+2. Type your email and password.
+3. Tap **Sign in**.
 
-**What's on the dashboard:**
-- **Welcome message** with your name
-- **Weekly stats** — how many diary entries, photos, and delays have been logged this week (only shows if there's data)
-- **Project cards** — each active project is shown as a card with the project name, address, and client name
-
-**To open a project:** Tap the project card.
+If you have never logged in, check your email for an invite. Tap the link in it and
+set a password.
 
 ---
 
-## 4. Viewing a Project
+## 2. Find your job
 
-When you open a project, you'll see:
+After you log in you see the **Dashboard**. This shows the jobs you are on.
 
-- **Project name, address, and client** at the top
-- **Quick stats** — total entries, project status, and date of the last entry
-- **Recent entries** — the last 5 diary entries, showing the date, time, and site manager
-- **Action buttons:**
-  - **Reports** — generate a summary report
-  - **New Diary Entry** — start today's log
-
-**To view all entries:** Tap "View all" next to "Recent Entries".
+- Tap a job card to open it.
+- Inside a job you can see the diary, photos, and more.
 
 ---
 
-## 5. Creating a Diary Entry
+## 3. Clock in and out
 
-This is the main thing you'll do each day. A diary entry records everything that happened on site.
+If your boss uses time tracking, you will see a **clock** at the top of the job.
 
-### Step-by-step:
+**To clock in:**
+1. Open the job.
+2. Tap **Clock in**.
+3. Allow location if it asks. This records where you started.
 
-1. Open a project from the dashboard
-2. Tap **New Diary Entry**
-3. Fill in the sections (each section expands when you tap it):
+**To take a break:** tap **Start break**. Tap **End break** when you're back.
 
-| Section | What to fill in |
-|---|---|
-| **Date & Time** | Date, start time, end time (auto-calculates duration) |
-| **Site Manager** | Who's in charge today (auto-filled with your name) |
-| **Personnel** | Add each person on site — name, role (operative/visitor), hours worked |
-| **Activities** | What work was done — task description and status (active/complete/on hold) |
-| **Delays** | Any delays — what was affected, reason, hours lost |
-| **Weather** | Auto-fills from weather data. Shows temperature, wind, humidity, and conditions |
-| **Variations** | Scope changes — description and estimated hours |
-| **Materials Required** | Materials to order — supplier, items, date needed |
-| **Equipment Hire** | Equipment being hired — equipment name and supplier |
-| **Materials Delivered** | What arrived on site — supplier and delivery notes |
-| **Photos** | Site photos and documents (see Section 7) |
-| **Notes** | Any additional notes or comments |
+**To clock out:** tap **Clock out** at the end of the day.
 
-4. Tap **Save Entry** at the bottom
-
-### Copy Yesterday's Entry
-
-If today's entry is similar to yesterday's, tap the **Copy Yesterday** button at the top of the form. This pre-fills personnel, activities, and equipment from the previous day. You can then edit as needed.
-
-### Auto-save
-
-The form saves a draft automatically. If you navigate away and come back, your draft will be there.
+That's it. Your hours are saved for the office.
 
 ---
 
-## 6. Editing a Diary Entry
+## 4. Fill in the daily diary
 
-1. Open a project
-2. Tap on an entry from the "Recent Entries" list (or tap "View all" to see all entries)
-3. Make your changes
-4. Tap **Save Entry**
+The diary is the most important job. It records what happened on site each day.
 
----
+**To start today's diary:**
 
-## 7. Taking & Uploading Photos
+1. Open the job.
+2. Tap **Site diary**, then **New entry** (or open today's entry if it's started).
+3. Fill in what you can. You do not have to fill in everything.
 
-Photos are attached to a diary entry. You must save the entry first before adding photos.
+The diary has sections. Tap a section to open it:
 
-### To add photos:
+- **Times** — when you started and finished.
+- **Weather** — this can fill in by itself.
+- **People on site** — add each person and their hours.
+- **Work done** — what you did today.
+- **Delays** — anything that held you up, and why.
+- **Variations** — extra work found (see section 6).
+- **Materials needed** — things to order.
+- **Materials delivered** — what turned up (see section 7).
+- **Photos** — pictures of the work (see section 5).
+- **Notes** — anything else.
 
-1. Open or create a diary entry and save it
-2. Scroll to the **Photos** section and tap to expand it
-3. Tap **Take Photo** (opens your camera) or **Upload** (pick from your gallery)
-4. The photo uploads automatically with a progress bar
-5. You can add a caption by tapping on the photo
+**Your work saves by itself** every few seconds. You will see **Saved** near the
+bottom. There is also a **Save** button you can tap any time.
 
-### Supported file types:
-- JPEG, PNG, WebP, HEIC (iPhone photos), PDF
-- Maximum file size: 10MB per file
-
-### To view a photo full-screen:
-Tap on any photo thumbnail to open the lightbox. Swipe or use arrows to navigate.
-
----
-
-## 8. Generating Reports
-
-Reports create a professional summary of diary entries that you can print or save as PDF.
-
-### To generate a report:
-
-1. Open a project
-2. Tap **Reports**
-3. Choose report type:
-   - **Daily** — summary of a single diary entry
-   - **Weekly** — summary of all entries for a given week
-4. Select the entry or week you want
-5. The report preview loads automatically
-6. Tap **Print** to print or save as PDF
-7. Tap **Download HTML** to save the file
+> **Tip:** Fill the diary in as you go, not all at the end of the day. It's
+> quicker and you won't forget things.
 
 ---
 
-## 9. Working Offline
+## 5. Take and add photos
 
-Project Hub works even without internet. This is useful on sites with poor signal.
+Photos are the best part for the customer. They love to see progress.
 
-### What works offline:
-- Viewing entries you've already loaded
-- Creating new diary entries
-- Taking photos (queued for upload)
+1. In the diary, tap the **Photos** section.
+2. Tap **Take Photo** to use the camera, or **Upload** to pick pictures you already
+   took.
+3. Wait for each photo to finish uploading.
 
-### What needs internet:
-- Logging in/out
-- Weather data
-- Uploading photos to the server
-- Generating reports
+You can add as many photos as you like. There is no limit. Take lots on a day when
+something important happens, like when you open up a wall or finish a stage.
 
-### How it works:
+**Which photos does the customer see?** Not all of them. Later, the manager picks
+the best few to show the customer. So take plenty — the good ones get chosen.
 
-1. When you go offline, a **yellow banner** appears at the top: "You are offline"
-2. Any entries you save are **queued** — you'll see "Queued — will sync when online"
-3. When you reconnect, the banner shows the number of pending changes
-4. Tap **Sync now** to push your changes, or they'll sync automatically
-
-### Sync status:
-| Banner colour | Meaning |
-|---|---|
-| **Yellow** | Offline or changes waiting to sync |
-| **Blue** | Currently syncing |
-| **No banner** | All synced, you're online |
+**Photos on extra work and deliveries:** you can also add photos right on a
+**variation** or a **materials delivered** line. Look for the small **Add photos**
+link under that line. This is great for showing the customer exactly what you
+found or what arrived.
 
 ---
 
-## 10. Installing the App on Your Phone
+## 6. Note extra work (variations)
 
-You can install Project Hub on your home screen so it opens like a normal app.
+A "variation" is extra work that wasn't in the original plan — for example, you
+find rot, or the customer asks for a change.
 
-### iPhone (Safari):
-1. Open `https://maintainlondon.co.uk/project-hub/` in Safari
-2. Tap the **Share** button (square with arrow)
-3. Scroll down and tap **Add to Home Screen**
-4. Tap **Add**
+1. In the diary, open the **Variations** section.
+2. Tap **Add Variation**.
+3. Write what the extra work is. For example: *"Two rafters rotten, need
+   replacing."*
+4. Add a photo if you can (tap **Add photos** under the line).
 
-### Android (Chrome):
-1. Open `https://maintainlondon.co.uk/project-hub/` in Chrome
-2. Tap the **three dots** menu (top right)
-3. Tap **Add to Home Screen** (or you may see an install banner)
-4. Tap **Add**
+That's all you do on site. You do **not** put a price. When you save, the office is
+told and they add the price and send it to the customer to approve.
 
-Once installed, the app opens in full screen without the browser bar.
-
----
-
-## 11. Settings
-
-Tap **Settings** in the sidebar (desktop) or bottom bar (mobile).
-
-**What's in Settings:**
-- **Your profile** — your name, email, and role
-- **PWA status** — whether the app is installed
-- **Service Worker** — whether offline support is active
-- **Sign Out** — logs you out
+> **Why this matters:** This makes sure extra work gets recorded and paid for.
+> Before, extra work was often forgotten. Now it never is.
 
 ---
 
-## 12. Tips & Troubleshooting
+## 7. Note materials delivered
 
-### The page won't load
-- Check your internet connection
-- Try refreshing the page (pull down on mobile, or press F5)
-- Clear your browser cache and try again
-
-### I can't see any projects
-- Ask your admin to add you to a project or check that projects exist
-
-### Photos won't upload
-- Check file size (max 10MB)
-- Check file type (JPEG, PNG, WebP, HEIC, or PDF only)
-- Make sure you've saved the diary entry first
-
-### The sync banner won't go away
-- Tap "Sync now" — if it doesn't clear, the server may have rejected the entry (e.g. duplicate date)
-- Check your internet connection
-- Try refreshing the page
-
-### I can't log in
-- Double-check your email and password (case-sensitive)
-- Contact your admin to verify your account exists
+1. In the diary, open the **Materials Delivered** section.
+2. Tap **Add Delivery**.
+3. Pick the **supplier** and write a note about what came.
+4. Add a photo of the delivery note or the goods (tap **Add photos** under the line).
 
 ---
 
-*This manual covers the current version of Project Hub. New sections will be added as features are released.*
+## 8. Ask for something to be approved
 
-<!-- FUTURE SECTIONS (uncomment as features ship)
+If you need to spend money or do work that needs a yes first, you can raise a
+request.
 
-## Client Portal
-## Document Hub
-## Weekly Summary Emails
-## Gantt Chart
-## Labour Cost Tracking
-## Stage Payments
-## AI Summaries
-## Email Notifications
+1. Open the job.
+2. Find **Additional works & approvals**.
+3. Tap **Request** (if you have this button).
+4. Write what you need and the rough cost.
+5. Send it.
 
--->
+Small amounts may be approved automatically. Bigger ones go to a manager or the
+customer. You'll see the status change to **Approved** or **Rejected**.
+
+---
+
+## 9. Add files to a folder
+
+Each job has a **Documents** area with folders (Drawings, Contracts, and so on).
+
+1. Open the job and scroll to **Documents**.
+2. Tap a folder.
+3. Tap **Upload** and pick the file.
+
+By default, most folders are internal (the customer can't see them). Contracts,
+handovers, and progress pics are shown to the customer. Your manager controls this.
+
+---
+
+## 10. Update the plan (programme)
+
+If your boss wants you to keep the plan up to date:
+
+1. Open the job and scroll to **Schedule**.
+2. On the **Programme** tab, find your task.
+3. Change its status: **Not started**, **In progress**, or **Complete**.
+
+You can also add a task with a start and end date. This helps everyone see the plan.
+
+---
+
+## 11. Messages
+
+Each job has a **Messages** chat. You and the office (and sometimes the customer)
+can talk here.
+
+1. Open the job and scroll to **Messages**.
+2. Type your message.
+3. Tap **Send**.
+
+New messages update on their own while the page is open. Keep the whole
+conversation here so nothing gets lost.
+
+---
+
+## 12. Working with no signal
+
+Site basements and new builds often have no signal. The Hub still works.
+
+- Fill in the diary as normal. It **saves on your phone**.
+- When you get signal again, it **sends everything up** on its own.
+- You'll see a small banner if you're offline, and it clears when you're back.
+
+You do not need to do anything special. Just keep working.
+
+> **Tip:** Photos taken offline also upload later, once you have signal.
+
+---
+
+## 13. Put the app on your phone
+
+Make the Hub open with one tap, like an app.
+
+**iPhone (Safari):**
+1. Open the Hub in Safari.
+2. Tap the **Share** button (square with an arrow up).
+3. Tap **Add to Home Screen**, then **Add**.
+
+**Android (Chrome):**
+1. Open the Hub in Chrome.
+2. Tap the **three dots** menu.
+3. Tap **Add to Home screen** (or **Install app**).
+
+---
+
+## 14. Common questions
+
+**My photo won't show / is stuck.**
+Wait for it to finish uploading (you'll see a progress bar). If you have no signal,
+it uploads later when you're back online.
+
+**The diary won't let me start a new entry.**
+There is one diary entry per job per day. If today's is already started, just open
+and add to it.
+
+**I put a price on a variation — was that right?**
+No need. On site you only describe the extra work. The office adds the price.
+
+**I lost signal and I'm worried my work is gone.**
+It isn't. The Hub saved it on your phone and will send it up when you're back
+online. Look for the "will sync when online" note.
+
+**I can't see a job I'm supposed to be on.**
+Tell the office. They add you to a job. You only see jobs you're put on.
+
+---
+
+*Fill the diary in every day, take lots of photos, and note any extra work. That's
+the job. The office and the customer see the rest.*

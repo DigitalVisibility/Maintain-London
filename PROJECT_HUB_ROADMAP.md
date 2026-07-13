@@ -310,21 +310,44 @@ hidden from clients entirely, and recording/raising is gated behind `view_costs`
 - [x] Export is the register CSV (Phase 3); **no live-spreadsheet sync** — the
       client suggested it, but two-way sync is a conflict factory.
 
-Still open: a **client-facing invoice PDF** and **direct Xero** are the natural
-follow-ons, but the figures and the tracking are all here.
+- [x] **Client-facing invoice + receipt PDFs** (`lib/invoice-document.ts`) — a full
+      VAT invoice (trading address, VAT number, bank details, terms) and a paid
+      receipt with a PAID stamp, A4 print-perfect → the browser's Save-as-PDF makes
+      a real file. Company details come from a new profile (Settings → Company
+      details). Client-reachable, drafts never shown to a client, receipt only once
+      paid.
 
-### Phase 5 — Document Hub
+Still open: **direct Xero** is the natural follow-on to the CSV export.
 
-- [ ] Folder grid per wireframe: Drawings, Interior Finishes, Kitchen, Bathrooms,
-      Superseded, Contracts, Handovers, Progress Pics, Financials
-- [ ] **Files are currently diary-entry-scoped only** — there is no project-level
-      file concept. This is a real schema addition, not a UI change.
-      *(supersedes "Document Hub" above)*
+### Phase 5 — Document Hub ✅ COMPLETE
 
-### Phase 6 — Schedules
+- [x] Folder grid per wireframe (`documents` table): Drawings, Interior Finishes,
+      Kitchen, Bathrooms, Superseded, Contracts, Handovers, Progress Pics,
+      Financials. Project-level files, distinct from the diary-scoped `entry_files`.
+- [x] Per-file **client-visible** control, with a sensible per-folder default
+      (contracts/handovers/progress pics/financials shared; drawings/superseded
+      internal), applied server-side so nothing leaks by accident.
+- [x] Client portal **Documents** area (visible files only) + **Progress reports**
+      (the exact sent summaries, from the R2 archive — the client's "progress file").
+- [x] Serve authorises via the documents table (only keys we issued) and re-checks
+      client-visibility. Verified: cross-business and cross-client both 403.
 
-- [ ] Programme, procurement and financial schedules
+### Phase 6 — Schedules ✅ COMPLETE
+
+- [x] **Programme** (`programme_tasks`) — a lightweight Gantt: tasks with dates as
+      bars, status not-started/in-progress/complete. Client-visible by default →
+      becomes the client's "project schedule" in the portal.
+- [x] **Procurement** (`procurement_items`) — item / supplier / required-by /
+      status (to-order/ordered/delivered). Internal by default.
+- [x] **Financial schedule** — reuses the Phase 4 valuation + invoice timeline (no
+      second copy of the money).
       *(supersedes "Gantt Chart" above)*
+
+### Documentation ✅ COMPLETE
+
+- [x] `docs/ADMIN_MANUAL.md`, `docs/USER_MANUAL.md` rewritten and
+      `docs/CLIENT_MANUAL.md` created — plain-English, step-by-step, covering the
+      whole current system for owners, site teams, and customers.
 
 ---
 

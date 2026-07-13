@@ -1,315 +1,407 @@
-# Project Hub — Admin Manual
+# Project Hub — Admin Guide
 
-> **Version:** 1.0 (April 2026)
-> **For:** Business owners and administrators
+> **For:** The business owner and office managers
+> **Reading time:** About 20 minutes
+> **Updated:** July 2026
 
----
+This guide shows you how to run the Project Hub for your building business. It is
+written in plain, simple steps. If you can send an email, you can do everything in
+this guide.
 
-## Table of Contents
+Your Project Hub lives at:
 
-1. [Overview](#1-overview)
-2. [Admin vs User — What's Different?](#2-admin-vs-user--whats-different)
-3. [Managing Projects](#3-managing-projects)
-4. [Managing Users](#4-managing-users)
-5. [Understanding Roles](#5-understanding-roles)
-6. [Viewing & Reviewing Diary Entries](#6-viewing--reviewing-diary-entries)
-7. [Generating Reports](#7-generating-reports)
-8. [Data & Storage](#8-data--storage)
-9. [Security](#9-security)
-10. [Common Admin Tasks (Quick Reference)](#10-common-admin-tasks-quick-reference)
-11. [Troubleshooting](#11-troubleshooting)
+**https://maintainlondon.co.uk/project-hub/**
+
+Save that link. Add it to your phone's home screen so it opens like an app (there
+are steps for this near the end).
 
 ---
 
-## 1. Overview
+## What the Project Hub does
 
-Project Hub is Maintain London's internal project management platform. It runs at:
+Think of it as one place for a whole building job. It holds:
 
-**`https://maintainlondon.co.uk/project-hub/`**
+- **A daily diary** — what happened on site each day, with photos.
+- **Updates for your customer** — sent for you, so you don't have to remember.
+- **Variations** — extra work, priced, and sent to the customer to say yes or no.
+- **Invoices** — deposits and stage payments, with proper PDF invoices and receipts.
+- **Documents** — drawings, contracts, handover packs, kept in folders.
+- **A schedule** — the plan of work, what to order, and the money timeline.
+- **Messages** — a chat with your customer, all in one thread.
 
-It's used by your site team to log daily progress, take photos, record materials and delays, and generate reports. As an admin, you can manage projects, control user access, and oversee all activity across every project.
+There are **three kinds of people** who use it:
 
-**No software to install** — it works in any web browser and can be installed on phones as an app (see User Manual Section 10).
-
----
-
-## 2. Admin vs User — What's Different?
-
-| Feature | Operative | Manager | Admin |
-|---|---|---|---|
-| View assigned projects | Yes | Yes | Yes |
-| Create diary entries | Own entries | Project entries | All entries |
-| Upload photos | Yes | Yes | Yes |
-| Generate reports | Yes | Yes | Yes |
-| **Create new projects** | No | No | **Yes** |
-| **Edit project details** | No | No | **Yes** |
-| **Delete projects** | No | No | **Yes** |
-| **Manage users** | No | No | **Yes** |
-
-As an admin, you'll see extra buttons that other users don't see:
-- **"New Project"** button on the Dashboard
-- **"Edit Project"** button on each project page
+1. **You and your office** (owner/admin) — you set things up and see everything.
+2. **Your site team** (managers and workers) — they fill in the diary and photos.
+3. **Your customers** (clients) — they see updates and approve things. They only
+   ever see their own job. They never see your other customers or other jobs.
 
 ---
 
-## 3. Managing Projects
+## Table of contents
 
-### Creating a New Project
+1. [Your first day: setting up](#1-your-first-day-setting-up)
+2. [Add your company details (for invoices)](#2-add-your-company-details-for-invoices)
+3. [Make a project](#3-make-a-project)
+4. [Invite your team and your customer](#4-invite-your-team-and-your-customer)
+5. [Who can do what (roles)](#5-who-can-do-what-roles)
+6. [Set when customer updates go out](#6-set-when-customer-updates-go-out)
+7. [Approving and sending customer updates](#7-approving-and-sending-customer-updates)
+8. [Variations (extra work)](#8-variations-extra-work)
+9. [Invoices and payments](#9-invoices-and-payments)
+10. [Documents](#10-documents)
+11. [The schedule](#11-the-schedule)
+12. [Messages](#12-messages)
+13. [Put the app on your phone](#13-put-the-app-on-your-phone)
+14. [Common questions](#14-common-questions)
 
-1. Log in and go to the **Dashboard**
-2. Tap the green **New Project** button (top right)
-3. Fill in the form:
+---
 
-| Field | Required? | Example |
+## 1. Your first day: setting up
+
+1. Open **https://maintainlondon.co.uk/project-hub/**
+2. Type your email and password.
+3. Click **Sign in**.
+
+You are now on the **Dashboard**. This is your home page. It shows your jobs.
+
+Down the left side (or along the bottom on a phone) is the **menu**. You will use:
+
+- **Dashboard** — all your jobs.
+- **Team & Clients** — invite people.
+- **Client updates** — approve updates before they go to customers.
+- **Settings** — your company details and other choices.
+
+---
+
+## 2. Add your company details (for invoices)
+
+Do this once. It makes your invoices look proper and professional.
+
+1. Click **Settings** in the menu.
+2. Find the box called **Company details for invoices**.
+3. Fill in each line:
+   - **Trading address** — where your business is.
+   - **VAT number** — leave blank if you are not VAT registered.
+   - **Company number** — your Companies House number, if you have one.
+   - **Phone** and **Contact email** — how customers reach you.
+   - **Bank details** — so customers know where to pay. For example:
+     *Account name, Sort code, Account number.*
+   - **Payment terms** — for example: *"Payment due within 14 days."*
+4. Click **Save company details**.
+
+Now every invoice and receipt you send will show these. You only need to do this
+once, but you can change it any time.
+
+> **Good to know:** Invoices and emails go out in **your** business name, not
+> "Project Hub". Your customers see your name.
+
+---
+
+## 3. Make a project
+
+A "project" is one building job for one customer.
+
+1. Go to the **Dashboard**.
+2. Click **New Project** (top right).
+3. Fill in:
+   - **Name** — for example, *"Smith Kitchen"*.
+   - **Address** and **Postcode**.
+   - **Customer name** and **Customer email** (you can add these now or later).
+4. Click **Save**.
+
+The job now shows on your Dashboard as a card. Click the card to open it.
+
+---
+
+## 4. Invite your team and your customer
+
+People can only see the Hub after you invite them. An invite is an email with a
+link. They click it, pick a password, and they are in.
+
+1. Click **Team & Clients** in the menu.
+2. Click **Invite** (or **Add person**).
+3. Type their **email**.
+4. Choose their **role** (see the next section to understand roles):
+   - For a site worker, pick **Operative**.
+   - For a site boss, pick **Manager**.
+   - For an office person, pick **Admin**.
+   - For your **customer**, pick **Client**, and then choose which **project**
+     they belong to.
+5. Click **Send invite**.
+
+They get an email. If it does not arrive, check their spam folder. You can also
+copy the invite link and send it yourself.
+
+> **Very important:** A **Client** only ever sees the one project you tie them to.
+> They never see your other jobs, your other customers, or your prices unless you
+> choose to show them. This is built in and cannot be changed by accident.
+
+---
+
+## 5. Who can do what (roles)
+
+Each person has a **role**. The role decides what they can see and do.
+
+| Role | Who it's for | What they can do |
 |---|---|---|
-| Project Name | Yes | Kitchen Renovation - 42 Oak Lane |
-| Site Address | Yes | 42 Oak Lane, Wandsworth, London |
-| Postcode | Yes | SW18 1AA |
-| Client Name | No | Mr & Mrs Smith |
-| Client Email | No | smith@email.com |
+| **Owner** | You | Everything. |
+| **Admin** | Office staff | Almost everything: projects, people, money, settings. |
+| **Manager** | Site boss | Run projects, diary, photos, variations, approve works, send updates. |
+| **Operative** | Site worker | Fill in the diary, add photos, request extra works, clock in/out. |
+| **Client** | Your customer | See their own job, approve variations, see invoices, message you. |
 
-4. Tap **Create Project**
+You can fine-tune this. In **Settings → Role access**, you can turn certain
+powers on or off for Managers, Operatives, and Clients. For example, you can let
+Operatives choose which photos the customer sees, or keep that for Managers only.
 
-The project immediately appears on the dashboard and is available to all team members.
-
-### Editing a Project
-
-1. Open the project from the Dashboard
-2. Tap the **Edit Project** button (pencil icon, top right)
-3. Change any details — name, address, client info, or status
-4. Tap **Save Changes**
-
-### Changing Project Status
-
-Projects have three statuses:
-
-| Status | Meaning | Visible on dashboard? |
-|---|---|---|
-| **Active** | Currently in progress | Yes |
-| **On Hold** | Paused temporarily | No (hidden from dashboard) |
-| **Completed** | Finished | No (hidden from dashboard) |
-
-To change status: Edit the project and select the new status from the dropdown.
-
-**Note:** Changing to "On Hold" or "Completed" hides the project from the dashboard, but all data is preserved. Change it back to "Active" to show it again.
+> **Tip:** Start with the defaults. They are sensible. Only change Role access if
+> you have a clear reason.
 
 ---
 
-## 4. Managing Users
+## 6. Set when customer updates go out
 
-### How Users Get Accounts
+The Hub can write a progress update from the site diary and have it ready for you
+to check and send. You decide how often.
 
-Currently, new users are created by your developer using command-line tools. Here's what to tell them:
+**Set the default for the whole business:**
 
-**To add a new team member:**
-1. They need a **name**, **email address**, and a **password**
-2. Your developer runs a signup command and assigns their role
+1. Go to **Settings**.
+2. Find **Client update schedule**.
+3. Choose how often:
+   - **No schedule** — nothing goes out on its own; you send when you want.
+   - **Daily**, **Weekly**, **Every other week**, or **Monthly**.
+   - **When a milestone is reached** — good for jobs paid by stage, like a
+     roofer paid once the roof is watertight.
+4. If you picked Weekly, pick the **day** and **time** (Friday 4pm is the default).
+5. Check the **timezone** says the right place (Europe/London for the UK).
 
-**To change someone's role:**
-Your developer can promote or demote users between operative, manager, and admin.
+**Change it for one job only:** open that project and scroll to its own schedule
+box. A single job can run on a different plan from the rest.
 
-**To remove a user:**
-Your developer can deactivate or delete the account.
-
-> **Coming soon:** A user management screen inside Project Hub where you can add, edit, and remove users yourself.
-
-### Current Users
-
-To see who has access, ask your developer to check the user list. They can provide you with a list of all accounts and their roles.
-
----
-
-## 5. Understanding Roles
-
-| Role | Who | What they can do |
-|---|---|---|
-| **Operative** | Site workers, tradespeople | Create their own diary entries, upload photos, view their projects |
-| **Manager** | Site managers, supervisors | Create entries for any assigned project, view all project entries |
-| **Admin** | Business owner, office staff | Everything above, plus: create/edit/delete projects, manage users |
-
-**Recommendation:** Keep the number of admins small (1-2 people). Give managers to your site supervisors and operatives to your crew.
+> **How it works:** At the chosen time, the Hub gathers the diary for that period
+> and writes a friendly update. It does **not** send it to the customer. It waits
+> for you to check it. See the next section.
 
 ---
 
-## 6. Viewing & Reviewing Diary Entries
+## 7. Approving and sending customer updates
 
-As an admin, you can see every diary entry across all projects.
+Updates never go to a customer until a person approves them. This keeps you in
+control.
 
-### To review an entry:
+1. Click **Client updates** in the menu. This is your approval list.
+2. You will see any updates that are ready, marked **draft**.
+3. Click one to read it. The Hub has already written it from the diary.
+4. Change any words you want. Fix the title if you like.
+5. When you are happy, click **Approve & send**.
 
-1. Open a project from the Dashboard
-2. Tap "View all" to see every diary entry
-3. Tap an entry to open it
-4. Review all sections — personnel, activities, delays, photos, notes
+What happens next:
 
-### What to look for:
-- **Are entries being completed daily?** Check the "Recent Entries" list
-- **Any delays logged?** The dashboard shows a weekly delay count
-- **Photos attached?** Good entries have photos documenting progress
-- **Notes section** — operatives often flag issues here
+- The update is **emailed to your customer** in your business name.
+- A copy is **saved** so there is always a record of what you told them. Your
+  customer can re-read it in their portal under **Progress reports**.
 
----
+If an update is wrong or not needed, click **Dismiss** instead.
 
-## 7. Generating Reports
-
-Reports are useful for client updates, internal reviews, and record-keeping.
-
-### Daily Report
-Shows everything from a single diary entry — personnel, activities, delays, weather, photos, and notes. Use this for individual day reviews.
-
-### Weekly Report
-Summarises all entries for a given week across a project. Shows:
-- Total days worked
-- All personnel and hours
-- Activities completed
-- Delays and hours lost
-- Summary statistics
-
-### To generate:
-
-1. Open a project
-2. Tap **Reports**
-3. Choose **Daily** or **Weekly**
-4. Select the entry or week
-5. Preview loads automatically
-6. Tap **Print** (saves to PDF from the print dialog)
-
-**Tip:** Weekly reports work well for client updates — print to PDF and email them.
+> **You can also make one any time.** Open a project and click
+> **Generate an update now** to create a draft on the spot.
 
 ---
 
-## 8. Data & Storage
+## 8. Variations (extra work)
 
-### Where is the data stored?
+A "variation" is a change to the job that changes the price — for example, "we
+found rot and need to replace two rafters." The Hub tracks these from start to
+finish.
 
-All data is stored securely on **Cloudflare's infrastructure**:
+**Where variations come from:**
 
-| Data | Location | Capacity |
-|---|---|---|
-| User accounts, entries, project data | Cloudflare D1 (database) | 10GB free |
-| Photos and documents | Cloudflare R2 (file storage) | 10GB free |
-| User sessions | Cloudflare KV (key-value) | Included |
+- Your site team can note one on the daily diary. When they do, the Hub makes a
+  **draft** variation for you and emails the office to price it.
+- Or you can add one by hand.
 
-### Data limits
+**To price and send a variation:**
 
-- **Photos:** 10MB per file
-- **File types:** JPEG, PNG, WebP, HEIC, PDF
-- **Entries:** No practical limit within free tier
+1. Open the project. Scroll to **Variations**.
+2. Find the draft. Click **Edit**.
+3. Type the **price** (the net amount) and pick the **VAT** (20%, 5%, or 0%).
+4. Click **Save**.
+5. Click **Raise**.
 
-### Backups
+Now the customer gets an email with a **one-tap approve or decline** button. No
+login needed for them. When they tap **Approve**:
 
-Cloudflare D1 handles database redundancy automatically. For additional safety, ask your developer about periodic data exports.
+- The variation turns green (Approved).
+- Its price is added to the job total automatically.
 
----
+If they decline, it is marked Rejected and does **not** change the price.
 
-## 9. Security
+**Who signs off variations?** By default, the customer signs off every variation,
+because it changes their bill. You can change this per project to follow your
+spend limits instead (small ones auto-approve). This setting is on the project.
 
-### How the system is protected
-
-| Layer | Protection |
-|---|---|
-| **Login** | Email + password, encrypted with industry-standard hashing |
-| **Sessions** | Secure cookies, expire after 7 days, auto-refresh |
-| **Data in transit** | HTTPS encryption (enforced by Cloudflare) |
-| **Data at rest** | Encrypted on Cloudflare's servers |
-| **Photos** | Private by default — only accessible to logged-in users |
-| **API access** | Every request checked for valid session |
-
-### Best practices
-
-- Use **strong passwords** (mix of letters, numbers, symbols, 8+ characters)
-- **Don't share accounts** — each person should have their own login
-- **Log out on shared devices** (Settings > Sign Out)
-- The **BETTER_AUTH_SECRET** in the Cloudflare dashboard should never be shared
-
-### What the admin sees
-
-Admins can see all data across all projects, including:
-- All diary entries
-- All uploaded photos
-- All user activity
-
-Admins **cannot** see user passwords (they're encrypted).
+**Export for your accountant:** click **Export CSV** in the Variations box to
+download a file you can open in Excel or import into Xero, QuickBooks, or Sage.
 
 ---
 
-## 10. Common Admin Tasks (Quick Reference)
+## 9. Invoices and payments
 
-| Task | How |
-|---|---|
-| **Create a project** | Dashboard > New Project > Fill form > Create |
-| **Edit a project** | Open project > Edit Project > Change details > Save |
-| **Pause a project** | Edit Project > Status: On Hold > Save |
-| **Complete a project** | Edit Project > Status: Completed > Save |
-| **Re-activate a project** | Ask developer to set status back to "active" (or use Cloudflare dashboard) |
-| **Add a user** | Contact your developer with name, email, password, and role |
-| **Change a user's role** | Contact your developer |
-| **View all entries** | Open project > View all |
-| **Generate a report** | Open project > Reports > Choose type > Print |
-| **Check weekly activity** | Dashboard shows stats: entries, photos, delays this week |
+Open a project and scroll to **Financials**. This is the money for the job.
 
----
+**Step 1 — Set the contract:**
 
-## 11. Troubleshooting
+1. Type the **Quoted (net)** amount — your original price before VAT.
+2. Pick the **VAT** rate.
+3. Drag the **% complete** slider to show how far along the job is.
 
-### "No projects yet" on the dashboard
-You need to create a project first. Tap "New Project".
+The Hub then shows a live summary:
 
-### A team member can't log in
-- Verify their email is correct (case-sensitive)
-- Ask your developer to check the account exists and is active
-- Reset their password if needed
+- **Revised contract sum** = your quote **plus** approved variations.
+- **Value of work complete** = the % you set, of the revised sum.
+- **Next instalment due** = value of work done **minus** what's been paid.
+- **Balance outstanding** = what is still owed.
 
-### Entries aren't appearing
-- Check the team member is creating entries for the correct project
-- Entries created offline will appear after they sync (when back online)
+This matches how stage payments work: you bill for the work done so far, minus
+what the customer has already paid.
 
-### Photos aren't showing
-- Photos need internet to upload — if taken offline, they sync when back online
-- Check file size (max 10MB) and type (JPEG, PNG, WebP, HEIC, PDF)
+**Step 2 — Raise an invoice:**
 
-### The sync banner is stuck
-- The team member should tap "Sync now" while connected to internet
-- If it persists, refreshing the page usually clears stale queue items
+- Click **Raise next instalment** to bill exactly the amount that is due now. It
+  makes a **draft** invoice with the right figure.
+- Or use **Add draft** to make a deposit or a custom invoice. Tick **Deposit** for
+  a deposit.
 
-### I need to delete an entry
-- Currently entries can be deleted by your developer via the database
-- A delete button inside the app is coming in a future update
+**Step 3 — Send and track:**
 
-### I need help with something not listed here
-- Contact your developer (Digital Visibility) for technical support
+1. On the draft, click **Issue**. The customer is emailed that an invoice is ready.
+2. When they pay, click **Mark paid**.
+
+**Documents:** every issued invoice has an **Invoice** link (a proper VAT invoice
+PDF). Every paid invoice also has a **Receipt** link. Your customer sees the same
+links in their portal. To save as a PDF, open the document and click
+**Save as PDF / Print**.
+
+> **Note:** The Hub tracks payments; it does not take card payments. You mark an
+> invoice paid when the money arrives in your bank.
 
 ---
 
-## What's Coming Next
+## 10. Documents
 
-These features are planned for future releases. This manual will be updated with new sections as each feature ships.
+Open a project and scroll to **Documents**. This is the filing cabinet for the job.
 
-| Feature | Description |
-|---|---|
-| **User Management UI** | Add, edit, and remove users from within the app |
-| **Client Portal** | Give clients read-only access to view progress and approve entries |
-| **Document Hub** | Central storage for contracts, quotes, invoices, and drawings |
-| **Weekly Email Summaries** | Automated weekly reports sent to clients |
-| **Gantt Chart** | Visual project schedule |
-| **Labour Cost Tracking** | Hours x rates for each operative |
-| **Stage Payments** | Track value of works completed |
-| **AI Summaries** | Auto-generate client-friendly narratives from daily logs |
+You get folders that match how builders work:
+
+*Drawings · Interior Finishes · Kitchen · Bathrooms · Superseded · Contracts ·
+Handovers · Progress Pics · Financials.*
+
+**To add a file:**
+
+1. Click a folder.
+2. Click **Upload**.
+3. Pick the file (a PDF or a photo).
+
+**Choosing what the customer sees:** each file has a button that says either
+**Client can see** or **Internal**. Click it to switch.
+
+- Contracts, Handovers, Progress Pics, and Financials are shown to the customer by
+  default.
+- Drawings and Superseded are kept **internal** by default.
+
+Your customer sees a **Documents** area in their portal with only the files you
+marked "Client can see."
 
 ---
 
-*This manual covers the current version of Project Hub. Contact Digital Visibility for support or feature requests.*
+## 11. The schedule
 
-<!-- FUTURE SECTIONS (uncomment as features ship)
+Open a project and scroll to **Schedule**. There are three tabs.
 
-## User Management UI
-## Client Portal
-## Document Hub
-## Weekly Email Summaries
-## Gantt Chart
-## Labour Cost Tracking
-## Stage Payments
-## AI Summaries
-## Email Notifications
+**Programme** — the plan of work. Add each stage with a start and end date. It
+draws a simple bar chart (a Gantt) so you can see the plan at a glance. Set each
+task to *Not started*, *In progress*, or *Complete*. Tasks are shown to the
+customer by default (use the eye button to hide one).
 
--->
+**Procurement** — what to order. Add the item, the supplier, and the date you
+need it by. Mark each as *To order*, *Ordered*, or *Delivered*. This is
+**internal** — customers do not see it unless you choose to share a line.
+
+**Financial schedule** — your invoices and the money position, shown as a
+timeline. This is a read-only view of the Financials section.
+
+Your customer sees the **Programme** in their portal (the tasks you left visible),
+so they can follow the plan.
+
+---
+
+## 12. Messages
+
+Every project has a **Messages** thread — a simple chat between you and the
+customer.
+
+- When the customer sends a message, you get an **email** so nothing is missed.
+- A red badge appears on the project card on your Dashboard.
+- Open the project, read the message, and reply.
+
+You choose how pushy the emails are in **Settings → Message notifications**:
+
+- **Tell me once** (default) — one email until you've read it. Then the next new
+  message emails you again.
+- **Keep chasing me** — reminds you while messages pile up, at most once every 30
+  minutes.
+
+---
+
+## 13. Put the app on your phone
+
+The Hub works like an app on your phone.
+
+**On an iPhone (Safari):**
+1. Open the Hub in Safari.
+2. Tap the **Share** button (the square with an arrow).
+3. Tap **Add to Home Screen**.
+4. Tap **Add**.
+
+**On Android (Chrome):**
+1. Open the Hub in Chrome.
+2. Tap the **three dots** menu.
+3. Tap **Add to Home screen** (or **Install app**).
+
+Now it opens with one tap, like any other app.
+
+---
+
+## 14. Common questions
+
+**Can one customer see another customer's job?**
+No. A customer only sees the project you tied them to. They cannot see your other
+jobs, other customers, prices, or documents you kept internal. This is built in.
+
+**Can another building business see my jobs?**
+No. Each business is completely separate. Nobody from another business — even
+their owner — can see your projects, invoices, documents, or customers.
+
+**A customer says they didn't get an email.**
+Ask them to check spam. You can also copy any invite or update link and send it
+yourself. Everything is always in their portal too, so they can log in and see it.
+
+**I set the update schedule but nothing was sent.**
+Updates are written for you and wait in **Client updates** for you to approve.
+Nothing goes out until you press **Approve & send**. Also, if there was no diary
+activity for that period, a scheduled update is skipped.
+
+**How do I change my company name or bank details on invoices?**
+Settings → Company details for invoices. Change and save. New invoices use the new
+details.
+
+**Something looks wrong or won't load.**
+Refresh the page. If it still fails, sign out and back in. If a customer has a
+problem, check they are opening their own project link.
+
+---
+
+*You are the owner. You see everything, you control everything, and your customers
+only ever see their own job. Keep this guide handy for your first few weeks.*
