@@ -264,7 +264,15 @@ export default function FinancialsPanel({ projectId }: { projectId: string }) {
                   </span>
                 </td>
                 <td className="py-2">
-                  <div className="flex gap-1 justify-end">
+                  <div className="flex gap-1 justify-end items-center flex-wrap">
+                    {inv.status !== 'draft' && (
+                      <a href={`/api/invoices/${inv.id}/document?type=invoice`} target="_blank" rel="noopener"
+                        className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded" title="Open the printable invoice">Invoice</a>
+                    )}
+                    {inv.status === 'paid' && (
+                      <a href={`/api/invoices/${inv.id}/document?type=receipt`} target="_blank" rel="noopener"
+                        className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded" title="Open the payment receipt">Receipt</a>
+                    )}
                     {inv.status === 'draft' && (
                       <>
                         <button onClick={() => setInvoiceStatus(inv, 'sent')} disabled={busy === inv.id}
@@ -276,7 +284,6 @@ export default function FinancialsPanel({ projectId }: { projectId: string }) {
                       <button onClick={() => setInvoiceStatus(inv, 'paid')} disabled={busy === inv.id}
                         className="px-2 py-1 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded">Mark paid</button>
                     )}
-                    {inv.status === 'paid' && <span className="text-xs text-gray-400">{inv.paid_at?.split(' ')[0]}</span>}
                   </div>
                 </td>
               </tr>

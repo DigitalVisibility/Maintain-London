@@ -5,6 +5,7 @@ import HubLayout from '../../layouts/HubLayout.astro';
 import RoleAccess from '../../components/project-hub/RoleAccess';
 import ScheduleSettings from '../../components/project-hub/ScheduleSettings';
 import NotificationSettings from '../../components/project-hub/NotificationSettings';
+import CompanyProfile from '../../components/project-hub/CompanyProfile';
 import SignOutButton from '../../components/project-hub/SignOutButton';
 import { hasCap } from '../../lib/capabilities';
 
@@ -73,6 +74,13 @@ const canManageUsers = hasCap(Astro.locals, 'manage_users');
         Install Project Hub
       </button>
     </div>
+
+    <!-- Company details for invoices -->
+    {canManageUsers && (
+      <div class="mb-6">
+        <CompanyProfile client:load />
+      </div>
+    )}
 
     <!-- Client update schedule (business default) -->
     {canManageUsers && (

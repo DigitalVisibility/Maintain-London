@@ -125,6 +125,7 @@ function fmt(date: string) {
                 <th class="text-left px-3 py-2">Description</th>
                 <th class="text-right px-3 py-2">Amount</th>
                 <th class="text-left px-3 py-2">Status</th>
+                <th class="text-right px-3 py-2">Document</th>
               </tr>
             </thead>
             <tbody>
@@ -137,6 +138,12 @@ function fmt(date: string) {
                     <span class={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${inv.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                       {inv.status === 'paid' ? 'Paid' : 'Due'}
                     </span>
+                  </td>
+                  <td class="px-3 py-2 text-right whitespace-nowrap">
+                    <a href={`/api/invoices/${inv.id}/document?type=invoice`} target="_blank" rel="noopener" class="text-[#83B81A] hover:underline text-xs font-medium">Invoice</a>
+                    {inv.status === 'paid' && (
+                      <a href={`/api/invoices/${inv.id}/document?type=receipt`} target="_blank" rel="noopener" class="ml-2 text-[#83B81A] hover:underline text-xs font-medium">Receipt</a>
+                    )}
                   </td>
                 </tr>
               ))}
