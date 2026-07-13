@@ -4,6 +4,7 @@ export const prerender = false;
 import PortalLayout from '../../../layouts/PortalLayout.astro';
 import ApprovalsInbox from '../../../components/project-hub/ApprovalsInbox';
 import MessageThread from '../../../components/project-hub/MessageThread';
+import DocumentHub from '../../../components/project-hub/DocumentHub';
 import { queryOne, queryAll } from '../../../lib/db';
 import { valuationFor, listInvoices, type ProjectFinancials } from '../../../lib/financials';
 import type { Project, DiaryEntry } from '../../../types/diary';
@@ -37,6 +38,20 @@ const awaitingRow = await queryOne<{ n: number }>(
   [id]
 );
 const awaitingApproval = awaitingRow?.n ?? 0;
+
+// Documents shared with the client (drives whether to show the section at all).
+const clientDocCount = (await queryOne<{ n: number }>(
+  env.DB, 'SELECT COUNT(*) AS n FROM documents WHERE project_id = ? AND client_visible = 1', [id]
+))?.n ?? 0;
+
+// Progress reports: the weekly / milestone summaries that were actually sent —
+// the "progress file for everyone's records" the client asked for.
+const progressReports = await queryAll<{ id: string; title: string | null; period_start: string; period_end: string; sent_at: string | null }>(
+  env.DB,
+  `SELECT id, title, period_start, period_end, sent_at FROM summaries
+    WHERE project_id = ? AND status = 'sent' ORDER BY period_end DESC`,
+  [id]
+);
 
 const money = (n: number) => `£${n.toFixed(2)}`;
 const invNo = (n: number) => String(n).padStart(4, '0');
@@ -187,6 +202,33 @@ function fmt(date: string) {
       <div class="bg-white rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">No updates released yet.</div>
     )}
   </section>
+
+  <!-- Progress reports — sent weekly / milestone summaries, kept on record -->
+  {progressReports.length > 0 && (
+    <section class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-900 mb-3">Progress reports</h2>
+      <div class="space-y-2">
+        {progressReports.map((r) => (
+          <a href={`/api/summaries/${r.id}/document`} target="_blank" rel="noopener"
+            class="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between hover:border-[#AEDE4A] transition-colors">
+            <div>
+              <div class="text-sm font-medium text-gray-900">{r.title || `Progress update`}</div>
+              <div class="text-xs text-gray-400">{r.period_start} to {r.period_end}</div>
+            </div>
+            <span class="text-sm font-medium text-[#83B81A]">Read →</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Documents shared with the client -->
+  {clientDocCount > 0 && (
+    <section class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-900 mb-3">Documents</h2>
+      <DocumentHub client:load projectId={id!} canManage={false} hideEmpty={true} />
+    </section>
+  )}
 
   <!-- Approvals -->
   <section id="approvals" class="mb-8 scroll-mt-4">

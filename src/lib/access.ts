@@ -108,3 +108,35 @@ export async function canReadFile(
   if (locals.role !== 'client') return true;
   return file.client_visible === 1 && file.client_released === 1;
 }
+
+/** A document-hub file, with the project it belongs to. */
+export interface DocRecord {
+  r2_key: string;
+  project_id: string;
+  org_id: string | null;
+  client_visible: number | null;
+}
+
+/** Look a document up by its R2 key — same "only keys we issued" guarantee. */
+export function loadDocByKey(db: D1Database, key: string): Promise<DocRecord | null> {
+  return queryOne<DocRecord>(
+    db,
+    'SELECT r2_key, project_id, org_id, client_visible FROM documents WHERE r2_key = ?',
+    [key]
+  );
+}
+
+/**
+ * May this user read this document? Staff: same org (via the project). Client:
+ * linked to the project, and the document marked client-visible — enforced at
+ * serve time so a guessed URL can't reach a document the team kept internal.
+ */
+export async function canReadDoc(
+  db: D1Database,
+  locals: AccessLocals,
+  doc: DocRecord
+): Promise<boolean> {
+  if (!(await canAccessProject(db, locals, doc.project_id))) return false;
+  if (locals.role !== 'client') return true;
+  return doc.client_visible === 1;
+}

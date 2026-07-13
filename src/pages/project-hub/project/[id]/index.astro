@@ -14,6 +14,7 @@ import SummaryQueue from '../../../../components/project-hub/SummaryQueue';
 import ScheduleSettings from '../../../../components/project-hub/ScheduleSettings';
 import VariationsRegister from '../../../../components/project-hub/VariationsRegister';
 import FinancialsPanel from '../../../../components/project-hub/FinancialsPanel';
+import DocumentHub from '../../../../components/project-hub/DocumentHub';
 
 const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
@@ -188,6 +189,12 @@ const totalEntries = await queryOne<{ count: number }>(
         <ScheduleSettings client:load projectId={id!} />
       </div>
     )}
+
+    <!-- Documents — the project filing cabinet -->
+    <div class="mt-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Documents</h2>
+      <DocumentHub client:load projectId={id!} canManage={canManageProjects || canRequestWorks} />
+    </div>
 
     <!-- Financials — the interim valuation and client invoices -->
     {canViewCosts && (

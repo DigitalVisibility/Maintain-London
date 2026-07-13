@@ -41,6 +41,14 @@ export function buildR2Key(
   return `entries/${entryId}/${fileType}/${ts}-${safe}`;
 }
 
+/** Build a document-hub key: documents/{projectId}/{folderSlug}/{timestamp}-{filename} */
+export function buildDocKey(projectId: string, folder: string, filename: string): string {
+  const ts = Date.now();
+  const folderSlug = folder.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'documents';
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  return `documents/${projectId}/${folderSlug}/${ts}-${safe}`;
+}
+
 /** Upload a file to R2 */
 export async function uploadToR2(
   r2: R2Bucket,
