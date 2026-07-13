@@ -5,6 +5,7 @@ import PortalLayout from '../../../layouts/PortalLayout.astro';
 import ApprovalsInbox from '../../../components/project-hub/ApprovalsInbox';
 import MessageThread from '../../../components/project-hub/MessageThread';
 import DocumentHub from '../../../components/project-hub/DocumentHub';
+import ProjectSchedule from '../../../components/project-hub/ProjectSchedule';
 import { queryOne, queryAll } from '../../../lib/db';
 import { valuationFor, listInvoices, type ProjectFinancials } from '../../../lib/financials';
 import type { Project, DiaryEntry } from '../../../types/diary';
@@ -42,6 +43,11 @@ const awaitingApproval = awaitingRow?.n ?? 0;
 // Documents shared with the client (drives whether to show the section at all).
 const clientDocCount = (await queryOne<{ n: number }>(
   env.DB, 'SELECT COUNT(*) AS n FROM documents WHERE project_id = ? AND client_visible = 1', [id]
+))?.n ?? 0;
+
+// Programme tasks shared with the client (drives the schedule section).
+const clientTaskCount = (await queryOne<{ n: number }>(
+  env.DB, 'SELECT COUNT(*) AS n FROM programme_tasks WHERE project_id = ? AND client_visible = 1', [id]
 ))?.n ?? 0;
 
 // Progress reports: the weekly / milestone summaries that were actually sent —
@@ -202,6 +208,14 @@ function fmt(date: string) {
       <div class="bg-white rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">No updates released yet.</div>
     )}
   </section>
+
+  <!-- Project programme (client-visible tasks) -->
+  {clientTaskCount > 0 && (
+    <section class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-900 mb-3">Project schedule</h2>
+      <ProjectSchedule client:load projectId={id!} canManage={false} canViewCosts={false} clientView={true} />
+    </section>
+  )}
 
   <!-- Progress reports — sent weekly / milestone summaries, kept on record -->
   {progressReports.length > 0 && (

@@ -15,6 +15,7 @@ import ScheduleSettings from '../../../../components/project-hub/ScheduleSetting
 import VariationsRegister from '../../../../components/project-hub/VariationsRegister';
 import FinancialsPanel from '../../../../components/project-hub/FinancialsPanel';
 import DocumentHub from '../../../../components/project-hub/DocumentHub';
+import ProjectSchedule from '../../../../components/project-hub/ProjectSchedule';
 
 const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
@@ -189,6 +190,12 @@ const totalEntries = await queryOne<{ count: number }>(
         <ScheduleSettings client:load projectId={id!} />
       </div>
     )}
+
+    <!-- Schedule — programme, procurement, financial -->
+    <div class="mt-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Schedule</h2>
+      <ProjectSchedule client:load projectId={id!} canManage={canManageProjects || canRequestWorks} canViewCosts={canViewCosts} />
+    </div>
 
     <!-- Documents — the project filing cabinet -->
     <div class="mt-6">
