@@ -13,6 +13,7 @@ import Milestones from '../../../../components/project-hub/Milestones';
 import SummaryQueue from '../../../../components/project-hub/SummaryQueue';
 import ScheduleSettings from '../../../../components/project-hub/ScheduleSettings';
 import VariationsRegister from '../../../../components/project-hub/VariationsRegister';
+import FinancialsPanel from '../../../../components/project-hub/FinancialsPanel';
 
 const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
@@ -185,6 +186,14 @@ const totalEntries = await queryOne<{ count: number }>(
     {canManageProjects && (
       <div class="mt-6">
         <ScheduleSettings client:load projectId={id!} />
+      </div>
+    )}
+
+    <!-- Financials — the interim valuation and client invoices -->
+    {canViewCosts && (
+      <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Financials</h2>
+        <FinancialsPanel client:load projectId={id!} />
       </div>
     )}
 

@@ -286,18 +286,32 @@ not just the org — clients can't see another client's variations, drafts are
 hidden from clients entirely, and recording/raising is gated behind `view_costs`
 (clients don't have it). Verified by attacking as one client against another.
 
-### Phase 4 — Financials & client portal build-out
+### Phase 4 — Financials & client portal build-out ✅ COMPLETE
 
-- [ ] Interim-valuation model per the invoice wireframe: revised contract sum =
-      quote + **approved** variations; value of work done = % complete × revised
-      sum; **next instalment = value of work done − paid to date**
-- [ ] Needs a new input: **% complete** per project
-- [ ] Client portal summary cards — variations awaiting approval, information
-      requested, invoices paid vs pending, schedule
-- [ ] Financials folder opens onto a high-level position, not a pile of documents
+- [x] **Interim-valuation model** per the invoice wireframe, computed live
+      (`lib/financials.ts`, unit-tested to the penny against the sketch):
+      revised contract sum = quote + **approved** variations; value of work done =
+      % complete × revised sum; **next instalment = value of work done − paid to
+      date**; balance outstanding = revised − paid. Nothing is stored but the
+      quote, the % complete, and the invoices — so it can't drift from the register
+      or the payments.
+- [x] **% complete** per project (a slider on the financials panel); **quoted net
+      + VAT rate** per project.
+- [x] **Client invoices / instalments / deposit** (`invoices` table) —
+      draft → sent → paid, sequential numbering per business (seedable so it aligns
+      with the firm's existing books). "Raise next instalment" bills the exact
+      computed figure. Issuing an invoice emails the client (tenant identity).
+- [x] **Client portal financial cards** — contract sum, % complete, paid to date,
+      balance outstanding; a paid-vs-due invoice list; a "N variations awaiting your
+      approval" banner linking to the approvals section. Drafts and the internal
+      register never reach the client; the costs API is gated behind `view_costs`,
+      which clients don't have.
       *(supersedes "Stage Payments" above)*
-- [ ] **No live-spreadsheet sync.** The client suggested it; two-way sync is a
-      conflict factory. Read-only export instead.
+- [x] Export is the register CSV (Phase 3); **no live-spreadsheet sync** — the
+      client suggested it, but two-way sync is a conflict factory.
+
+Still open: a **client-facing invoice PDF** and **direct Xero** are the natural
+follow-ons, but the figures and the tracking are all here.
 
 ### Phase 5 — Document Hub
 

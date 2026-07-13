@@ -5,6 +5,7 @@ import PortalLayout from '../../../layouts/PortalLayout.astro';
 import ApprovalsInbox from '../../../components/project-hub/ApprovalsInbox';
 import MessageThread from '../../../components/project-hub/MessageThread';
 import { queryOne, queryAll } from '../../../lib/db';
+import { valuationFor, listInvoices, type ProjectFinancials } from '../../../lib/financials';
 import type { Project, DiaryEntry } from '../../../types/diary';
 
 const { env } = Astro.locals.runtime;
@@ -17,8 +18,28 @@ const link = user
   : null;
 if (!link) return Astro.redirect('/project-hub/portal');
 
-const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+const project = await queryOne<Project & ProjectFinancials>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
 if (!project) return Astro.redirect('/project-hub/portal');
+
+// The client's financial position. Only client-facing figures (what the contract
+// is worth, what they've paid, what's outstanding) and issued invoices — drafts
+// and the internal register stay staff-side.
+const valuation = await valuationFor(env.DB, project);
+const invoices = (await listInvoices(env.DB, id!)).filter((inv) => inv.status !== 'draft');
+const hasFinancials = project.quoted_net > 0 || invoices.length > 0;
+
+// Variations still awaiting this client's approval (a summary card that links to
+// the approvals section below).
+const awaitingRow = await queryOne<{ n: number }>(
+  env.DB,
+  `SELECT COUNT(*) AS n FROM approval_requests
+    WHERE project_id = ? AND status = 'pending' AND required_level = 'client'`,
+  [id]
+);
+const awaitingApproval = awaitingRow?.n ?? 0;
+
+const money = (n: number) => `£${n.toFixed(2)}`;
+const invNo = (n: number) => String(n).padStart(4, '0');
 
 // Only days the contractor has released to the client.
 const released = await queryAll<DiaryEntry>(
@@ -60,6 +81,72 @@ function fmt(date: string) {
   <h1 class="text-2xl font-bold text-gray-900 mb-1">{project.name}</h1>
   <p class="text-gray-500 text-sm mb-6">{project.address}, {project.postcode}</p>
 
+  <!-- Things that need you -->
+  {awaitingApproval > 0 && (
+    <a href="#approvals" class="flex items-center justify-between gap-3 mb-6 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 hover:bg-amber-100 transition-colors">
+      <span class="text-sm font-medium text-amber-900">
+        {awaitingApproval} variation{awaitingApproval === 1 ? '' : 's'} awaiting your approval
+      </span>
+      <span class="text-sm font-semibold text-amber-800">Review →</span>
+    </a>
+  )}
+
+  <!-- Financial position — the high-level view the client asked for -->
+  {hasFinancials && (
+    <section class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-900 mb-3">Financial summary</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">Contract sum</div>
+          <div class="text-lg font-bold text-gray-900">{money(valuation.revised.total)}</div>
+          <div class="text-xs text-gray-400">incl. VAT</div>
+        </div>
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">Work complete</div>
+          <div class="text-lg font-bold text-gray-900">{valuation.percentComplete}%</div>
+          <div class="text-xs text-gray-400">{money(valuation.valueComplete.total)}</div>
+        </div>
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">Paid to date</div>
+          <div class="text-lg font-bold text-green-700">{money(valuation.paidToDate.total)}</div>
+        </div>
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">Balance outstanding</div>
+          <div class="text-lg font-bold text-gray-900">{money(valuation.balanceOutstanding.total)}</div>
+        </div>
+      </div>
+
+      {invoices.length > 0 && (
+        <div class="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs uppercase text-gray-400 border-b border-gray-100">
+                <th class="text-left px-3 py-2">Invoice</th>
+                <th class="text-left px-3 py-2">Description</th>
+                <th class="text-right px-3 py-2">Amount</th>
+                <th class="text-left px-3 py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((inv) => (
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-3 py-2 font-mono text-gray-500">{invNo(inv.number)}</td>
+                  <td class="px-3 py-2 text-gray-900">{inv.description}</td>
+                  <td class="px-3 py-2 text-right tabular-nums font-medium">{money(inv.total)}</td>
+                  <td class="px-3 py-2">
+                    <span class={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${inv.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                      {inv.status === 'paid' ? 'Paid' : 'Due'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  )}
+
   <!-- Released updates -->
   <section class="mb-8">
     <h2 class="text-sm font-semibold text-gray-900 mb-3">Daily updates</h2>
@@ -95,7 +182,7 @@ function fmt(date: string) {
   </section>
 
   <!-- Approvals -->
-  <section class="mb-8">
+  <section id="approvals" class="mb-8 scroll-mt-4">
     <h2 class="text-sm font-semibold text-gray-900 mb-3">Approvals</h2>
     <ApprovalsInbox client:load projectId={id!} mode="client" canDecide={true} />
   </section>
