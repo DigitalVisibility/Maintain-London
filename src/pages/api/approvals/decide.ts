@@ -1,12 +1,13 @@
 import type { APIRoute } from 'astro';
 import { queryOne, execute, now } from '../../../lib/db';
+import { syncVariationFromApproval } from '../../../lib/approvals';
 
 export const prerender = false;
 
 interface ApprovalRow {
   id: string; description: string; est_cost: number | null; status: string;
   required_level: string; is_emergency: number; requested_by_name: string | null;
-  project_id: string;
+  project_id: string; variation_id: string | null;
 }
 
 /** GET /api/approvals/decide?token= — validate a magic link and return the request */
@@ -55,5 +56,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
     `UPDATE approval_requests SET status = ?, approver_name = ?, decided_at = ? WHERE id = ?`,
     [status, 'Decided via secure link', now(), req.id]
   );
+
+  // If this approval was raised by a variation, mirror the decision onto the
+  // register — so the client's one-tap approval marks the variation approved and
+  // it starts counting toward the contract sum.
+  await syncVariationFromApproval(env.DB, { ...req, status }, 'Decided via secure link');
+
   return Response.json({ success: true, status });
 };

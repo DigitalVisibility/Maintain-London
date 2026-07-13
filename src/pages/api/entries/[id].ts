@@ -3,6 +3,7 @@ import { now, queryAll, queryOne, execute, batch } from '../../../lib/db';
 import { canAccessProject } from '../../../lib/access';
 import { hasCap, isStaff } from '../../../lib/capabilities';
 import { buildChildDeletes, buildChildInserts } from '../../../lib/diary-children';
+import { syncDiaryVariations } from '../../../lib/variations';
 import type {
   DiaryEntry, DiaryEntryFull, EntryPersonnel, EntryActivity,
   EntryDelay, EntryVariation, EntryMaterialRequired, EntryEquipmentHire,
@@ -111,6 +112,19 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
   statements.push(...buildChildInserts(id, body, timestamp));
 
   await batch(env.DB, statements);
+
+  // A variation noted on the diary becomes a draft in the register (idempotent —
+  // each line is promoted once). Runs after the save so it sees the stored rows,
+  // and never blocks the response on the notification email.
+  const promote = syncDiaryVariations(
+    env,
+    { id, project_id: existing.project_id, org_id: locals.org?.id ?? null },
+    Array.isArray(body.variations) ? body.variations : [],
+    { id: locals.user.id, name: locals.user.name ?? null }
+  );
+  const ctx = locals.runtime.ctx;
+  if (ctx?.waitUntil) ctx.waitUntil(promote); else await promote;
+
   return Response.json({ id, status: 'updated' });
 };
 

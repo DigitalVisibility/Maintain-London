@@ -3,6 +3,7 @@ import { generateId, now, queryAll, batch } from '../../../lib/db';
 import { canAccessProject } from '../../../lib/access';
 import { hasCap, isStaff } from '../../../lib/capabilities';
 import { buildChildInserts } from '../../../lib/diary-children';
+import { syncDiaryVariations } from '../../../lib/variations';
 import type { DiaryEntry } from '../../../types/diary';
 
 export const prerender = false;
@@ -73,11 +74,22 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
   try {
     await batch(env.DB, statements);
-    return Response.json({ id: entryId, status: 'created' }, { status: 201 });
   } catch (err: any) {
     if (err?.message?.includes('UNIQUE constraint')) {
       return Response.json({ error: 'An entry already exists for this project and date' }, { status: 409 });
     }
     throw err;
   }
+
+  // Promote any variation lines on the new entry into draft register entries.
+  const promote = syncDiaryVariations(
+    env,
+    { id: entryId, project_id: body.project_id, org_id: locals.org?.id ?? null },
+    Array.isArray(body.variations) ? body.variations : [],
+    { id: user.id, name: user.name ?? null }
+  );
+  const ctx = locals.runtime.ctx;
+  if (ctx?.waitUntil) ctx.waitUntil(promote); else await promote;
+
+  return Response.json({ id: entryId, status: 'created' }, { status: 201 });
 };

@@ -256,15 +256,35 @@ noted so nothing gets built twice.
       unread badge, digested so it doesn't become noise.
       *(supersedes "Email Notifications" above)*
 
-### Phase 3 — Variations → approvals → invoicing
+### Phase 3 — Variations → approvals → invoicing ✅ COMPLETE
 
-- [ ] Add net / VAT / total + status (Draft, Pending, Approved, Rejected) to diary
-      variations — per the variations-register wireframe
-- [ ] Raising a variation on site auto-creates an **approval request** through the
-      existing tiered engine (this is the workflow gap the client reported)
-- [ ] Variation register view (0001, 0002 …) with running totals
-- [ ] **Direct Xero / QuickBooks integration** (client's choice; package TBC).
-      Explicitly *not* IFTTT — no audit trail, breaks when a variation is edited.
+- [x] **Variations register** (`variations` table) — numbered per project (0001,
+      0002 …), each with net / VAT / total and status Draft → Pending → Approved /
+      Rejected. Only *approved* variations count toward the contract sum, which is
+      the figure Phase 4's valuation reads.
+- [x] **A diary variation auto-creates a draft** in the register and emails the
+      office to price it — idempotent (each diary line promoted once, via a stable
+      id + unique index). This is the workflow gap the client reported: "if someone
+      enters a variation on the site diary it doesn't prompt an approval request".
+      Nothing goes to the client automatically — it becomes a draft to reword and
+      price, exactly per his "a quick check, a quick reword, and sending".
+- [x] **Raising a variation reuses the existing approval engine** (extracted to
+      `lib/approvals.ts`) — same tiered logic, same one-tap emailed decide link.
+      The decision (in-app or via the link) flows back onto the register.
+- [x] **Per-project routing** (`projects.variation_approval`): default `client`
+      (every variation needs the client's sign-off, since it changes the bill),
+      or `tiered` (follow the project's spend limits — small ones auto-approve).
+- [x] Running totals (approved / pending / draft / rejected) on the project page.
+- [x] **CSV export** — package-agnostic, imports into Xero/QuickBooks/Sage/a sheet.
+      Direct Xero push is the follow-on (client chose CSV first).
+- [x] VAT: 20 / 5 / 0 % selectable per variation; net + VAT = total, stored and
+      reconciled to the penny.
+- [ ] **Direct Xero integration** — the follow-on to the CSV. Package: Xero.
+
+**Security:** every variation route authorises the *project* (canAccessProject),
+not just the org — clients can't see another client's variations, drafts are
+hidden from clients entirely, and recording/raising is gated behind `view_costs`
+(clients don't have it). Verified by attacking as one client against another.
 
 ### Phase 4 — Financials & client portal build-out
 

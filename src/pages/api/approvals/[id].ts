@@ -2,11 +2,13 @@ import type { APIRoute } from 'astro';
 import { queryOne, execute, now } from '../../../lib/db';
 import { hasCap } from '../../../lib/capabilities';
 import { canAccessProject } from '../../../lib/access';
+import { syncVariationFromApproval } from '../../../lib/approvals';
 
 export const prerender = false;
 
 interface ApprovalRow {
   id: string; org_id: string; project_id: string; required_level: string; status: string;
+  variation_id: string | null;
 }
 
 /** PATCH /api/approvals/:id  { decision: 'approve' | 'reject' } — decide in-app */
@@ -45,5 +47,9 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     `UPDATE approval_requests SET status = ?, approver_id = ?, approver_name = ?, decided_at = ? WHERE id = ?`,
     [status, user.id, user.name ?? null, now(), params.id]
   );
+
+  // Mirror the decision onto the register if this approval was raised by a variation.
+  await syncVariationFromApproval(env.DB, { ...req, status }, user.name ?? null);
+
   return Response.json({ success: true, status });
 };

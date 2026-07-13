@@ -62,11 +62,19 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
     }
   }
 
+  // 'client' (every variation needs the client's sign-off) or 'tiered' (follow
+  // the project's spend limits). Anything else falls back to the safe default.
+  const requestedVA = (body as any).variation_approval;
+  const variationApproval =
+    requestedVA === 'tiered' ? 'tiered'
+    : requestedVA === 'client' ? 'client'
+    : (existing as any).variation_approval ?? 'client';
+
   await execute(
     env.DB,
     `UPDATE projects SET
        name = ?, address = ?, postcode = ?, lat = ?, lng = ?,
-       client_name = ?, client_email = ?, status = ?, updated_at = ?
+       client_name = ?, client_email = ?, status = ?, variation_approval = ?, updated_at = ?
      WHERE id = ?`,
     [
       body.name ?? existing.name,
@@ -77,6 +85,7 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
       body.client_name ?? existing.client_name ?? null,
       body.client_email ?? existing.client_email ?? null,
       body.status ?? existing.status,
+      variationApproval,
       timestamp,
       params.id,
     ]

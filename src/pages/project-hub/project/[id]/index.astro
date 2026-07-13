@@ -12,6 +12,7 @@ import ClockWidget from '../../../../components/project-hub/ClockWidget';
 import Milestones from '../../../../components/project-hub/Milestones';
 import SummaryQueue from '../../../../components/project-hub/SummaryQueue';
 import ScheduleSettings from '../../../../components/project-hub/ScheduleSettings';
+import VariationsRegister from '../../../../components/project-hub/VariationsRegister';
 
 const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
@@ -22,6 +23,7 @@ const canRequestWorks = hasCap(Astro.locals, 'request_works');
 const canApproveWorks = hasCap(Astro.locals, 'approve_works');
 const canClock = hasCap(Astro.locals, 'clock_time');
 const canReleaseToClient = hasCap(Astro.locals, 'release_to_client');
+const canViewCosts = hasCap(Astro.locals, 'view_costs');
 
 const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
 if (!project || project.org_id !== orgId) return Astro.redirect('/project-hub/');
@@ -183,6 +185,14 @@ const totalEntries = await queryOne<{ count: number }>(
     {canManageProjects && (
       <div class="mt-6">
         <ScheduleSettings client:load projectId={id!} />
+      </div>
+    )}
+
+    <!-- Variations register — priced changes to the contract, sent to the client for sign-off -->
+    {canViewCosts && (
+      <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Variations</h2>
+        <VariationsRegister client:load projectId={id!} />
       </div>
     )}
 
