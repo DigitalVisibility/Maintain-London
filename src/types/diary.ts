@@ -209,4 +209,6 @@ export interface Env {
   R2: R2Bucket;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
+  /** Platform root domain for subdomain-per-business routing (e.g. projectdash.app). */
+  PLATFORM_DOMAIN?: string;
 }

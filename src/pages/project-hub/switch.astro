@@ -1,0 +1,89 @@
+---
+export const prerender = false;
+
+import { createAuth } from '../../lib/auth';
+import { getMemberships, isPlatformAdmin } from '../../lib/org';
+import { isPlatformHost, platformDomain, baseUrlForSlug } from '../../lib/platform';
+import SignOutButton from '../../components/project-hub/SignOutButton';
+
+// This page is reachable without a resolved business, so it resolves the
+// session itself and sends the user to the right place: the one business they
+// belong to, a chooser when they have several, or a friendly nudge when they
+// have none.
+const { env } = Astro.locals.runtime;
+const onPlatform = isPlatformHost(Astro.request.headers.get('host'), env);
+const baseURL = onPlatform ? Astro.url.origin : env.BETTER_AUTH_URL;
+const auth = createAuth(
+  env.DB, env.BETTER_AUTH_SECRET, baseURL, onPlatform ? platformDomain(env) : undefined
+);
+const session = await auth.api.getSession({ headers: Astro.request.headers });
+if (!session) return Astro.redirect('/project-hub/login');
+
+if (await isPlatformAdmin(env.DB, session.user.id)) {
+  return Astro.redirect('/project-hub/agency');
+}
+
+const memberships = await getMemberships(env.DB, session.user.id);
+const withSlug = memberships.filter((m) => m.org_slug);
+
+// Exactly one business (and we can build its URL) → go straight in.
+if (onPlatform && withSlug.length === 1) {
+  return Astro.redirect(baseUrlForSlug(env, withSlug[0].org_slug!) + '/project-hub/');
+}
+
+const businesses = onPlatform
+  ? withSlug.map((m) => ({ name: m.org_name, url: baseUrlForSlug(env, m.org_slug!) + '/project-hub/' }))
+  : memberships.map((m) => ({ name: m.org_name, url: '/project-hub/' }));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Choose a business | Project Dash</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-gray-50 font-sans">
+    <div class="min-h-screen flex items-center justify-center px-4">
+      <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-bold text-gray-900">Project Dash</h1>
+          <p class="text-gray-500 mt-1">
+            {businesses.length > 0 ? 'Choose a business to open' : 'Your account isn’t linked to a business yet'}
+          </p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {businesses.length > 0 ? (
+            <ul class="space-y-2">
+              {businesses.map((b) => (
+                <li>
+                  <a
+                    href={b.url}
+                    class="flex items-center justify-between px-4 py-3 rounded-md border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    <span class="text-sm font-medium text-gray-900">{b.name}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010 1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="text-sm text-gray-600">
+              Ask the business owner to invite you, then use the link in your email to join.
+            </p>
+          )}
+          <div class="mt-5 pt-4 border-t border-gray-100 text-center">
+            <SignOutButton client:load className="text-sm text-gray-400 hover:text-gray-700">
+              Sign out
+            </SignOutButton>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -4,8 +4,23 @@ import { D1Dialect } from 'kysely-d1';
 /**
  * Create a Better-Auth instance bound to the current request's D1 database.
  * Must be called per-request since D1 bindings are request-scoped in Workers.
+ *
+ * `platformDomain` (e.g. "projectdash.app") turns on cross-subdomain sessions:
+ * the cookie is set on `.projectdash.app` so signing in once is recognised on
+ * every business subdomain. Isolation is still enforced downstream — the
+ * subdomain pins the business and access needs membership (see middleware).
+ * Leave it undefined on the legacy single-domain host for a host-only cookie.
  */
-export function createAuth(db: D1Database, secret: string, baseURL: string) {
+export function createAuth(db: D1Database, secret: string, baseURL: string, platformDomain?: string) {
+  const crossSubDomain = platformDomain
+    ? {
+        crossSubDomainCookies: { enabled: true, domain: '.' + platformDomain },
+      }
+    : {};
+  const trustedOrigins = platformDomain
+    ? [`https://${platformDomain}`, `https://*.${platformDomain}`]
+    : undefined;
+
   return betterAuth({
     database: {
       dialect: new D1Dialect({ database: db }),
@@ -14,6 +29,7 @@ export function createAuth(db: D1Database, secret: string, baseURL: string) {
     baseURL,
     basePath: '/api/auth',
     secret,
+    ...(trustedOrigins ? { trustedOrigins } : {}),
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
@@ -44,6 +60,7 @@ export function createAuth(db: D1Database, secret: string, baseURL: string) {
     },
     advanced: {
       useSecureCookies: true,
+      ...crossSubDomain,
     },
   });
 }

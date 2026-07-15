@@ -5,6 +5,8 @@ type Runtime = import('@astrojs/cloudflare').Runtime<{
   R2: R2Bucket;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
+  /** Platform root domain for subdomain-per-business routing (e.g. projectdash.app). */
+  PLATFORM_DOMAIN?: string;
   /** Resend — transactional email (invites, approvals, client summaries). */
   RESEND_API_KEY?: string;
   /** Claude — drafts the client-facing summary narrative. */
