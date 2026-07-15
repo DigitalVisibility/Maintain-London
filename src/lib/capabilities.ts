@@ -32,8 +32,11 @@ const ALL: Capability[] = [
 export const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
   owner: ALL,
   admin: ALL,
+  // Managers run projects, but seeing the money (view_costs — quotes, invoices,
+  // variations, the valuation) is a per-person grant the owner controls, not an
+  // automatic part of the role. Off by default; granted per user.
   manager: [
-    'manage_projects', 'edit_diary', 'view_costs', 'approve_works',
+    'manage_projects', 'edit_diary', 'approve_works',
     'request_works', 'clock_time', 'release_to_client', 'message',
   ],
   operative: ['edit_diary', 'request_works', 'clock_time'],
@@ -64,14 +67,26 @@ export const ALL_CAPABILITIES = ALL;
 /** A per-org override of a role's capability (deviation from the defaults). */
 export interface CapabilityOverride { role: string; capability: string; enabled: number; }
 
+/** A per-user grant/removal of a capability (wins over role and per-role override). */
+export interface UserCapabilityOverride { capability: string; enabled: number; }
+
 /**
- * Effective capabilities for a role = built-in defaults, with the org's
- * overrides applied (enabled=1 adds, enabled=0 removes).
+ * Effective capabilities for a person: built-in role defaults, then the org's
+ * per-role overrides, then this user's own per-user grants — each layer winning
+ * over the one before (enabled=1 adds, enabled=0 removes).
  */
-export function effectiveCapabilities(role: string | undefined | null, overrides: CapabilityOverride[] = []): Capability[] {
+export function effectiveCapabilities(
+  role: string | undefined | null,
+  overrides: CapabilityOverride[] = [],
+  userOverrides: UserCapabilityOverride[] = []
+): Capability[] {
   const set = new Set<Capability>(capabilitiesFor(role));
   for (const o of overrides) {
     if (o.role !== role) continue;
+    if (o.enabled) set.add(o.capability as Capability);
+    else set.delete(o.capability as Capability);
+  }
+  for (const o of userOverrides) {
     if (o.enabled) set.add(o.capability as Capability);
     else set.delete(o.capability as Capability);
   }

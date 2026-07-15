@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { queryAll, execute, generateId, now } from '../../../lib/db';
+import { queryAll, queryOne, execute, generateId, now } from '../../../lib/db';
 import { canAccessProject } from '../../../lib/access';
 import { isStaff, hasCap } from '../../../lib/capabilities';
 import { validateFile, buildDocKey, uploadToR2 } from '../../../lib/r2';
-import { normaliseFolder, clientVisibleByDefault, type ProjectDocument } from '../../../lib/documents';
+import { normaliseFolder, type ProjectDocument } from '../../../lib/documents';
 
 export const prerender = false;
 
@@ -56,13 +56,19 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const projectId = form.get('project_id') as string | null;
   const folder = normaliseFolder(form.get('folder') as string | null);
   const caption = (form.get('caption') as string | null) ?? null;
-  // If the caller didn't say, fall back to the folder's sensible default —
-  // contracts, handovers, progress pics and financials are client-facing; the
-  // rest (drawings, superseded) stay internal until someone opts them in.
+  // If the caller didn't say, fall back to whether this business marked the
+  // folder client-facing by default.
   const rawVisible = form.get('client_visible');
-  const clientVisible = rawVisible === null
-    ? clientVisibleByDefault(folder)
-    : (rawVisible === 'true' || rawVisible === '1');
+  let clientVisible: boolean;
+  if (rawVisible === null) {
+    const def = await queryOne<{ client_default: number }>(
+      env.DB, 'SELECT client_default FROM document_folders WHERE org_id = ? AND name = ?',
+      [locals.org?.id ?? '', folder]
+    );
+    clientVisible = def?.client_default === 1;
+  } else {
+    clientVisible = rawVisible === 'true' || rawVisible === '1';
+  }
 
   if (!file) return Response.json({ error: 'No file provided' }, { status: 400 });
   if (!projectId) return Response.json({ error: 'project_id is required' }, { status: 400 });

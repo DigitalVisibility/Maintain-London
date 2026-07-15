@@ -1,0 +1,46 @@
+---
+/**
+ * A collapsible section on the project page. Renders a header bar (always
+ * visible — this is the "heading" the user scans) with a chevron, and reveals
+ * its slotted content when opened. Multiple sections can be open at once, and
+ * each section remembers whether you left it open (per page, in localStorage).
+ *
+ * Uses a native <details>/<summary> so it works without JavaScript; the small
+ * inline script only adds the remembering.
+ */
+interface Props {
+  id: string;               // stable key for remembering open/closed
+  title: string;
+  subtitle?: string;        // one-line description shown under the title
+  open?: boolean;           // default state before any saved preference
+}
+const { id, title, subtitle, open = false } = Astro.props;
+---
+
+<details class="acc group mb-3" data-accordion={id} open={open}>
+  <summary
+    class="flex items-center justify-between gap-3 px-5 py-3.5 bg-white rounded-lg shadow-sm border border-gray-200 cursor-pointer select-none hover:border-gray-300 transition-colors"
+  >
+    <div class="min-w-0">
+      <h2 class="text-base font-semibold text-gray-900 truncate">{title}</h2>
+      {subtitle && <p class="text-xs text-gray-500 truncate mt-0.5">{subtitle}</p>}
+    </div>
+    <svg
+      class="acc-chevron h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200"
+      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+    >
+      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+    </svg>
+  </summary>
+  <div class="pt-3">
+    <slot />
+  </div>
+</details>
+
+<style>
+  /* Hide the default disclosure triangle across browsers. */
+  .acc > summary { list-style: none; }
+  .acc > summary::-webkit-details-marker { display: none; }
+  /* Point the chevron up when the section is open. */
+  .acc[open] > summary .acc-chevron { transform: rotate(180deg); }
+</style>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-interface Member { user_id: string; name: string; email: string; role: string; }
+interface Member { user_id: string; name: string; email: string; role: string; sees_financials: number; }
 interface Invite { id: string; email: string; name: string | null; role: string; token: string; project_id: string | null; }
 interface ProjectLite { id: string; name: string; }
 
@@ -54,6 +54,14 @@ export default function TeamManager() {
   async function changeRole(userId: string, newRole: string) {
     await fetch(`/api/members/${userId}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: newRole }),
+    });
+    load();
+  }
+  async function setFinancials(userId: string, sees: boolean) {
+    // Optimistic — flip the row now, reconcile on reload.
+    setMembers((ms) => ms.map((m) => m.user_id === userId ? { ...m, sees_financials: sees ? 1 : 0 } : m));
+    await fetch(`/api/members/${userId}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sees_financials: sees }),
     });
     load();
   }
@@ -113,6 +121,19 @@ export default function TeamManager() {
                 <div className="text-sm font-medium text-gray-900 truncate">{m.name}</div>
                 <div className="text-xs text-gray-500 truncate">{m.email}</div>
               </div>
+              {/* Sees financials — quotes, invoices, variations, the valuation.
+                  Owners/admins always do; clients never; managers/operatives are
+                  a per-person grant the owner controls. */}
+              {m.role === 'client' ? (
+                <span className="text-xs text-gray-300 w-24 text-center hidden sm:inline" title="Clients never see financials">—</span>
+              ) : m.role === 'owner' || m.role === 'admin' ? (
+                <span className="text-xs text-gray-400 w-24 text-center hidden sm:inline" title="Owners and admins always see financials">Financials ✓</span>
+              ) : (
+                <label className="text-xs text-gray-600 w-24 flex items-center justify-center gap-1.5 cursor-pointer select-none" title="Let this person see quotes, invoices, variations and the valuation">
+                  <input type="checkbox" checked={!!m.sees_financials} onChange={(e) => setFinancials(m.user_id, e.target.checked)} className="accent-[#83B81A]" />
+                  Financials
+                </label>
+              )}
               <select value={m.role} onChange={(e) => changeRole(m.user_id, e.target.value)} className="text-sm border border-gray-300 rounded-md px-2 py-1 capitalize">
                 {['owner', ...ROLES].map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
