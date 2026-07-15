@@ -1,5 +1,5 @@
 /**
- * IndexedDB offline store + sync queue for Project Hub.
+ * IndexedDB offline store + sync queue for Project Dash.
  * Uses the `idb` library for a cleaner promise-based API.
  */
 

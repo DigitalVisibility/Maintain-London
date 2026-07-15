@@ -8,7 +8,7 @@ interface Props { title: string; }
 const { title } = Astro.props;
 const user = Astro.locals.user;
 const org = Astro.locals.org;
-const orgName = org?.name ?? 'Project Hub';
+const orgName = org?.name ?? 'Project Dash';
 const orgLogo = org?.logo_url || '/images/Icons/Stacked.png';
 const brandColor = org?.brand_color || '#AEDE4A';
 ---

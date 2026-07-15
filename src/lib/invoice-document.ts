@@ -58,7 +58,7 @@ export function generateInvoiceHTML(
 
   const logo = org.logo_url
     ? `<img src="${esc(org.logo_url)}" alt="${esc(org.name)}" style="max-height:56px;max-width:220px;object-fit:contain">`
-    : `<div style="font-size:22px;font-weight:800;color:#111827">${esc(org.name || 'Project Hub')}</div>`;
+    : `<div style="font-size:22px;font-weight:800;color:#111827">${esc(org.name || 'Project Dash')}</div>`;
 
   const companyBlock = [
     org.company_address ? nl2br(org.company_address) : '',

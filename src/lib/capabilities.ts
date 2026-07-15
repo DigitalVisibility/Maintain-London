@@ -1,5 +1,5 @@
 /**
- * Role-based access control for Project Hub.
+ * Role-based access control for Project Dash.
  *
  * Roles map to a set of capabilities. This is the single source of truth used
  * to gate routes, API endpoints and UI sections — and it's what the future

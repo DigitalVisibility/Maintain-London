@@ -1,14 +1,14 @@
-# Project Hub — Admin Guide
+# Project Dash — Admin Guide
 
 > **For:** The business owner and office managers
 > **Reading time:** About 20 minutes
 > **Updated:** July 2026
 
-This guide shows you how to run the Project Hub for your building business. It is
+This guide shows you how to run the Project Dash for your building business. It is
 written in plain, simple steps. If you can send an email, you can do everything in
 this guide.
 
-Your Project Hub lives at:
+Your Project Dash lives at:
 
 **https://maintainlondon.co.uk/project-hub/**
 
@@ -17,7 +17,7 @@ are steps for this near the end).
 
 ---
 
-## What the Project Hub does
+## What the Project Dash does
 
 Think of it as one place for a whole building job. It holds:
 
@@ -94,7 +94,7 @@ Now every invoice and receipt you send will show these. You only need to do this
 once, but you can change it any time.
 
 > **Good to know:** Invoices and emails go out in **your** business name, not
-> "Project Hub". Your customers see your name.
+> "Project Dash". Your customers see your name.
 
 ---
 

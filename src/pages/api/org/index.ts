@@ -58,10 +58,10 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const acceptUrl = `${base}/project-hub/accept?token=${encodeURIComponent(token)}`;
     ownerInvited = await sendEmail((env as any).RESEND_API_KEY, {
       to: email,
-      subject: `You've been set up as owner of ${body.name.trim()} on Project Hub`,
+      subject: `You've been set up as owner of ${body.name.trim()} on Project Dash`,
       html: emailLayout({
         heading: `Welcome to ${body.name.trim()}`,
-        body: `<p>You've been set up as the owner of <strong>${body.name.trim()}</strong>'s Project Hub. Click below to set your password.</p>`,
+        body: `<p>You've been set up as the owner of <strong>${body.name.trim()}</strong>'s Project Dash. Click below to set your password.</p>`,
         ctaLabel: 'Set up your account', ctaUrl: acceptUrl,
       }),
     });

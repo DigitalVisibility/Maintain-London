@@ -1,4 +1,4 @@
-/** D1 query helpers for the Project Hub */
+/** D1 query helpers for the Project Dash */
 
 export { generateId } from './ids';
 

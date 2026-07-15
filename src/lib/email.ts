@@ -17,7 +17,7 @@ import { queryOne } from './db';
 
 /** The verified envelope address. Only the display name in front of it varies. */
 const ENVELOPE = 'noreply@mail.maintainlondon.co.uk';
-const PLATFORM_NAME = 'Maintain London Project Hub';
+const PLATFORM_NAME = 'Project Dash';
 const PLATFORM_COLOR = '#AEDE4A';
 
 export interface SendEmailOptions {

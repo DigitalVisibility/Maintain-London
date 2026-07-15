@@ -45,7 +45,7 @@ export default function LoginForm() {
             />
           </a>
           <h1 className="text-2xl font-bold text-gray-900 font-display">
-            Project Hub
+            Project Dash
           </h1>
           <p className="text-gray-500 mt-1">
             Sign in to manage your projects

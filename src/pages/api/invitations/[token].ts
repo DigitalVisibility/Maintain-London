@@ -31,7 +31,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
     email: invite.email,
     name: invite.name,
     role: invite.role,
-    org_name: org?.name ?? 'Project Hub',
+    org_name: org?.name ?? 'Project Dash',
   });
 };
 

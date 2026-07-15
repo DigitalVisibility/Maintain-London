@@ -1,4 +1,4 @@
-/** Project Hub Service Worker — offline caching + background sync */
+/** Project Dash Service Worker — offline caching + background sync */
 
 const CACHE_VERSION = 'ph-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
@@ -58,7 +58,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Project Hub pages — network first, cache fallback
+  // Project Dash pages — network first, cache fallback
   if (url.pathname.startsWith('/project-hub/')) {
     event.respondWith(
       fetch(event.request)

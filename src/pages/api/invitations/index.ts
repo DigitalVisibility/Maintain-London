@@ -88,11 +88,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
     to: email,
     from: sender.from,
     replyTo: sender.replyTo,
-    subject: `You've been invited to ${org.name} on Project Hub`,
+    subject: `You've been invited to ${org.name} on Project Dash`,
     html: emailLayout({
       sender,
-      heading: `Join ${org.name} on Project Hub`,
-      body: `<p>${user.name || 'A team member'} has invited you to ${org.name}'s Project Hub as <strong>${role}</strong>.</p>
+      heading: `Join ${org.name} on Project Dash`,
+      body: `<p>${user.name || 'A team member'} has invited you to ${org.name}'s Project Dash as <strong>${role}</strong>.</p>
              <p>Click below to set your password and get started. This link expires in ${INVITE_TTL_DAYS} days.</p>`,
       ctaLabel: 'Accept invitation',
       ctaUrl: acceptUrl,

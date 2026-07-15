@@ -1,4 +1,4 @@
-# Project Hub — Site Team Guide
+# Project Dash — Site Team Guide
 
 > **For:** Site managers and workers (operatives)
 > **Reading time:** About 15 minutes
@@ -8,7 +8,7 @@ This guide is for the people on site. It shows you how to fill in the daily diar
 take photos, note extra work, and clock in and out. It uses simple steps. You do
 not need to be good with computers.
 
-The Project Hub lives at:
+The Project Dash lives at:
 
 **https://maintainlondon.co.uk/project-hub/**
 
