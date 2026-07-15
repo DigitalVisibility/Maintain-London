@@ -1,7 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createAuth } from './lib/auth';
 import { resolveActiveOrg, loadOrg, isPlatformAdmin, ACTIVE_ORG_COOKIE } from './lib/org';
-import { effectiveCapabilities, ALL_CAPABILITIES, type CapabilityOverride } from './lib/capabilities';
+import { effectiveCapabilities, ALL_CAPABILITIES, type CapabilityOverride, type UserCapabilityOverride } from './lib/capabilities';
 import { queryAll } from './lib/db';
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -74,7 +74,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
           'SELECT role, capability, enabled FROM role_capabilities WHERE org_id = ?',
           [resolved.org.id]
         ).catch(() => [] as CapabilityOverride[]);
-        context.locals.capabilities = effectiveCapabilities(resolved.role, overrides);
+        // This person's own grants (e.g. the owner gave this manager financials).
+        const userOverrides = await queryAll<UserCapabilityOverride>(
+          env.DB,
+          'SELECT capability, enabled FROM user_capabilities WHERE org_id = ? AND user_id = ?',
+          [resolved.org.id, sessionData.user.id]
+        ).catch(() => [] as UserCapabilityOverride[]);
+        context.locals.capabilities = effectiveCapabilities(resolved.role, overrides, userOverrides);
       }
     }
   }
