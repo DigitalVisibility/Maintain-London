@@ -6,6 +6,7 @@ import '@fontsource/plus-jakarta-sans/latin-700.css';
 import OfflineBanner from '../components/project-hub/OfflineBanner';
 import SignOutButton from '../components/project-hub/SignOutButton';
 import { hasCap } from '../lib/capabilities';
+import { isPlatformHost, platformDomain, baseUrlForSlug } from '../lib/platform';
 
 interface Props {
   title: string;
@@ -18,8 +19,15 @@ const currentPath = Astro.url.pathname;
 // Active organisation (tenant) branding + the user's role within it.
 const org = Astro.locals.org;
 const memberships = Astro.locals.memberships ?? [];
-const orgName = org?.name ?? 'Maintain London';
+const orgName = org?.name ?? 'Project Dash';
 const orgLogo = org?.logo_url || '/images/Icons/Stacked.png';
+
+// On the platform each business is its own subdomain, so switching businesses
+// means navigating there rather than flipping a cookie.
+const env = Astro.locals.runtime.env;
+const onPlatform = isPlatformHost(Astro.request.headers.get('host'), env);
+const switchUrlFor = (slug?: string | null) =>
+  onPlatform && slug ? baseUrlForSlug(env, slug) + '/project-hub/' : '';
 const brandColor = org?.brand_color || '#AEDE4A';
 const orgRole = Astro.locals.role ?? user?.role ?? 'operative';
 const canManageUsers = hasCap(Astro.locals, 'manage_users');
@@ -34,7 +42,7 @@ const isPlatformAdmin = Astro.locals.isPlatformAdmin;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>{title} | Project Dash | Maintain London</title>
+    <title>{title} | {orgName} | Project Dash</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content={brandColor} />
@@ -68,7 +76,7 @@ const isPlatformAdmin = Astro.locals.isPlatformAdmin;
               class="w-full bg-gray-800 text-white text-sm rounded-md px-2 py-1.5 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-green"
             >
               {memberships.map((m) => (
-                <option value={m.org_id} selected={m.org_id === org?.id}>{m.org_name}</option>
+                <option value={m.org_id} data-url={switchUrlFor(m.org_slug)} selected={m.org_id === org?.id}>{m.org_name}</option>
               ))}
             </select>
           </div>
@@ -249,6 +257,11 @@ const isPlatformAdmin = Astro.locals.isPlatformAdmin;
         var sw = document.getElementById('org-switcher');
         if (!sw) return;
         sw.addEventListener('change', async function () {
+          // On the platform, each business is its own subdomain — just go there.
+          var opt = sw.options[sw.selectedIndex];
+          var url = opt && opt.getAttribute('data-url');
+          if (url) { window.location.href = url; return; }
+          // Legacy single-domain host: flip the active-org cookie and reload.
           try {
             await fetch('/api/org/switch', {
               method: 'POST',

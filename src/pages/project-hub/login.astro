@@ -2,11 +2,43 @@
 export const prerender = false;
 
 import LoginForm from '../../components/project-hub/LoginForm';
+import { createAuth } from '../../lib/auth';
+import { getMemberships } from '../../lib/org';
+import {
+  isPlatformHost, businessSlugFromHost, loadOrgBySlug, platformDomain,
+} from '../../lib/platform';
 
-// If already logged in, redirect to dashboard
-if (Astro.locals.session) {
-  return Astro.redirect('/project-hub/');
+// The login page is served from each business subdomain, so it brands itself
+// to that business. On the apex it shows the Project Dash platform branding.
+const { env } = Astro.locals.runtime;
+const host = Astro.request.headers.get('host');
+const onPlatform = isPlatformHost(host, env);
+const slug = onPlatform ? businessSlugFromHost(host, env) : null;
+const org = slug ? await loadOrgBySlug(env.DB, slug) : null;
+
+// If already signed in, don't sit on the login page — route the user onward.
+const auth = createAuth(
+  env.DB, env.BETTER_AUTH_SECRET,
+  onPlatform ? Astro.url.origin : env.BETTER_AUTH_URL,
+  onPlatform ? platformDomain(env) : undefined
+);
+const session = await auth.api.getSession({ headers: Astro.request.headers });
+if (session) {
+  if (org) {
+    const memberships = await getMemberships(env.DB, session.user.id);
+    if (memberships.some((m) => m.org_id === org.id)) return Astro.redirect('/project-hub/');
+    return Astro.redirect('/project-hub/switch');
+  }
+  return Astro.redirect('/project-hub/switch');
 }
+
+const businessName = org?.name ?? null;
+const logoUrl = org?.logo_url ?? null;
+const brandColor = org?.brand_color ?? '#AEDE4A';
+// After login: a business subdomain keeps you here (the app); the apex sends
+// you to the chooser to pick a business.
+const redirectTo = org ? '/project-hub/' : '/project-hub/switch';
+const pageTitle = businessName ? `Sign In | ${businessName}` : 'Sign In | Project Dash';
 ---
 
 <!doctype html>
@@ -15,11 +47,17 @@ if (Astro.locals.session) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Sign In | Project Dash | Maintain London</title>
+    <title>{pageTitle}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#AEDE4A" />
+    <meta name="theme-color" content={brandColor} />
   </head>
   <body class="bg-gray-50 font-sans">
-    <LoginForm client:load />
+    <LoginForm
+      client:load
+      businessName={businessName}
+      logoUrl={logoUrl}
+      brandColor={brandColor}
+      redirectTo={redirectTo}
+    />
   </body>
 </html>

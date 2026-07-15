@@ -1,7 +1,21 @@
 import { useState } from 'react';
 import { signIn } from '../../lib/auth-client';
 
-export default function LoginForm() {
+interface Props {
+  /** The business this subdomain belongs to; null on the platform apex. */
+  businessName?: string | null;
+  logoUrl?: string | null;
+  brandColor?: string;
+  /** Where to go after a successful sign-in. */
+  redirectTo?: string;
+}
+
+export default function LoginForm({
+  businessName = null,
+  logoUrl = null,
+  brandColor = '#AEDE4A',
+  redirectTo = '/project-hub/',
+}: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,8 +38,7 @@ export default function LoginForm() {
         return;
       }
 
-      // Redirect to dashboard on success
-      window.location.href = '/project-hub/';
+      window.location.href = redirectTo;
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);
@@ -35,21 +48,26 @@ export default function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
+        {/* Logo / branding — the business on this subdomain, or Project Dash. */}
         <div className="text-center mb-8">
-          <a href="/">
+          {logoUrl && (
             <img
-              src="/images/Icons/Stacked.png"
-              alt="Maintain London"
+              src={logoUrl}
+              alt={businessName || 'Project Dash'}
               className="h-16 w-auto mx-auto mb-4"
             />
-          </a>
+          )}
           <h1 className="text-2xl font-bold text-gray-900 font-display">
-            Project Dash
+            {businessName || 'Project Dash'}
           </h1>
           <p className="text-gray-500 mt-1">
-            Sign in to manage your projects
+            {businessName
+              ? 'Sign in to your projects'
+              : 'Sign in to manage your projects'}
           </p>
+          {businessName && (
+            <p className="text-xs text-gray-400 mt-2">Powered by Project Dash</p>
+          )}
         </div>
 
         {/* Login Card */}
@@ -102,7 +120,8 @@ export default function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: brandColor }}
+              className="w-full py-2.5 px-4 text-gray-900 font-semibold rounded-md transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -136,7 +155,7 @@ export default function LoginForm() {
         </div>
 
         <p className="text-center text-sm text-gray-400 mt-6">
-          &copy; {new Date().getFullYear()} Maintain London. All rights reserved.
+          &copy; {new Date().getFullYear()} {businessName || 'Project Dash'}. All rights reserved.
         </p>
       </div>
     </div>
