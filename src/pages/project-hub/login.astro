@@ -33,7 +33,8 @@ if (session) {
 }
 
 const businessName = org?.name ?? null;
-const logoUrl = org?.logo_url ?? null;
+// A business shows its own logo (if set); the platform apex shows the Project Dash mark.
+const logoUrl = org ? (org.logo_url ?? null) : '/images/projectdash/mark.svg';
 const brandColor = org?.brand_color ?? '#AEDE4A';
 // After login: a business subdomain keeps you here (the app); the apex sends
 // you to the chooser to pick a business.
@@ -48,7 +49,7 @@ const pageTitle = businessName ? `Sign In | ${businessName}` : 'Sign In | Projec
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{pageTitle}</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={org?.logo_url || '/images/projectdash/favicon.svg'} />
     <meta name="theme-color" content={brandColor} />
   </head>
   <body class="bg-gray-50 font-sans">
