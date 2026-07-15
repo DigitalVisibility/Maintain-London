@@ -16,6 +16,7 @@ import VariationsRegister from '../../../../components/project-hub/VariationsReg
 import FinancialsPanel from '../../../../components/project-hub/FinancialsPanel';
 import DocumentHub from '../../../../components/project-hub/DocumentHub';
 import ProjectSchedule from '../../../../components/project-hub/ProjectSchedule';
+import AccordionSection from '../../../../components/project-hub/AccordionSection.astro';
 
 const { env } = Astro.locals.runtime;
 const { id } = Astro.params;
@@ -126,108 +127,125 @@ const totalEntries = await queryOne<{ count: number }>(
       </div>
     </div>
 
-    <!-- Recent entries -->
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-lg font-semibold text-gray-900">Recent Entries</h2>
-      <a href={`/project-hub/project/${id}/diary/`} class="text-sm text-[#AEDE4A] hover:text-[#83B81A] font-medium transition-colors">
-        View all
-      </a>
-    </div>
+    <!-- Collapsible sections. Each header is always visible so the page opens as
+         a tidy list; click one to expand it, click again to minimise. What you
+         leave open is remembered per project. -->
 
-    {recentEntries.length > 0 ? (
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="divide-y divide-gray-100">
-          {recentEntries.map((entry) => {
-            const dateObj = new Date(entry.date + 'T00:00:00');
-            return (
-              <a
-                href={`/project-hub/project/${id}/diary/${entry.id}`}
-                class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
-              >
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600">
-                    {dateObj.getDate()}
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">
-                      {dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+    <!-- Recent entries -->
+    <AccordionSection id="entries" title="Recent Entries" subtitle="The latest site diary entries" open={true}>
+      <div class="flex justify-end mb-2">
+        <a href={`/project-hub/project/${id}/diary/`} class="text-sm text-[#83B81A] hover:text-[#6B8F2E] font-medium transition-colors">
+          View all entries
+        </a>
+      </div>
+      {recentEntries.length > 0 ? (
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="divide-y divide-gray-100">
+            {recentEntries.map((entry) => {
+              const dateObj = new Date(entry.date + 'T00:00:00');
+              return (
+                <a
+                  href={`/project-hub/project/${id}/diary/${entry.id}`}
+                  class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600">
+                      {dateObj.getDate()}
                     </div>
-                    <div class="text-xs text-gray-500">{entry.start_time} – {entry.end_time} · {entry.site_manager}</div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">
+                        {dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </div>
+                      <div class="text-xs text-gray-500">{entry.start_time} – {entry.end_time} · {entry.site_manager}</div>
+                    </div>
                   </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010 1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            );
-          })}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010 1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    ) : (
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-        <p class="text-sm text-gray-500">No diary entries yet. Create your first one to get started.</p>
-      </div>
-    )}
+      ) : (
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <p class="text-sm text-gray-500">No diary entries yet. Create your first one to get started.</p>
+        </div>
+      )}
+    </AccordionSection>
 
     <!-- Milestones — the stages this job is measured in. Completing one drafts a
          client update, and is what a stage payment will later hang off. -->
-    <div class="mt-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-3">Milestones</h2>
-      <Milestones client:load projectId={id!} />
-    </div>
+    <AccordionSection id="milestones" title="Milestones" subtitle="Stages of the job — completing one updates the client">
+      <Milestones client:visible projectId={id!} />
+    </AccordionSection>
 
     <!-- Client updates: drafted for you, sent only once you approve -->
     {canReleaseToClient && (
-      <div class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Client updates</h2>
-        <SummaryQueue client:load projectId={id!} />
-      </div>
+      <AccordionSection id="client-updates" title="Client updates" subtitle="Drafted summaries, sent only when you approve">
+        <SummaryQueue client:visible projectId={id!} />
+      </AccordionSection>
     )}
 
     <!-- Schedule for this project (defaults to the business setting) -->
     {canManageProjects && (
-      <div class="mt-6">
-        <ScheduleSettings client:load projectId={id!} />
-      </div>
+      <AccordionSection id="update-schedule" title="Client update schedule" subtitle="How often the client is updated">
+        <ScheduleSettings client:visible projectId={id!} />
+      </AccordionSection>
     )}
 
     <!-- Schedule — programme, procurement, financial -->
-    <div class="mt-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-3">Schedule</h2>
-      <ProjectSchedule client:load projectId={id!} canManage={canManageProjects || canRequestWorks} canViewCosts={canViewCosts} />
-    </div>
+    <AccordionSection id="schedule" title="Schedule" subtitle="Programme, procurement and payment dates">
+      <ProjectSchedule client:visible projectId={id!} canManage={canManageProjects || canRequestWorks} canViewCosts={canViewCosts} />
+    </AccordionSection>
 
     <!-- Documents — the project filing cabinet -->
-    <div class="mt-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-3">Documents</h2>
-      <DocumentHub client:load projectId={id!} canManage={canManageProjects || canRequestWorks} />
-    </div>
+    <AccordionSection id="documents" title="Documents" subtitle="Drawings, contracts, photos and files">
+      <DocumentHub client:visible projectId={id!} canManage={canManageProjects || canRequestWorks} />
+    </AccordionSection>
 
     <!-- Financials — the interim valuation and client invoices -->
     {canViewCosts && (
-      <div class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Financials</h2>
-        <FinancialsPanel client:load projectId={id!} />
-      </div>
+      <AccordionSection id="financials" title="Financials" subtitle="Interim valuation and client invoices">
+        <FinancialsPanel client:visible projectId={id!} />
+      </AccordionSection>
     )}
 
     <!-- Variations register — priced changes to the contract, sent to the client for sign-off -->
     {canViewCosts && (
-      <div class="mt-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Variations</h2>
-        <VariationsRegister client:load projectId={id!} />
-      </div>
+      <AccordionSection id="variations" title="Variations" subtitle="Priced changes to the contract, sent for sign-off">
+        <VariationsRegister client:visible projectId={id!} />
+      </AccordionSection>
     )}
 
     <!-- Additional works & approvals -->
-    <div class="mt-6">
-      <ApprovalsPanel client:load projectId={id!} canRequest={canRequestWorks} canDecide={canApproveWorks} />
-    </div>
+    <AccordionSection id="approvals" title="Additional works & approvals" subtitle="Requests that need a sign-off">
+      <ApprovalsPanel client:visible projectId={id!} canRequest={canRequestWorks} canDecide={canApproveWorks} />
+    </AccordionSection>
 
     <!-- Messages with the client -->
-    <div class="mt-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-3">Messages</h2>
-      <MessageThread client:load projectId={id!} meUserId={user?.id} />
-    </div>
+    <AccordionSection id="messages" title="Messages" subtitle="Chat with the client and team">
+      <MessageThread client:visible projectId={id!} meUserId={user?.id} />
+    </AccordionSection>
   </div>
+
+  <!-- Remember which sections each person leaves open, per project. -->
+  <script is:inline>
+    (function () {
+      var base = 'acc:' + location.pathname + ':';
+      var items = document.querySelectorAll('details[data-accordion]');
+      for (var i = 0; i < items.length; i++) {
+        (function (el) {
+          var key = base + el.getAttribute('data-accordion');
+          var saved = null;
+          try { saved = localStorage.getItem(key); } catch (e) {}
+          if (saved === 'open') el.open = true;
+          else if (saved === 'closed') el.open = false;
+          el.addEventListener('toggle', function () {
+            try { localStorage.setItem(key, el.open ? 'open' : 'closed'); } catch (e) {}
+          });
+        })(items[i]);
+      }
+    })();
+  </script>
 </HubLayout>
