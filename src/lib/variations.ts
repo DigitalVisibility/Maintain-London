@@ -15,6 +15,7 @@
 import { queryAll, queryOne, execute, generateId, now } from './db';
 import { raiseApproval, type ApprovalProject } from './approvals';
 import { sendEmail, emailLayout, loadSender } from './email';
+import { baseUrlForOrgId } from './platform';
 
 export type VariationStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 
@@ -274,7 +275,7 @@ async function notifyVariationsDrafted(
     const recipients = staff.map((s) => s.email).filter(Boolean);
     if (recipients.length === 0) return;
 
-    const base = env.BETTER_AUTH_URL ?? 'https://maintainlondon.co.uk';
+    const base = await baseUrlForOrgId(env, env.DB, project.org_id);
     const sender = await loadSender(env.DB, project.org_id);
     const list = drafted
       .map((d) => `<li><strong>${formatNumber(d.number)}</strong> — ${escapeHtml(d.description)}</li>`)

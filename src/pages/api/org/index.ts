@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { queryAll, execute, generateId, now } from '../../../lib/db';
 import { sendEmail, emailLayout } from '../../../lib/email';
+import { baseUrlForSlug } from '../../../lib/platform';
 
 export const prerender = false;
 
@@ -54,7 +55,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
        VALUES (?, ?, ?, 'owner', NULL, ?, ?, ?, 'pending', ?, ?)`,
       [generateId(), email, body.owner_name ?? null, id, token, locals.user.id, expires, now()]
     );
-    const base = (env as any).BETTER_AUTH_URL || 'https://maintainlondon.co.uk';
+    const base = baseUrlForSlug(env, slug || id);
     const acceptUrl = `${base}/project-hub/accept?token=${encodeURIComponent(token)}`;
     ownerInvited = await sendEmail((env as any).RESEND_API_KEY, {
       to: email,

@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { queryAll, queryOne, execute, generateId, now } from '../../../lib/db';
 import { can, type Role } from '../../../lib/capabilities';
 import { sendEmail, emailLayout, senderFor } from '../../../lib/email';
+import { orgBaseUrl } from '../../../lib/platform';
 
 export const prerender = false;
 
@@ -80,8 +81,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
     [id, email, body.name ?? null, role, body.project_id ?? null, org.id, token, user.id, expires, timestamp]
   );
 
-  // Email the magic link — from the business doing the inviting.
-  const base = (env as any).BETTER_AUTH_URL || 'https://maintainlondon.co.uk';
+  // Email the magic link — from the business doing the inviting, pointing at
+  // that business's own subdomain.
+  const base = orgBaseUrl(env, org);
   const acceptUrl = `${base}/project-hub/accept?token=${encodeURIComponent(token)}`;
   const sender = senderFor(org);
   const emailed = await sendEmail((env as any).RESEND_API_KEY, {

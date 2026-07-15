@@ -104,3 +104,20 @@ export async function slugForOrg(db: D1Database, orgId: string): Promise<string 
   );
   return row?.slug ?? null;
 }
+
+/**
+ * Client-facing base URL for a business given only its org id — the shape most
+ * email/notification code has. Uses the business's subdomain, falling back to
+ * the deployment's configured URL when there's no slug (or no org).
+ */
+export async function baseUrlForOrgId(
+  env: { PLATFORM_DOMAIN?: string; BETTER_AUTH_URL?: string },
+  db: D1Database,
+  orgId: string | null | undefined
+): Promise<string> {
+  if (orgId) {
+    const slug = await slugForOrg(db, orgId);
+    if (slug) return baseUrlForSlug(env, slug);
+  }
+  return env?.BETTER_AUTH_URL || `https://${platformDomain(env)}`;
+}

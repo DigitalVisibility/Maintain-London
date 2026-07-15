@@ -18,6 +18,7 @@ import { draftSummary } from './ai';
 import { sendEmail, emailLayout, loadSender } from './email';
 import { uploadToR2 } from './r2';
 import { dayAfter } from './summary-schedule';
+import { baseUrlForOrgId } from './platform';
 import type { Project } from '../types/diary';
 
 export type SummaryTrigger = 'scheduled' | 'manual' | 'milestone';
@@ -201,7 +202,8 @@ export async function approveAndSend(
     return { ok: false, error: 'This project has no client to send to.' };
   }
 
-  const portalUrl = `${env.BETTER_AUTH_URL ?? 'https://maintainlondon.co.uk'}/project-hub/portal/${project.id}`;
+  const base = await baseUrlForOrgId(env, env.DB, project.org_id);
+  const portalUrl = `${base}/project-hub/portal/${project.id}`;
   const heading = summary.title || `Progress update — ${project.name}`;
 
   // The client hears from *their* builder — the business that owns the project —

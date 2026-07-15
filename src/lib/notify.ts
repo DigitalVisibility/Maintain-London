@@ -13,6 +13,7 @@
 
 import { queryAll, queryOne, execute, generateId, now } from './db';
 import { sendEmail, emailLayout, loadSender } from './email';
+import { baseUrlForOrgId } from './platform';
 import type { Project } from '../types/diary';
 
 /** In 'chase' mode, don't email the same person about a thread more often than this. */
@@ -183,7 +184,7 @@ export async function notifyNewMessage(env: NotifyEnv, msg: NewMessage): Promise
     ]);
     const mode: NotifyMode = org?.message_notify === 'chase' ? 'chase' : 'once';
 
-    const base = env.BETTER_AUTH_URL ?? 'https://maintainlondon.co.uk';
+    const base = await baseUrlForOrgId(env, env.DB, orgId);
     const author = msg.authorName || (msg.authorIsClient ? 'The client' : 'The team');
 
     for (const to of recipients) {

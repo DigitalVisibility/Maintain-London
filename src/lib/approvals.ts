@@ -9,6 +9,7 @@
 
 import { queryAll, execute, generateId, now } from './db';
 import { sendEmail, emailLayout, loadSender } from './email';
+import { baseUrlForOrgId } from './platform';
 
 export interface ApprovalProject {
   id: string;
@@ -121,7 +122,7 @@ interface NotifyInfo {
 
 /** Email the appropriate approvers (managers for manager-level, the client for client-level). */
 export async function notifyApprovers(env: ApprovalEnv, project: ApprovalProject, info: NotifyInfo): Promise<void> {
-  const base = env.BETTER_AUTH_URL || 'https://maintainlondon.co.uk';
+  const base = await baseUrlForOrgId(env, env.DB, project.org_id);
   const decideUrl = `${base}/project-hub/approve?token=${encodeURIComponent(info.decideToken)}`;
   const costStr = info.cost !== null ? `£${info.cost.toFixed(2)}` : 'cost TBC';
 

@@ -4,6 +4,7 @@ import { canAccessProject } from '../../../lib/access';
 import { hasCap } from '../../../lib/capabilities';
 import { computeInvoiceMoney, type Invoice, type InvoiceStatus } from '../../../lib/financials';
 import { sendEmail, emailLayout, loadSender } from '../../../lib/email';
+import { baseUrlForOrgId } from '../../../lib/platform';
 
 export const prerender = false;
 
@@ -110,7 +111,7 @@ async function notifyInvoiceIssued(env: any, invoice: Invoice): Promise<void> {
     const recipients = clients.map((c) => c.email).filter(Boolean);
     if (recipients.length === 0) return;
 
-    const base = env.BETTER_AUTH_URL ?? 'https://maintainlondon.co.uk';
+    const base = await baseUrlForOrgId(env, env.DB, project.org_id);
     const sender = await loadSender(env.DB, project.org_id);
     const num = String(invoice.number).padStart(4, '0');
 
