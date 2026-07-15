@@ -1,4 +1,4 @@
-/** The document hub's folders and shared types. */
+/** The document hub's shared types, defaults, and helpers. */
 
 export interface ProjectDocument {
   id: string;
@@ -16,31 +16,32 @@ export interface ProjectDocument {
   created_at: string;
 }
 
-/**
- * The standard folders, from the wireframe. A fixed set keeps every project's
- * filing consistent and the client-facing view predictable; uploads to an
- * unknown folder fall back to "Documents".
- */
-export const FOLDERS = [
-  'Drawings',
-  'Interior Finishes',
-  'Kitchen',
-  'Bathrooms',
-  'Superseded',
-  'Contracts',
-  'Handovers',
-  'Progress Pics',
-  'Financials',
-] as const;
-
-export type Folder = (typeof FOLDERS)[number];
-
-export function normaliseFolder(folder: string | null | undefined): string {
-  const match = FOLDERS.find((f) => f.toLowerCase() === (folder ?? '').trim().toLowerCase());
-  return match ?? 'Documents';
+export interface DocumentFolder {
+  id: string;
+  org_id: string;
+  name: string;
+  sort_order: number;
+  client_default: number;
+  created_at: string;
 }
 
-/** Whether a folder is one a client would normally be shown (used as an upload default). */
-export function clientVisibleByDefault(folder: string): boolean {
-  return ['Contracts', 'Handovers', 'Progress Pics', 'Financials'].includes(folder);
+/**
+ * The folders a new business starts with — the cross-trade ones that apply to
+ * almost any builder. Trade-specific folders (Kitchen, Bathrooms, …) are left for
+ * each business to add, so a roofer isn't stuck with a "Bathrooms" folder.
+ * `client_default` marks the ones whose uploads are normally shown to the client.
+ */
+export const DEFAULT_FOLDERS: { name: string; client_default: number }[] = [
+  { name: 'Drawings', client_default: 0 },
+  { name: 'Superseded', client_default: 0 },
+  { name: 'Contracts', client_default: 1 },
+  { name: 'Handovers', client_default: 1 },
+  { name: 'Progress Pics', client_default: 1 },
+  { name: 'Financials', client_default: 1 },
+];
+
+/** Tidy a folder name: trim, collapse whitespace, cap length. Empty → "Documents". */
+export function normaliseFolder(folder: string | null | undefined): string {
+  const name = (folder ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  return name || 'Documents';
 }
