@@ -13,8 +13,9 @@ export default function MessageThread({ projectId, meUserId }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const countRef = useRef(0);
+  const scrolledCount = useRef(0);
 
   async function load() {
     const res = await fetch(`/api/messages?project_id=${projectId}`);
@@ -48,7 +49,23 @@ export default function MessageThread({ projectId, meUserId }: Props) {
     return () => clearInterval(timer);
   }, [projectId]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  // Keep the newest message in view — but scroll only the message box, never the
+  // whole page. (scrollIntoView pulls every scrollable ancestor, including the
+  // window, which on a long project page yanked the reader to the bottom on every
+  // 20-second poll.) Only scroll on a genuinely new message, and don't yank a
+  // reader who has scrolled up to read history.
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    if (messages.length <= scrolledCount.current) {
+      scrolledCount.current = messages.length; // count dropped/unchanged — nothing to do
+      return;
+    }
+    const firstLoad = scrolledCount.current === 0;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    if (firstLoad || nearBottom) el.scrollTop = el.scrollHeight;
+    scrolledCount.current = messages.length;
+  }, [messages]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -66,7 +83,7 @@ export default function MessageThread({ projectId, meUserId }: Props) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col" style={{ maxHeight: 480 }}>
       <div className="px-4 py-3 border-b border-gray-100 text-sm font-semibold text-gray-900">Messages</div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ minHeight: 200 }}>
+      <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3" style={{ minHeight: 200 }}>
         {messages.length === 0 && <p className="text-sm text-gray-400">No messages yet. Say hello 👋</p>}
         {messages.map((m) => {
           const mine = meUserId && m.user_id === meUserId;
@@ -79,7 +96,6 @@ export default function MessageThread({ projectId, meUserId }: Props) {
             </div>
           );
         })}
-        <div ref={endRef} />
       </div>
       <form onSubmit={send} className="p-3 border-t border-gray-100 flex gap-2">
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a message…"
