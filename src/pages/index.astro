@@ -1,34 +1,98 @@
 ---
-export const prerender = true;
-import Layout from '../layouts/Layout.astro';
-import Navigation from '../components/Navigation.astro';
-import Hero from '../components/Hero.astro';
-import WhyChooseUs from '../components/WhyChooseUs.astro';
-import Services from '../components/Services.astro';
-import CostCalculatorCTA from '../components/CostCalculatorCTA.astro';
-import Process from '../components/Process.astro';
-import FeaturedProjects from '../components/FeaturedProjects.astro';
-import Testimonials from '../components/Testimonials.astro';
-import Resources from '../components/Resources.astro';
-import Contact from '../components/Contact.astro';
-import Footer from '../components/Footer.astro';
+export const prerender = false;
+
+// The Project Dash platform landing (apex). On a business subdomain the root is
+// the app, so send it there; the apex shows the product marketing below.
+import { isPlatformHost, businessSlugFromHost } from '../lib/platform';
+
+const { env } = Astro.locals.runtime;
+const host = Astro.request.headers.get('host');
+if (isPlatformHost(host, env) && businessSlugFromHost(host, env)) {
+  return Astro.redirect('/project-hub/');
+}
+
+const features = [
+  { title: 'Site diary', body: 'Daily logs with weather, hours and who was on site — captured on a phone, even offline.' },
+  { title: 'Photos', body: 'Snap progress on site; choose exactly what the client sees before it goes out.' },
+  { title: 'Client portal', body: 'Each client gets their own private view of their job — updates, photos and approvals.' },
+  { title: 'Approvals & variations', body: 'Raise extra works from site, get sign-off, and keep a priced variations register.' },
+  { title: 'Valuations & invoices', body: 'Interim valuations and branded VAT invoices with payment receipts, ready to send.' },
+  { title: 'Programme & documents', body: 'Keep the schedule, procurement dates and every drawing and contract in one place.' },
+];
 ---
 
-<Layout
-  title="Maintain London | Luxury Home Renovations Southwest London & Surrey"
-  description="Maintain London delivers premium home renovations, luxury kitchens, bathrooms and extensions in Southwest London and Surrey. 500+ projects, 98% satisfaction. Call 020 3886 2023."
-  ogType="website"
-  breadcrumbs={[{ name: "Home", url: "/" }]}
->
-  <Navigation />
-  <Hero />
-  <WhyChooseUs />
-  <Services />
-  <CostCalculatorCTA />
-  <Process />
-  <FeaturedProjects />
-  <Testimonials />
-  <Resources />
-  <Contact />
-  <Footer />
-</Layout>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Dash — construction project management for builders</title>
+    <meta name="description" content="Project Dash keeps your building projects and your clients in sync: site diaries, photos, approvals, valuations and a private client portal — each business on its own branded space." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#AEDE4A" />
+  </head>
+  <body class="bg-white font-sans text-gray-900">
+    <!-- Header -->
+    <header class="border-b border-gray-100">
+      <div class="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+        <span class="text-lg font-bold tracking-tight">Project&nbsp;Dash</span>
+        <a href="/project-hub/login" class="px-4 py-2 rounded-md bg-[#AEDE4A] hover:opacity-90 transition-opacity text-gray-900 text-sm font-semibold">
+          Sign in
+        </a>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="max-w-6xl mx-auto px-5 py-20 md:py-28 text-center">
+      <p class="text-sm font-semibold uppercase tracking-wide text-[#6B8F2E]">For builders &amp; contractors</p>
+      <h1 class="mt-3 text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
+        Run your projects.<br class="hidden sm:block" /> Keep your clients in the loop.
+      </h1>
+      <p class="mt-5 max-w-2xl mx-auto text-lg text-gray-600">
+        Project Dash is one simple place for your site diary, photos, approvals, valuations and
+        a private portal for every client — with your business on its own branded web address.
+      </p>
+      <div class="mt-8 flex items-center justify-center gap-3">
+        <a href="/project-hub/login" class="px-6 py-3 rounded-md bg-[#AEDE4A] hover:opacity-90 transition-opacity text-gray-900 font-semibold">
+          Sign in to your business
+        </a>
+        <a href="#features" class="px-6 py-3 rounded-md border border-gray-300 hover:border-gray-400 transition-colors font-semibold">
+          See what's inside
+        </a>
+      </div>
+      <p class="mt-4 text-sm text-gray-400">Each business signs in at its own address, e.g. <span class="font-medium text-gray-500">yourfirm.projectdash.app</span></p>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="bg-gray-50 border-y border-gray-100">
+      <div class="max-w-6xl mx-auto px-5 py-16 md:py-20">
+        <h2 class="text-2xl md:text-3xl font-bold text-center">Everything a job needs, in one place</h2>
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((f) => (
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 class="font-semibold text-lg">{f.title}</h3>
+              <p class="mt-2 text-sm text-gray-600 leading-relaxed">{f.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="max-w-6xl mx-auto px-5 py-16 md:py-20 text-center">
+      <h2 class="text-2xl md:text-3xl font-bold">Ready when you are</h2>
+      <p class="mt-3 text-gray-600">Already set up? Sign in to your business space.</p>
+      <a href="/project-hub/login" class="mt-6 inline-block px-6 py-3 rounded-md bg-[#AEDE4A] hover:opacity-90 transition-opacity text-gray-900 font-semibold">
+        Sign in
+      </a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-100">
+      <div class="max-w-6xl mx-auto px-5 py-8 text-sm text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <span>&copy; {new Date().getFullYear()} Project Dash</span>
+        <span>Construction project management</span>
+      </div>
+    </footer>
+  </body>
+</html>
