@@ -12,13 +12,20 @@ import { D1Dialect } from 'kysely-d1';
  * Leave it undefined on the legacy single-domain host for a host-only cookie.
  */
 export function createAuth(db: D1Database, secret: string, baseURL: string, platformDomain?: string) {
-  const crossSubDomain = platformDomain
+  const isHttps = baseURL.startsWith('https');
+  // Share the session across *.projectdash.app — but NOT for `.localhost`, which
+  // browsers refuse as a cookie domain. Local subdomains just get host-only
+  // cookies (each subdomain its own login), which is fine for dev.
+  const crossSubDomain = platformDomain && platformDomain !== 'localhost'
     ? {
         crossSubDomainCookies: { enabled: true, domain: '.' + platformDomain },
       }
     : {};
   const trustedOrigins = platformDomain
-    ? [`https://${platformDomain}`, `https://*.${platformDomain}`]
+    ? [
+        `https://${platformDomain}`, `https://*.${platformDomain}`,
+        `http://${platformDomain}`, `http://*.${platformDomain}`,
+      ]
     : undefined;
 
   return betterAuth({
@@ -59,7 +66,9 @@ export function createAuth(db: D1Database, secret: string, baseURL: string, plat
       },
     },
     advanced: {
-      useSecureCookies: true,
+      // Secure cookies over HTTPS in production; relaxed on http://localhost so
+      // sign-in works in local dev.
+      useSecureCookies: isHttps,
       ...crossSubDomain,
     },
   });
