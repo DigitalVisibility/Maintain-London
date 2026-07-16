@@ -6,6 +6,7 @@ import RoleAccess from '../../components/project-hub/RoleAccess';
 import ScheduleSettings from '../../components/project-hub/ScheduleSettings';
 import NotificationSettings from '../../components/project-hub/NotificationSettings';
 import CompanyProfile from '../../components/project-hub/CompanyProfile';
+import BrandingSettings from '../../components/project-hub/BrandingSettings';
 import SignOutButton from '../../components/project-hub/SignOutButton';
 import { hasCap } from '../../lib/capabilities';
 
@@ -74,6 +75,15 @@ const canManageUsers = hasCap(Astro.locals, 'manage_users');
         Install Project Dash
       </button>
     </div>
+
+    <!-- Branding — your business name, logo, colour and web address -->
+    {canManageUsers && (
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-6">
+        <h2 class="text-sm font-semibold text-gray-900 mb-1">Branding</h2>
+        <p class="text-xs text-gray-500 mb-4">How your business looks to your team and clients.</p>
+        <BrandingSettings client:load />
+      </div>
+    )}
 
     <!-- Company details for invoices -->
     {canManageUsers && (

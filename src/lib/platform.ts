@@ -70,6 +70,31 @@ export function baseUrlForSlug(env: { PLATFORM_DOMAIN?: string }, slug: string):
   return `https://${slug}.${platformDomain(env)}`;
 }
 
+/** Turn a business name into a candidate slug: "Maintain London" -> "maintain-london". */
+export function slugify(name: string): string {
+  return (name || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-+|-+$)/g, '')
+    .slice(0, 40);
+}
+
+/**
+ * Is this a valid, allowed business slug (subdomain)? Lowercase letters, digits
+ * and single hyphens; 2–40 chars; can't start/end with a hyphen; not reserved.
+ */
+export function isValidSlug(slug: string): boolean {
+  if (!slug || slug.length < 2 || slug.length > 40) return false;
+  if (RESERVED_SUBDOMAINS.has(slug)) return false;
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+}
+
+/** Is this a valid 6-digit hex colour like #AEDE4A? */
+export function isValidHexColor(c: string): boolean {
+  return /^#[0-9a-fA-F]{6}$/.test(c || '');
+}
+
 /**
  * Absolute base URL for building a business's client-facing links (invites,
  * portal, approvals, invoices). Prefers the org's own subdomain; falls back to
