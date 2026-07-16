@@ -20,6 +20,10 @@ export default function BrandingSettings() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // AI auto-fill from the business's website.
+  const [siteUrl, setSiteUrl] = useState('');
+  const [inspecting, setInspecting] = useState(false);
+  const [logoOptions, setLogoOptions] = useState<string[]>([]);
 
   async function load() {
     const r = await fetch('/api/org/branding');
@@ -36,6 +40,44 @@ export default function BrandingSettings() {
   const validColor = /^#[0-9a-fA-F]{6}$/.test(color);
   const cleanSlug = slug.trim().toLowerCase();
   const slugChanged = !!data && cleanSlug !== (data.slug || '');
+
+  async function inspect() {
+    if (!siteUrl.trim()) return;
+    setInspecting(true); setMsg(null); setLogoOptions([]);
+    try {
+      const r = await fetch('/api/onboarding/inspect', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: siteUrl.trim() }),
+      });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || 'Could not read that website');
+      if (out.business_name) setName(out.business_name);
+      if (out.brand_color && /^#[0-9a-fA-F]{6}$/.test(out.brand_color)) setColor(out.brand_color.toUpperCase());
+      if (Array.isArray(out.logo_candidates)) setLogoOptions(out.logo_candidates);
+      setMsg({ kind: 'ok', text: 'Filled in what we found — review it, pick a logo, then Save.' });
+    } catch (err: any) {
+      setMsg({ kind: 'err', text: err.message });
+    } finally {
+      setInspecting(false);
+    }
+  }
+
+  async function useLogoFromUrl(url: string) {
+    setUploading(true); setMsg(null);
+    try {
+      const r = await fetch('/api/org/branding/logo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }),
+      });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || 'Could not save that logo');
+      setLogoUrl(out.logo_url);
+      setLogoOptions([]);
+      setMsg({ kind: 'ok', text: 'Logo set from your website.' });
+    } catch (err: any) {
+      setMsg({ kind: 'err', text: err.message });
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -104,6 +146,35 @@ export default function BrandingSettings() {
       {msg && (
         <div className={`text-sm px-3 py-2 rounded-md break-words ${msg.kind === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{msg.text}</div>
       )}
+
+      {/* AI auto-fill from the business website */}
+      <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 p-3">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Fill from your website</label>
+        <div className="flex items-center gap-2">
+          <input value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)} spellCheck={false}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); inspect(); } }}
+            placeholder="yourbusiness.co.uk" className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-sm" />
+          <button type="button" onClick={inspect} disabled={inspecting || !siteUrl.trim()}
+            className="px-3 py-2 text-sm font-medium bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap">
+            {inspecting ? 'Reading…' : 'Auto-fill'}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-1.5">We’ll read your site and suggest your name, colour and logo. Nothing is saved until you press Save.</p>
+        {logoOptions.length > 0 && (
+          <div className="mt-3">
+            <p className="text-xs font-medium text-gray-600 mb-1.5">Pick your logo:</p>
+            <div className="flex flex-wrap gap-2">
+              {logoOptions.map((u) => (
+                <button key={u} type="button" onClick={() => useLogoFromUrl(u)} disabled={uploading}
+                  title="Use this as your logo"
+                  className="w-14 h-14 rounded-md border border-gray-200 bg-white flex items-center justify-center overflow-hidden hover:border-[#83B81A] disabled:opacity-50">
+                  <img src={u} alt="" className="max-w-full max-h-full object-contain" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Logo */}
       <div>
