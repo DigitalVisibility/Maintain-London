@@ -2,7 +2,7 @@
 
 This guide turns the code on the **`project-dash`** branch into a live, separate
 platform at **projectdash.app**, with each business on its own subdomain
-(e.g. `maintain-london.projectdash.app`).
+(e.g. `maintainlondon.projectdash.app`).
 
 The golden rule, above everything else:
 
@@ -20,8 +20,8 @@ deploying from `master` and keeps working exactly as before. Project Dash is a
 ## How it works (the 60-second version)
 
 - **One deployment, many businesses.** The web address decides the business: the
-  bit before `projectdash.app` is the business's *slug*. `maintain-london`
-  (slug) → `maintain-london.projectdash.app`.
+  bit before `projectdash.app` is the business's *slug*. `maintainlondon`
+  (slug) → `maintainlondon.projectdash.app`.
 - **The subdomain is the boss.** It pins which business you're in and overrides
   any saved choice. You only get in if you're a member of that business (or an
   agency super-admin). Everyone else is walled out — that's the isolation.
@@ -135,19 +135,18 @@ right place automatically.
 
 ## Part 7 — Check the business slugs (they are the subdomains)
 
-A business's **slug** is its subdomain. Current values:
+A business's **slug** is its subdomain. Current value:
 
 | Business | Slug → subdomain |
 |----------|------------------|
-| Maintain London | `maintain-london` → `maintain-london.projectdash.app` |
-| Test business - Anti-Damp | `test-business-anti-damp` → `…` |
+| Maintain London | `maintainlondon` → `maintainlondon.projectdash.app` |
 
-If you'd prefer `maintainlondon.projectdash.app` (no hyphen), rename the slug —
-it instantly becomes the new subdomain. From the project folder:
+Owners can change their own slug any time from **Settings → Branding** (it's
+validated for format, reserved names and uniqueness). To set one directly:
 
 ```bash
 npx wrangler d1 execute maintain-london-db --remote \
-  --command "UPDATE organisations SET slug = 'maintainlondon' WHERE id = 'org-maintain-london'"
+  --command "UPDATE organisations SET slug = 'newslug' WHERE id = 'org-…'"
 ```
 
 Slugs must be lowercase letters/numbers/hyphens, and can't be a reserved name
@@ -160,7 +159,7 @@ Slugs must be lowercase letters/numbers/hyphens, and can't be a reserved name
 Visit these and confirm:
 
 - [ ] `https://projectdash.app` → the **Project Dash landing**.
-- [ ] `https://maintain-london.projectdash.app` → a **login branded "Maintain London"**.
+- [ ] `https://maintainlondon.projectdash.app` → a **login branded "Maintain London"**.
 - [ ] Sign in there → you're in Maintain London's app, and the address stays on
       that subdomain.
 - [ ] While signed in, visit a **different** business's subdomain you're *not* a

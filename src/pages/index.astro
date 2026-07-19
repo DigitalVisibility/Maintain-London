@@ -30,6 +30,16 @@ const features = [
     <meta name="description" content="Project Dash keeps your building projects and your clients in sync: site diaries, photos, approvals, valuations and a private client portal — each business on its own branded space." />
     <link rel="icon" type="image/svg+xml" href="/images/projectdash/favicon.svg" />
     <meta name="theme-color" content="#AEDE4A" />
+    <!-- Social / share preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Project Dash — for builders & contractors" />
+    <meta property="og:description" content="Site diaries, photos, approvals, valuations and a private client portal — each business on its own branded space." />
+    <meta property="og:image" content={`${Astro.url.origin}/images/projectdash/og.jpg`} />
+    <meta property="og:url" content={Astro.url.origin} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Project Dash — for builders & contractors" />
+    <meta name="twitter:description" content="Run your projects. Keep your clients in the loop." />
+    <meta name="twitter:image" content={`${Astro.url.origin}/images/projectdash/og.jpg`} />
   </head>
   <body class="bg-white font-sans text-gray-900">
     <!-- Header -->
