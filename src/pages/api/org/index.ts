@@ -1,7 +1,9 @@
 import type { APIRoute } from 'astro';
-import { queryAll, execute, generateId, now } from '../../../lib/db';
+import { queryAll, queryOne, execute, generateId, now } from '../../../lib/db';
 import { sendEmail, emailLayout } from '../../../lib/email';
-import { baseUrlForSlug } from '../../../lib/platform';
+import { baseUrlForSlug, slugify, isValidSlug, isValidHexColor } from '../../../lib/platform';
+import { fetchRemoteImage } from '../../../lib/onboarding';
+import { uploadToR2 } from '../../../lib/r2';
 
 export const prerender = false;
 
@@ -13,7 +15,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
   const orgs = await queryAll(
     env.DB,
-    `SELECT o.id, o.name, o.brand_color, o.logo_url,
+    `SELECT o.id, o.name, o.slug, o.brand_color, o.logo_url,
             (SELECT COUNT(*) FROM projects p WHERE p.org_id = o.id) AS project_count,
             (SELECT COUNT(*) FROM memberships m WHERE m.org_id = o.id) AS member_count
        FROM organisations o ORDER BY o.name`
@@ -31,17 +33,44 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const { env } = locals.runtime;
 
   const body = await request.json().catch(() => ({})) as {
-    name?: string; brand_color?: string; logo_url?: string; owner_email?: string; owner_name?: string;
+    name?: string; brand_color?: string; logo_url?: string; slug?: string; owner_email?: string; owner_name?: string;
   };
   if (!body.name?.trim()) return Response.json({ error: 'Business name is required' }, { status: 400 });
 
   const id = generateId();
-  const slug = body.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  // Web address (subdomain): use the given one or derive from the name. Validate
+  // and make sure it's not already taken.
+  const desiredSlug = (body.slug?.trim().toLowerCase()) || slugify(body.name) || id;
+  if (body.slug !== undefined && !isValidSlug(desiredSlug)) {
+    return Response.json({ error: 'Web address can only use lowercase letters, numbers and hyphens (2–40 characters), and can’t be a reserved word.' }, { status: 400 });
+  }
+  const taken = await queryOne<{ id: string }>(env.DB, 'SELECT id FROM organisations WHERE slug = ?', [desiredSlug]);
+  if (taken) return Response.json({ error: 'That web address is already taken — choose another.' }, { status: 409 });
+
+  const brandColor = body.brand_color && isValidHexColor(body.brand_color) ? body.brand_color.toUpperCase() : '#AEDE4A';
+
+  // A logo may arrive as a web address (from AI auto-fill) — store it in R2 so
+  // it's ours. A local path is kept as-is. Failure just means no logo yet.
+  let logoUrl: string | null = body.logo_url || null;
+  if (logoUrl && /^https?:\/\//i.test(logoUrl)) {
+    try {
+      const img = await fetchRemoteImage(logoUrl);
+      const safeName = img.name.slice(-40) || 'logo';
+      const key = `branding/${id}/${Date.now()}-${safeName}`;
+      await uploadToR2(env.R2, key, img.buffer, img.type, { orgId: id });
+      logoUrl = `/api/branding/${encodeURIComponent(key)}`;
+    } catch {
+      logoUrl = null;
+    }
+  }
+
   await execute(
     env.DB,
     `INSERT INTO organisations (id, name, slug, brand_color, logo_url, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, body.name.trim(), slug || id, body.brand_color || '#AEDE4A', body.logo_url || null, now()]
+    [id, body.name.trim(), desiredSlug, brandColor, logoUrl, now()]
   );
+  const slug = desiredSlug;
 
   // Optionally invite the business owner.
   let ownerInvited = false;

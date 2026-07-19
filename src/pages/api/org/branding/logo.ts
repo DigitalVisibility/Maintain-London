@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { queryOne, execute } from '../../../../lib/db';
 import { validateFile, uploadToR2, deleteFromR2 } from '../../../../lib/r2';
 import { hasCap } from '../../../../lib/capabilities';
+import { fetchRemoteImage } from '../../../../lib/onboarding';
 
 export const prerender = false;
 
@@ -11,27 +12,6 @@ function keyFromLogoUrl(url: string | null | undefined): string | null {
   const m = url.match(/^\/api\/branding\/([^?]+)/);
   if (!m) return null;
   try { return decodeURIComponent(m[1]); } catch { return null; }
-}
-
-/** Fetch an image from a URL (used to save an AI-discovered logo). */
-async function fetchImage(url: string): Promise<{ buffer: ArrayBuffer; type: string; name: string }> {
-  let parsed: URL;
-  try { parsed = new URL(url); } catch { throw new Error('Invalid image address.'); }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('Invalid image address.');
-
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 12000);
-  try {
-    const res = await fetch(url, { redirect: 'follow', signal: controller.signal, headers: { 'User-Agent': 'ProjectDashBot/1.0' } });
-    if (!res.ok) throw new Error(`Could not fetch that image (${res.status}).`);
-    const type = (res.headers.get('content-type') || '').split(';')[0].trim();
-    if (!type.startsWith('image/')) throw new Error('That link isn’t an image.');
-    const buffer = await res.arrayBuffer();
-    const name = (parsed.pathname.split('/').pop() || 'logo').replace(/[^A-Za-z0-9._-]/g, '-') || 'logo';
-    return { buffer, type, name };
-  } finally {
-    clearTimeout(t);
-  }
 }
 
 /**
@@ -54,7 +34,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const body = await request.json().catch(() => ({})) as { url?: string };
     if (!body.url) return Response.json({ error: 'No image address provided' }, { status: 400 });
     try {
-      const img = await fetchImage(body.url);
+      const img = await fetchRemoteImage(body.url);
       bytes = img.buffer; mime = img.type; originalName = img.name;
     } catch (err: any) {
       return Response.json({ error: err?.message || 'Could not fetch image' }, { status: 400 });

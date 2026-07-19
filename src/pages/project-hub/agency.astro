@@ -4,9 +4,14 @@ export const prerender = false;
 import AgencyLayout from '../../layouts/AgencyLayout.astro';
 import AgencyDashboard from '../../components/project-hub/AgencyDashboard';
 import { ACTIVE_ORG_COOKIE } from '../../lib/org';
+import { isPlatformHost, platformDomain } from '../../lib/platform';
 
 // Platform (agency) super-admins only.
 if (!Astro.locals.isPlatformAdmin) return Astro.redirect('/project-hub/');
+
+const { env } = Astro.locals.runtime;
+const onPlatform = isPlatformHost(Astro.request.headers.get('host'), env);
+const domain = platformDomain(env);
 
 // Being on the agency dashboard means "no business selected" — clear it so
 // navigating into the app afterwards starts from a chosen business.
@@ -18,5 +23,5 @@ Astro.cookies.delete(ACTIVE_ORG_COOKIE, { path: '/' });
     <h1 class="text-2xl font-bold">Your businesses</h1>
     <p class="text-gray-400 text-sm mt-1">Oversee every business, create new ones, and enter any to manage it.</p>
   </div>
-  <AgencyDashboard client:load />
+  <AgencyDashboard client:load platformDomain={domain} onPlatform={onPlatform} />
 </AgencyLayout>

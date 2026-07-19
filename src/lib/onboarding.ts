@@ -117,6 +117,27 @@ export function htmlToText(html: string, cap = 12000): string {
   return text.slice(0, cap);
 }
 
+/** Fetch an image from a URL (to save an AI-discovered logo into R2). */
+export async function fetchRemoteImage(url: string): Promise<{ buffer: ArrayBuffer; type: string; name: string }> {
+  let parsed: URL;
+  try { parsed = new URL(url); } catch { throw new Error('Invalid image address.'); }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('Invalid image address.');
+
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 12000);
+  try {
+    const res = await fetch(url, { redirect: 'follow', signal: controller.signal, headers: { 'User-Agent': 'ProjectDashBot/1.0' } });
+    if (!res.ok) throw new Error(`Could not fetch that image (${res.status}).`);
+    const type = (res.headers.get('content-type') || '').split(';')[0].trim();
+    if (!type.startsWith('image/')) throw new Error('That link isn’t an image.');
+    const buffer = await res.arrayBuffer();
+    const name = (parsed.pathname.split('/').pop() || 'logo').replace(/[^A-Za-z0-9._-]/g, '-') || 'logo';
+    return { buffer, type, name };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 /** Fetch a website's HTML with a timeout and a browser-like user agent. */
 export async function fetchSiteHtml(url: string): Promise<string> {
   const controller = new AbortController();
