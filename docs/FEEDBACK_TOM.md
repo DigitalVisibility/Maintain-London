@@ -39,25 +39,23 @@ can't clock themselves, and those hours still reach the timesheet.
   takes multiple files at once (camera is one-at-a-time by nature). No fix
   needed. *(Tom 13)*
 
-## Tier 2 — Attendance engine (the core of Tom's feedback)
+## Tier 2 — Attendance engine ✅ DONE (LIVE on both — commit ed4a891)
 
-- [ ] **4. People roster** per business (seeded from team members + names
-  already typed into diaries), each with a **default working pattern**.
-  *(Tom 1, 2)* — **M**
-- [ ] **5. Per-site rota** — assign people to a project, overriding days/hours
-  where needed. *(new — agreed model)* — **M**
-- [ ] **6. Diary personnel picker** — type-ahead from the roster + free-type for
-  temp/agency, with a **per-operative note** field. *(Tom 2, 3)* — **M**
-- [ ] **7. Actuals = clock-in + manager register.** Manager logs on-site people
-  (incl. hours for non-app workers); both sources feed the timesheet.
-  *(Tom 1, 4, 11)* — **M**
-- [ ] **8. Live attendance board + flags** (on-time / late / no-show / left
-  early): per-site view + owner all-sites overview; manager sees their site.
-  *(Tom 5, 6)* — **M–L**
-- [ ] **9. Timesheet from actuals** — roll clock sessions **and** manager-entered
-  hours into the timesheet (diary labour is currently discarded). *(Tom 4)* — **M**
-- [ ] **10. Dashboard attendance counts** — overall "operatives logged" box +
-  per-project tile count. *(Tom 7)* — **M**
+- [x] **4. People roster** — per-business, auto-seeded from app users, each with
+  a default working pattern (Team → Workforce). *(Tom 1, 2)*
+- [x] **5. Per-site rota** — assign people to a project (Rota section on the
+  project page), with per-job day/hour overrides. *(agreed model)*
+- [x] **6. Diary personnel picker** — type-ahead from the roster, free-type temp/
+  agency, per-operative note. *(Tom 2, 3)* — shipped in 2a.
+- [x] **7. Actuals = clock-in + manager register**, both feeding the timesheet.
+  *(Tom 1, 4, 11)*
+- [x] **8. Live attendance board + flags** (on-time / late / no-show / left-early
+  / present / extra): per-site on the project page, org overview on the
+  dashboard. *(Tom 5, 6)*
+- [x] **9. Timesheet from actuals** — clock sessions + manager-logged diary hours,
+  with no double-counting for anyone who clocked. *(Tom 4)*
+- [x] **10. Dashboard attendance** — "On site today" overview (overall + per-site
+  present/expected/late/absent). *(Tom 7)*
 
 ## Tier 3 — Navigation & photos
 
