@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { queryAll } from '../../../lib/db';
 import { can } from '../../../lib/capabilities';
+import { labourForPeriod } from '../../../lib/attendance';
 
 export const prerender = false;
 
@@ -62,5 +63,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
     };
   });
 
-  return Response.json({ rows });
+  const labour = await labourForPeriod(env.DB, orgId, from, to, projectId);
+
+  return Response.json({ rows, labour });
 };
