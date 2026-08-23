@@ -5,7 +5,7 @@ import type { Person } from '../../../types/diary';
 
 export const prerender = false;
 
-const FIELDS = ['name', 'role', 'company', 'phone', 'default_days', 'default_start', 'default_end'] as const;
+const FIELDS = ['name', 'role', 'company', 'phone', 'default_days', 'default_start', 'default_end', 'default_rate'] as const;
 
 /** PATCH /api/people/:id — edit a roster person (managers/owners). */
 export const PATCH: APIRoute = async ({ locals, params, request }) => {

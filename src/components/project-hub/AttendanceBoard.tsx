@@ -13,9 +13,11 @@ interface Row {
   hours: number | null;
   note: string | null;
   status: 'on_time' | 'late' | 'present' | 'absent' | 'upcoming' | 'left_early' | 'extra';
+  offsite?: boolean;
+  distance_m?: number | null;
 }
 interface Summary {
-  expected: number; present: number; on_time: number; late: number; absent: number; extra: number;
+  expected: number; present: number; on_time: number; late: number; absent: number; extra: number; offsite?: number;
 }
 interface SiteData {
   date: string;
@@ -25,12 +27,12 @@ interface SiteData {
 }
 interface OverviewProject {
   project_id: string; project_name: string;
-  expected: number; present: number; on_time: number; late: number; absent: number; extra: number;
+  expected: number; present: number; on_time: number; late: number; absent: number; extra: number; offsite?: number;
 }
 interface OverviewData {
   date: string;
   projects: OverviewProject[];
-  totals: { present: number; expected: number; late: number; absent: number };
+  totals: { present: number; expected: number; late: number; absent: number; offsite?: number };
 }
 
 interface Props {
@@ -175,6 +177,12 @@ function SiteView({ data }: { data: SiteData }) {
                     {actual && <span className="text-gray-700"> · {actual}</span>}
                   </div>
                   {r.note && <div className="text-xs text-gray-400 italic mt-0.5">{r.note}</div>}
+                  {r.offsite && (
+                    <div className="text-xs text-orange-600 mt-1 inline-flex items-center gap-1" title="Clocked in away from the site location">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                      Clocked in off-site{r.distance_m != null ? ` (~${r.distance_m >= 1000 ? (r.distance_m / 1000).toFixed(1) + ' km' : r.distance_m + ' m'} away)` : ''}
+                    </div>
+                  )}
                 </div>
                 <StatusBadge status={r.status} />
               </div>
@@ -231,6 +239,9 @@ function OverviewView({ data }: { data: OverviewData }) {
                 )}
                 {p.absent > 0 && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">{p.absent} absent</span>
+                )}
+                {(p.offsite ?? 0) > 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">{p.offsite} off-site</span>
                 )}
                 {allGood && <span className="text-green-600 text-sm" aria-label="All present">✓</span>}
               </div>

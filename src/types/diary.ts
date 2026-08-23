@@ -114,6 +114,7 @@ export interface Person {
   default_days?: string; // CSV of weekday numbers, Mon=1 … Sun=7
   default_start?: string;
   default_end?: string;
+  default_rate?: number; // optional hourly rate (financials only)
   active: number;
   created_at: string;
 }
@@ -153,6 +154,10 @@ export interface AttendanceRow {
   hours: number | null;
   note: string | null;
   status: AttendanceStatus;
+  /** Clocked in more than the threshold away from the site location. */
+  offsite?: boolean;
+  /** Metres between the clock-in location and the site, when both are known. */
+  distance_m?: number | null;
 }
 
 export type ActivityStatus = 'active' | 'complete' | 'on_hold';

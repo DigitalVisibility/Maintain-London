@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { queryAll } from '../../../lib/db';
+import { queryAll, queryOne } from '../../../lib/db';
 import { hasCap } from '../../../lib/capabilities';
 import { expectedForProject, actualForProject, buildBoard, referenceMinutes } from '../../../lib/attendance';
 import type { AttendanceRow } from '../../../types/diary';
@@ -13,6 +13,7 @@ interface Summary {
   late: number;
   absent: number;
   extra: number;
+  offsite: number;
 }
 
 /** Roll a board's rows up into per-project counts. */
@@ -24,6 +25,7 @@ function summarise(rows: AttendanceRow[]): Summary {
     late: rows.filter((r) => r.status === 'late').length,
     absent: rows.filter((r) => r.status === 'absent').length,
     extra: rows.filter((r) => r.status === 'extra').length,
+    offsite: rows.filter((r) => r.offsite).length,
   };
 }
 
@@ -49,15 +51,18 @@ export const GET: APIRoute = async ({ locals, url }) => {
   const projectId = url.searchParams.get('project_id');
 
   if (projectId) {
+    const site = await queryOne<{ lat: number | null; lng: number | null }>(
+      env.DB, 'SELECT lat, lng FROM projects WHERE id = ?', [projectId]
+    );
     const expected = await expectedForProject(env.DB, orgId, projectId, date);
     const { clock, register } = await actualForProject(env.DB, projectId, date);
-    const rows = buildBoard(expected, clock, register, refMin);
+    const rows = buildBoard(expected, clock, register, refMin, 10, site);
     return Response.json({ date, project_id: projectId, rows, summary: summarise(rows) });
   }
 
-  const projects = await queryAll<{ id: string; name: string }>(
+  const projects = await queryAll<{ id: string; name: string; lat: number | null; lng: number | null }>(
     env.DB,
-    "SELECT id, name FROM projects WHERE org_id = ? AND status = 'active' ORDER BY name",
+    "SELECT id, name, lat, lng FROM projects WHERE org_id = ? AND status = 'active' ORDER BY name",
     [orgId]
   );
 
@@ -65,7 +70,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
   for (const p of projects) {
     const expected = await expectedForProject(env.DB, orgId, p.id, date);
     const { clock, register } = await actualForProject(env.DB, p.id, date);
-    const rows = buildBoard(expected, clock, register, refMin);
+    const rows = buildBoard(expected, clock, register, refMin, 10, { lat: p.lat, lng: p.lng });
     const s = summarise(rows);
     out.push({ project_id: p.id, project_name: p.name, ...s });
   }
@@ -75,6 +80,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
     expected: out.reduce((n, o) => n + o.expected, 0),
     late: out.reduce((n, o) => n + o.late, 0),
     absent: out.reduce((n, o) => n + o.absent, 0),
+    offsite: out.reduce((n, o) => n + o.offsite, 0),
   };
 
   return Response.json({ date, projects: out, totals });

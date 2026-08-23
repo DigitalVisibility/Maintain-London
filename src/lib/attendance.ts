@@ -56,7 +56,20 @@ export interface ExpectedPerson {
   end: string | null;
 }
 
-export interface ClockActual { user_id: string; user_name: string | null; clock_in: string; clock_out: string | null; }
+export interface ClockActual {
+  user_id: string; user_name: string | null; clock_in: string; clock_out: string | null;
+  clock_in_lat: number | null; clock_in_lng: number | null;
+}
+
+/** Straight-line distance between two lat/lng points, in metres (haversine). */
+export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(a)));
+}
 export interface RegisterActual { person_id: string | null; name: string; hours: number | null; note: string | null; }
 
 /** Who is expected on a project on a given date (rota overrides person defaults). */
@@ -98,7 +111,7 @@ export async function actualForProject(
   const [clock, register] = await Promise.all([
     queryAll<ClockActual>(
       db,
-      `SELECT t.user_id, u.name AS user_name, t.clock_in, t.clock_out
+      `SELECT t.user_id, u.name AS user_name, t.clock_in, t.clock_out, t.clock_in_lat, t.clock_in_lng
          FROM time_sessions t LEFT JOIN user u ON u.id = t.user_id
         WHERE t.project_id = ? AND date(t.clock_in) = date(?)`,
       [projectId, date]
@@ -142,15 +155,22 @@ function statusFor(
  */
 export function buildBoard(
   expected: ExpectedPerson[], clock: ClockActual[], register: RegisterActual[],
-  refMin: number, grace = 10
+  refMin: number, grace = 10, site?: { lat: number | null; lng: number | null } | null, offsiteThreshold = 300
 ): AttendanceRow[] {
+  // How far the clock-in was from the site (metres), and whether that's "off-site".
+  const geo = (lat: number | null, lng: number | null): { offsite: boolean; distance_m: number | null } => {
+    if (site?.lat == null || site?.lng == null || lat == null || lng == null) return { offsite: false, distance_m: null };
+    const d = haversineMeters(lat, lng, site.lat, site.lng);
+    return { offsite: d > offsiteThreshold, distance_m: d };
+  };
+
   // Collapse a person's clock sessions into earliest-in / latest-out.
-  const clockByUser = new Map<string, { clock_in: string; clock_out: string | null; name: string | null }>();
+  const clockByUser = new Map<string, { clock_in: string; clock_out: string | null; name: string | null; lat: number | null; lng: number | null }>();
   for (const c of clock) {
     const prev = clockByUser.get(c.user_id);
-    if (!prev) clockByUser.set(c.user_id, { clock_in: c.clock_in, clock_out: c.clock_out, name: c.user_name });
+    if (!prev) clockByUser.set(c.user_id, { clock_in: c.clock_in, clock_out: c.clock_out, name: c.user_name, lat: c.clock_in_lat, lng: c.clock_in_lng });
     else {
-      if (c.clock_in < prev.clock_in) prev.clock_in = c.clock_in;
+      if (c.clock_in < prev.clock_in) { prev.clock_in = c.clock_in; prev.lat = c.clock_in_lat; prev.lng = c.clock_in_lng; }
       if (c.clock_out && (!prev.clock_out || c.clock_out > prev.clock_out)) prev.clock_out = c.clock_out;
     }
   }
@@ -169,6 +189,7 @@ export function buildBoard(
     const present = !!c || !!r;
     const expStart = minutesOf(e.start);
     const expEnd = minutesOf(e.end);
+    const g = c ? geo(c.lat, c.lng) : { offsite: false, distance_m: null };
     rows.push({
       person_id: e.person_id, name: e.name, company: e.company,
       expected_start: e.start, expected_end: e.end,
@@ -176,17 +197,20 @@ export function buildBoard(
       present, source: c ? 'clock' : r ? 'register' : null,
       hours: r?.hours ?? null, note: r?.note ?? null,
       status: statusFor(present, c?.clock_in ?? null, c?.clock_out ?? null, expStart, expEnd, refMin, grace),
+      offsite: g.offsite, distance_m: g.distance_m,
     });
   }
 
   // Present but not planned for today → "extra".
   for (const [userId, c] of clockByUser) {
     if (usedUsers.has(userId)) continue;
+    const g = geo(c.lat, c.lng);
     rows.push({
       person_id: null, name: c.name || 'Unknown', company: null,
       expected_start: null, expected_end: null,
       clocked_in: c.clock_in, clocked_out: c.clock_out, present: true,
       source: 'clock', hours: null, note: null, status: 'extra',
+      offsite: g.offsite, distance_m: g.distance_m,
     });
   }
   for (const r of register) {
