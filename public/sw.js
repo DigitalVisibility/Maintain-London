@@ -200,3 +200,30 @@ function getAllFromStore(store) {
     req.onerror = () => reject(req.error);
   });
 }
+
+// ── Web push: show notifications, and focus/open the app on click ──
+self.addEventListener('push', (event) => {
+  let data = { title: 'Project Dash', body: 'You have a new notification.', url: '/project-hub/' };
+  try { if (event.data) data = { ...data, ...event.data.json() }; } catch (e) { /* keep defaults */ }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/images/projectdash/mark.svg',
+      badge: '/images/projectdash/mark.svg',
+      tag: data.tag || undefined,
+      data: { url: data.url || '/project-hub/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/project-hub/';
+  event.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of all) {
+      if ('focus' in c) { c.focus(); if ('navigate' in c) c.navigate(url).catch(() => {}); return; }
+    }
+    if (self.clients.openWindow) await self.clients.openWindow(url);
+  })());
+});

@@ -6,6 +6,7 @@ import RoleAccess from '../../components/project-hub/RoleAccess';
 import ScheduleSettings from '../../components/project-hub/ScheduleSettings';
 import NotificationSettings from '../../components/project-hub/NotificationSettings';
 import CompanyProfile from '../../components/project-hub/CompanyProfile';
+import NotificationToggle from '../../components/project-hub/NotificationToggle';
 import SignOutButton from '../../components/project-hub/SignOutButton';
 import { hasCap } from '../../lib/capabilities';
 
@@ -73,6 +74,13 @@ const canManageUsers = hasCap(Astro.locals, 'manage_users');
         </svg>
         Install Project Hub
       </button>
+    </div>
+
+    <!-- Push notifications (per device) -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-6">
+      <h2 class="text-sm font-semibold text-gray-900 mb-1">Notifications</h2>
+      <p class="text-xs text-gray-500 mb-4">Get alerted about messages, approvals and clock reminders on this device.</p>
+      <NotificationToggle client:load />
     </div>
 
     <!-- Company details for invoices -->

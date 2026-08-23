@@ -13,6 +13,7 @@
 
 import { queryAll, queryOne, execute, generateId, now } from './db';
 import { sendEmail, emailLayout, loadSender } from './email';
+import { sendToUser } from './push';
 import type { Project } from '../types/diary';
 
 /** In 'chase' mode, don't email the same person about a thread more often than this. */
@@ -192,6 +193,14 @@ export async function notifyNewMessage(env: NotifyEnv, msg: NewMessage): Promise
       const url = to.isClient
         ? `${base}/project-hub/portal/${msg.project.id}`
         : `${base}/project-hub/project/${msg.project.id}`;
+
+      // Push notification (best-effort, no-op if push isn't configured).
+      await sendToUser(env.DB, env as any, to.id, {
+        title: `New message · ${msg.project.name}`,
+        body: `${author}: ${preview(msg.body)}`,
+        url,
+        tag: `msg-${msg.project.id}`,
+      });
 
       const sent = await sendEmail(env.RESEND_API_KEY, {
         to: to.email,
