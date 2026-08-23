@@ -18,6 +18,7 @@ import DocumentHub from '../../../../components/project-hub/DocumentHub';
 import ProjectSchedule from '../../../../components/project-hub/ProjectSchedule';
 import AttendanceBoard from '../../../../components/project-hub/AttendanceBoard';
 import RotaManager from '../../../../components/project-hub/RotaManager';
+import PhotoBrowser from '../../../../components/project-hub/PhotoBrowser';
 import AccordionSection from '../../../../components/project-hub/AccordionSection.astro';
 
 const { env } = Astro.locals.runtime;
@@ -213,6 +214,11 @@ const totalEntries = await queryOne<{ count: number }>(
     <!-- Schedule — programme, procurement, financial -->
     <AccordionSection id="schedule" title="Schedule" subtitle="Programme, procurement and payment dates">
       <ProjectSchedule client:visible projectId={id!} canManage={canManageProjects || canRequestWorks} canViewCosts={canViewCosts} />
+    </AccordionSection>
+
+    <!-- Photos — every photo from this project's diary entries, in one place -->
+    <AccordionSection id="photos" title="Photos" subtitle="Every photo from this job's site diary">
+      <PhotoBrowser client:visible projectId={id!} showFilters={true} />
     </AccordionSection>
 
     <!-- Documents — the project filing cabinet -->

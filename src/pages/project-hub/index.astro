@@ -101,18 +101,18 @@ try {
     <!-- Weekly Stats -->
     {(stats.entriesThisWeek > 0 || stats.photosThisWeek > 0 || stats.delaysThisWeek > 0) && (
       <div class="grid grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+        <a href={`/project-hub/entries?from=${weekStart}`} class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center hover:border-[#AEDE4A] hover:shadow transition-all">
           <div class="text-2xl font-bold text-gray-900 font-display">{stats.entriesThisWeek}</div>
           <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Entries This Week</div>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+        </a>
+        <a href={`/project-hub/photos?from=${weekStart}`} class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center hover:border-[#AEDE4A] hover:shadow transition-all">
           <div class="text-2xl font-bold text-gray-900 font-display">{stats.photosThisWeek}</div>
           <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Photos Taken</div>
-        </div>
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+        </a>
+        <a href={`/project-hub/entries?from=${weekStart}`} class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center hover:border-[#AEDE4A] hover:shadow transition-all">
           <div class={`text-2xl font-bold font-display ${stats.delaysThisWeek > 0 ? 'text-red-500' : 'text-gray-900'}`}>{stats.delaysThisWeek}</div>
           <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Delays Logged</div>
-        </div>
+        </a>
       </div>
     )}
 
