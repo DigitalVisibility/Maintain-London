@@ -13,6 +13,10 @@ type Runtime = import('@astrojs/cloudflare').Runtime<{
   ANTHROPIC_API_KEY?: string;
   /** Shared secret the summary cron worker authenticates with. */
   CRON_SECRET?: string;
+  /** Web push (VAPID). Public key is safe to expose; private key is a secret. */
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_SUBJECT?: string;
 }>;
 
 declare namespace App {
