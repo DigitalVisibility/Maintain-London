@@ -3,6 +3,7 @@ export const prerender = false;
 
 import HubLayout from '../../layouts/HubLayout.astro';
 import TeamManager from '../../components/project-hub/TeamManager';
+import WorkforceRoster from '../../components/project-hub/WorkforceRoster';
 import { hasCap } from '../../lib/capabilities';
 
 // Only people who can manage users may see this page.
@@ -12,8 +13,19 @@ if (!hasCap(Astro.locals, 'manage_users')) {
 ---
 
 <HubLayout title="Team & Clients">
-  <div class="max-w-3xl mx-auto">
-    <h1 class="text-2xl font-bold text-gray-900 font-display mb-6">Team &amp; Clients</h1>
-    <TeamManager client:load />
+  <div class="max-w-3xl mx-auto space-y-8">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 font-display mb-6">Team &amp; Clients</h1>
+      <TeamManager client:load />
+    </div>
+
+    <!-- Workforce roster: everyone you put on site (incl. agency/subbies without
+         the app), with their default working hours. Powers the diary picker and
+         the attendance board. -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">Workforce</h2>
+      <p class="text-sm text-gray-500 mb-4">Your people and their default working hours — used across the site diary and attendance.</p>
+      <WorkforceRoster client:load />
+    </div>
   </div>
 </HubLayout>

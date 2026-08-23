@@ -7,6 +7,11 @@ interface Row {
   clock_out_lat: number | null; clock_out_lng: number | null;
 }
 
+interface LabourRow {
+  project_id: string; project_name: string; date: string;
+  name: string; person_id: string | null; hours: number; note: string | null;
+}
+
 function startOfWeek(): string {
   const d = new Date();
   const day = d.getDay();
@@ -16,11 +21,15 @@ function startOfWeek(): string {
 function fmtDate(ts: string) {
   return new Date(ts.replace(' ', 'T') + 'Z').toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
+function fmtDay(d: string) {
+  return new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
 export default function Timesheets() {
   const [from, setFrom] = useState(startOfWeek());
   const [to, setTo] = useState(new Date().toISOString().split('T')[0]);
   const [rows, setRows] = useState<Row[]>([]);
+  const [labour, setLabour] = useState<LabourRow[]>([]);
   const [loading, setLoading] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapObj = useRef<any>(null);
@@ -31,6 +40,7 @@ export default function Timesheets() {
       const res = await fetch(`/api/time/report?from=${from}&to=${to}`);
       const data = await res.json();
       setRows(data.rows || []);
+      setLabour(data.labour || []);
     } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
@@ -43,6 +53,11 @@ export default function Timesheets() {
     byWorker.set(r.user_name || 'Unknown', (byWorker.get(r.user_name || 'Unknown') || 0) + r.worked_hours);
     byProject.set(r.project_name, (byProject.get(r.project_name) || 0) + r.worked_hours);
     grand += r.worked_hours;
+  }
+  for (const l of labour) {
+    byWorker.set(l.name, (byWorker.get(l.name) || 0) + l.hours);
+    byProject.set(l.project_name, (byProject.get(l.project_name) || 0) + l.hours);
+    grand += l.hours;
   }
 
   // Leaflet map (loaded from CDN, best-effort).
@@ -157,6 +172,32 @@ export default function Timesheets() {
           </tbody>
         </table>
       </div>
+
+      {/* Site-logged labour */}
+      {labour.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-900">Site-logged labour</h3>
+            <p className="text-xs text-gray-500">Hours the manager recorded in the diary for workers without an app clock-in.</p>
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+              <tr><th className="text-left px-4 py-2">Worker</th><th className="text-left px-4 py-2">Project</th><th className="text-left px-4 py-2">Date</th><th className="text-left px-4 py-2">Note</th><th className="text-right px-4 py-2">Hours</th></tr>
+            </thead>
+            <tbody>
+              {labour.map((l, i) => (
+                <tr key={`${l.project_id}-${l.person_id ?? l.name}-${l.date}-${i}`} className="border-t border-gray-100">
+                  <td className="px-4 py-2">{l.name}</td>
+                  <td className="px-4 py-2">{l.project_name}</td>
+                  <td className="px-4 py-2">{fmtDay(l.date)}</td>
+                  <td className="px-4 py-2 text-gray-500">{l.note || '—'}</td>
+                  <td className="px-4 py-2 text-right font-medium">{l.hours.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

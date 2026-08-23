@@ -6,6 +6,7 @@ import { queryAll, queryOne } from '../../lib/db';
 import { hasCap } from '../../lib/capabilities';
 import type { Project } from '../../types/diary';
 import NewProjectButton from '../../components/project-hub/NewProjectButton';
+import AttendanceBoard from '../../components/project-hub/AttendanceBoard';
 
 const { env } = Astro.locals.runtime;
 const user = Astro.locals.user;
@@ -112,6 +113,14 @@ try {
           <div class={`text-2xl font-bold font-display ${stats.delaysThisWeek > 0 ? 'text-red-500' : 'text-gray-900'}`}>{stats.delaysThisWeek}</div>
           <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mt-1">Delays Logged</div>
         </div>
+      </div>
+    )}
+
+    <!-- On site today — expected vs actual across every active job -->
+    {canManageProjects && projects.length > 0 && (
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <h2 class="text-sm font-semibold text-gray-900 mb-3">On site today</h2>
+        <AttendanceBoard client:load />
       </div>
     )}
 

@@ -118,6 +118,43 @@ export interface Person {
   created_at: string;
 }
 
+/** A person assigned to a project, optionally overriding their default hours. */
+export interface RotaAssignment {
+  id: string;
+  org_id: string;
+  project_id: string;
+  person_id: string;
+  days?: string;        // CSV weekday numbers (Mon=1 … Sun=7)
+  start_time?: string;
+  end_time?: string;
+  created_at: string;
+}
+
+export type AttendanceStatus =
+  | 'on_time'    // present and clocked in on time
+  | 'late'       // present but clocked in after the expected start (+ grace)
+  | 'present'    // present via the manager's register (no clock time to judge)
+  | 'absent'     // expected but not present, and the start time has passed
+  | 'upcoming'   // expected but the day/start hasn't arrived yet
+  | 'left_early' // clocked out before the expected end
+  | 'extra';     // present but not on the rota for today
+
+/** One row on the live attendance board: a person expected/present on a site today. */
+export interface AttendanceRow {
+  person_id: string | null;
+  name: string;
+  company?: string | null;
+  expected_start: string | null;
+  expected_end: string | null;
+  clocked_in: string | null;
+  clocked_out: string | null;
+  present: boolean;
+  source: 'clock' | 'register' | null;
+  hours: number | null;
+  note: string | null;
+  status: AttendanceStatus;
+}
+
 export type ActivityStatus = 'active' | 'complete' | 'on_hold';
 
 export interface EntryActivity {
