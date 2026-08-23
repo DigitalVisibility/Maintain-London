@@ -45,9 +45,19 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const raw = await queryAll<Row>(env.DB, sql, params);
 
+  // Hourly rates, so hours can be costed. Keyed by the person's app user and by
+  // their roster id (for manager-logged labour).
+  const rateRows = await queryAll<{ id: string; user_id: string | null; default_rate: number | null }>(
+    env.DB, 'SELECT id, user_id, default_rate FROM people WHERE org_id = ? AND default_rate IS NOT NULL', [orgId]
+  );
+  const rateByUser = new Map(rateRows.filter((r) => r.user_id).map((r) => [r.user_id as string, r.default_rate as number]));
+  const rateByPerson = new Map(rateRows.map((r) => [r.id, r.default_rate as number]));
+  const cost = (hours: number, rate?: number) => (rate != null ? Math.round(hours * rate * 100) / 100 : null);
+
   const rows = raw.map((r) => {
     const gross = r.clock_out ? (parseTs(r.clock_out) - parseTs(r.clock_in)) / 3600000 : 0;
     const net = Math.max(0, gross - (r.break_minutes || 0) / 60);
+    const worked = Math.round(net * 100) / 100;
     return {
       id: r.id,
       project_id: r.project_id,
@@ -57,13 +67,15 @@ export const GET: APIRoute = async ({ locals, url }) => {
       clock_in: r.clock_in,
       clock_out: r.clock_out,
       break_minutes: r.break_minutes,
-      worked_hours: Math.round(net * 100) / 100,
+      worked_hours: worked,
+      cost: cost(worked, rateByUser.get(r.user_id)),
       clock_in_lat: r.clock_in_lat, clock_in_lng: r.clock_in_lng,
       clock_out_lat: r.clock_out_lat, clock_out_lng: r.clock_out_lng,
     };
   });
 
-  const labour = await labourForPeriod(env.DB, orgId, from, to, projectId);
+  const labourRaw = await labourForPeriod(env.DB, orgId, from, to, projectId);
+  const labour = labourRaw.map((l) => ({ ...l, cost: cost(l.hours, l.person_id ? rateByPerson.get(l.person_id) : undefined) }));
 
   return Response.json({ rows, labour });
 };

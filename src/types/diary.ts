@@ -114,6 +114,7 @@ export interface Person {
   default_days?: string; // CSV of weekday numbers, Mon=1 … Sun=7
   default_start?: string;
   default_end?: string;
+  default_rate?: number; // optional hourly rate (financials only)
   active: number;
   created_at: string;
 }

@@ -11,6 +11,7 @@ interface Person {
   default_days?: string;
   default_start?: string;
   default_end?: string;
+  default_rate?: number;
   active: number;
   created_at: string;
 }
@@ -178,6 +179,20 @@ export default function WorkforceRoster() {
                         onBlur={(e) => { if (e.target.value !== (person.default_end || '')) patchPerson(person.id, { default_end: e.target.value }); }}
                         className="px-2 py-1 border border-gray-300 rounded-md text-xs text-gray-900"
                       />
+                    </label>
+                    <label className="flex items-center gap-1.5">
+                      £/hr
+                      <span className="flex items-center gap-1">
+                        <span className="text-gray-400">£</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          defaultValue={person.default_rate ?? ''}
+                          onBlur={(e) => { if (e.target.value !== (person.default_rate != null ? String(person.default_rate) : '')) patchPerson(person.id, { default_rate: e.target.value ? Number(e.target.value) : null }); }}
+                          className="w-24 px-2 py-1 border border-gray-300 rounded-md text-xs text-gray-900"
+                        />
+                      </span>
                     </label>
                   </div>
                 </div>

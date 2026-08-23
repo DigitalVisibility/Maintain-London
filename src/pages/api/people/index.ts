@@ -60,12 +60,12 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const id = generateId();
   await execute(
     env.DB,
-    `INSERT INTO people (id, org_id, name, role, company, phone, default_days, default_start, default_end, active, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+    `INSERT INTO people (id, org_id, name, role, company, phone, default_days, default_start, default_end, default_rate, active, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
     [
       id, locals.org.id, name, body.role || 'operative', body.company?.trim() || null,
       body.phone?.trim() || null, body.default_days || null, body.default_start || null,
-      body.default_end || null, now(),
+      body.default_end || null, body.default_rate ?? null, now(),
     ]
   );
   return Response.json({ id, name, role: body.role || 'operative', company: body.company || null }, { status: 201 });

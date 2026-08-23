@@ -5,11 +5,13 @@ interface Row {
   clock_in: string; clock_out: string | null; break_minutes: number; worked_hours: number;
   clock_in_lat: number | null; clock_in_lng: number | null;
   clock_out_lat: number | null; clock_out_lng: number | null;
+  cost: number | null;
 }
 
 interface LabourRow {
   project_id: string; project_name: string; date: string;
   name: string; person_id: string | null; hours: number; note: string | null;
+  cost: number | null;
 }
 
 function startOfWeek(): string {
@@ -47,18 +49,27 @@ export default function Timesheets() {
 
   // Totals
   const byWorker = new Map<string, number>();
+  const byWorkerCost = new Map<string, number>();
   const byProject = new Map<string, number>();
   let grand = 0;
+  let grandCost = 0;
   for (const r of rows) {
-    byWorker.set(r.user_name || 'Unknown', (byWorker.get(r.user_name || 'Unknown') || 0) + r.worked_hours);
+    const w = r.user_name || 'Unknown';
+    byWorker.set(w, (byWorker.get(w) || 0) + r.worked_hours);
+    byWorkerCost.set(w, (byWorkerCost.get(w) || 0) + (r.cost ?? 0));
     byProject.set(r.project_name, (byProject.get(r.project_name) || 0) + r.worked_hours);
     grand += r.worked_hours;
+    grandCost += r.cost ?? 0;
   }
   for (const l of labour) {
     byWorker.set(l.name, (byWorker.get(l.name) || 0) + l.hours);
+    byWorkerCost.set(l.name, (byWorkerCost.get(l.name) || 0) + (l.cost ?? 0));
     byProject.set(l.project_name, (byProject.get(l.project_name) || 0) + l.hours);
     grand += l.hours;
+    grandCost += l.cost ?? 0;
   }
+  const anyCost = rows.some((r) => r.cost != null) || labour.some((l) => l.cost != null);
+  const fmtGbp = (n: number) => n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Leaflet map (loaded from CDN, best-effort).
   useEffect(() => {
@@ -119,7 +130,10 @@ export default function Timesheets() {
         <button onClick={load} disabled={loading} className="px-5 py-2 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md text-sm disabled:opacity-50">
           {loading ? 'Loading…' : 'Run report'}
         </button>
-        <div className="ml-auto text-sm text-gray-500">Total: <span className="font-bold text-gray-900">{grand.toFixed(2)}h</span></div>
+        <div className="ml-auto text-sm text-gray-500 text-right">
+          <div>Total: <span className="font-bold text-gray-900">{grand.toFixed(2)}h</span></div>
+          {anyCost && <div>Total cost: <span className="font-bold text-gray-900">£{fmtGbp(grandCost)}</span></div>}
+        </div>
       </div>
 
       {/* Totals */}
@@ -128,7 +142,8 @@ export default function Timesheets() {
           <h3 className="text-sm font-semibold text-gray-900 mb-2">By worker (payroll)</h3>
           {[...byWorker.entries()].map(([name, h]) => (
             <div key={name} className="flex justify-between text-sm py-1 border-b border-gray-50">
-              <span className="text-gray-700">{name}</span><span className="font-medium">{h.toFixed(2)}h</span>
+              <span className="text-gray-700">{name}</span>
+              <span className="font-medium">{h.toFixed(2)}h{anyCost && <span className="ml-2 text-gray-500">£{fmtGbp(byWorkerCost.get(name) || 0)}</span>}</span>
             </div>
           ))}
           {byWorker.size === 0 && <p className="text-sm text-gray-400">No completed sessions.</p>}
@@ -155,7 +170,7 @@ export default function Timesheets() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-            <tr><th className="text-left px-4 py-2">Worker</th><th className="text-left px-4 py-2">Project</th><th className="text-left px-4 py-2">In</th><th className="text-left px-4 py-2">Out</th><th className="text-right px-4 py-2">Break</th><th className="text-right px-4 py-2">Hours</th></tr>
+            <tr><th className="text-left px-4 py-2">Worker</th><th className="text-left px-4 py-2">Project</th><th className="text-left px-4 py-2">In</th><th className="text-left px-4 py-2">Out</th><th className="text-right px-4 py-2">Break</th><th className="text-right px-4 py-2">Hours</th>{anyCost && <th className="text-right px-4 py-2">Cost</th>}</tr>
           </thead>
           <tbody>
             {rows.map((r) => (
@@ -166,9 +181,10 @@ export default function Timesheets() {
                 <td className="px-4 py-2">{r.clock_out ? fmtDate(r.clock_out) : '—'}</td>
                 <td className="px-4 py-2 text-right">{Math.round(r.break_minutes)}m</td>
                 <td className="px-4 py-2 text-right font-medium">{r.worked_hours.toFixed(2)}</td>
+                {anyCost && <td className="px-4 py-2 text-right font-medium">{r.cost != null ? `£${r.cost.toFixed(2)}` : '—'}</td>}
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No data for this range.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={anyCost ? 7 : 6} className="px-4 py-6 text-center text-gray-400">No data for this range.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -182,7 +198,7 @@ export default function Timesheets() {
           </div>
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-              <tr><th className="text-left px-4 py-2">Worker</th><th className="text-left px-4 py-2">Project</th><th className="text-left px-4 py-2">Date</th><th className="text-left px-4 py-2">Note</th><th className="text-right px-4 py-2">Hours</th></tr>
+              <tr><th className="text-left px-4 py-2">Worker</th><th className="text-left px-4 py-2">Project</th><th className="text-left px-4 py-2">Date</th><th className="text-left px-4 py-2">Note</th><th className="text-right px-4 py-2">Hours</th>{anyCost && <th className="text-right px-4 py-2">Cost</th>}</tr>
             </thead>
             <tbody>
               {labour.map((l, i) => (
@@ -192,6 +208,7 @@ export default function Timesheets() {
                   <td className="px-4 py-2">{fmtDay(l.date)}</td>
                   <td className="px-4 py-2 text-gray-500">{l.note || '—'}</td>
                   <td className="px-4 py-2 text-right font-medium">{l.hours.toFixed(2)}</td>
+                  {anyCost && <td className="px-4 py-2 text-right font-medium">{l.cost != null ? `£${l.cost.toFixed(2)}` : '—'}</td>}
                 </tr>
               ))}
             </tbody>
