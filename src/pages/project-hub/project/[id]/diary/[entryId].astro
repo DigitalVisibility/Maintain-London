@@ -53,10 +53,13 @@ const initialData = {
   weather_visible: entry.weather_visible === 1,
   notes_visible: entry.notes_visible === 1,
   personnel: personnel.map((p) => ({
+    id: p.id,
     name: p.name,
     role: p.role,
     hours: p.hours ?? ('' as any),
     company: p.company ?? '',
+    person_id: p.person_id ?? null,
+    note: p.note ?? '',
     client_visible: p.client_visible === 1,
   })),
   activities: activities.map((a) => ({
