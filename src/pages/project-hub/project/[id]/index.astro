@@ -17,6 +17,7 @@ import FinancialsPanel from '../../../../components/project-hub/FinancialsPanel'
 import DocumentHub from '../../../../components/project-hub/DocumentHub';
 import ProjectSchedule from '../../../../components/project-hub/ProjectSchedule';
 import AttendanceBoard from '../../../../components/project-hub/AttendanceBoard';
+import AttendanceHistory from '../../../../components/project-hub/AttendanceHistory';
 import RotaManager from '../../../../components/project-hub/RotaManager';
 import PhotoBrowser from '../../../../components/project-hub/PhotoBrowser';
 import AccordionSection from '../../../../components/project-hub/AccordionSection.astro';
@@ -181,6 +182,13 @@ const totalEntries = await queryOne<{ count: number }>(
     {canManageProjects && (
       <AccordionSection id="attendance" title="On site today" subtitle="Who's expected, who's clocked in, who's late or missing" open={true}>
         <AttendanceBoard client:visible projectId={id!} />
+      </AccordionSection>
+    )}
+
+    <!-- Attendance history — a person × day grid for the week -->
+    {canManageProjects && (
+      <AccordionSection id="attendance-history" title="Attendance history" subtitle="Who was on site each day, week by week">
+        <AttendanceHistory client:visible projectId={id!} />
       </AccordionSection>
     )}
 

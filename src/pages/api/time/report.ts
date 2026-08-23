@@ -77,5 +77,19 @@ export const GET: APIRoute = async ({ locals, url }) => {
   const labourRaw = await labourForPeriod(env.DB, orgId, from, to, projectId);
   const labour = labourRaw.map((l) => ({ ...l, cost: cost(l.hours, l.person_id ? rateByPerson.get(l.person_id) : undefined) }));
 
+  // CSV export for payroll/accounting.
+  if (url.searchParams.get('format') === 'csv') {
+    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [['Type', 'Worker', 'Project', 'Date', 'Clock in', 'Clock out', 'Break (min)', 'Hours', 'Cost'].join(',')];
+    for (const r of rows) lines.push([esc('Clock'), esc(r.user_name), esc(r.project_name), esc(r.clock_in?.slice(0, 10)), esc(r.clock_in), esc(r.clock_out), esc(r.break_minutes), esc(r.worked_hours), esc(r.cost ?? '')].join(','));
+    for (const l of labour) lines.push([esc('Diary'), esc(l.name), esc(l.project_name), esc(l.date), '', '', '', esc(l.hours), esc(l.cost ?? '')].join(','));
+    return new Response(lines.join('\r\n'), {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="timesheet_${from || 'all'}_${to || 'all'}.csv"`,
+      },
+    });
+  }
+
   return Response.json({ rows, labour });
 };

@@ -130,6 +130,13 @@ export default function Timesheets() {
         <button onClick={load} disabled={loading} className="px-5 py-2 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md text-sm disabled:opacity-50">
           {loading ? 'Loading…' : 'Run report'}
         </button>
+        <a
+          href={`/api/time/report?from=${from}&to=${to}&format=csv`}
+          className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md text-sm font-medium"
+          title="Download this period as a CSV for payroll"
+        >
+          Download CSV
+        </a>
         <div className="ml-auto text-sm text-gray-500 text-right">
           <div>Total: <span className="font-bold text-gray-900">{grand.toFixed(2)}h</span></div>
           {anyCost && <div>Total cost: <span className="font-bold text-gray-900">£{fmtGbp(grandCost)}</span></div>}
