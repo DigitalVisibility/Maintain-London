@@ -21,11 +21,13 @@ export type Capability =
   | 'clock_time'          // clock in/out of projects
   | 'release_to_client'   // vet & release entries to the client
   | 'view_client_portal'  // access the client-facing portal
+  | 'manage_quotes'       // build, price and send quotes for jobs not yet won
   | 'message';            // use the per-project message thread
 
 const ALL: Capability[] = [
   'manage_users', 'manage_projects', 'edit_diary', 'view_costs', 'approve_works',
-  'request_works', 'clock_time', 'release_to_client', 'view_client_portal', 'message',
+  'request_works', 'clock_time', 'release_to_client', 'view_client_portal',
+  'manage_quotes', 'message',
 ];
 
 /** Default capability set per role. */
@@ -37,7 +39,7 @@ export const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
   // automatic part of the role. Off by default; granted per user.
   manager: [
     'manage_projects', 'edit_diary', 'approve_works',
-    'request_works', 'clock_time', 'release_to_client', 'message',
+    'request_works', 'clock_time', 'release_to_client', 'manage_quotes', 'message',
   ],
   operative: ['edit_diary', 'request_works', 'clock_time'],
   // Clients only ever touch their own portal: view released content, approve

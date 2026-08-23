@@ -351,6 +351,73 @@ Still open: **direct Xero** is the natural follow-on to the CSV export.
 
 ---
 
+## Tier 1 — Voice & camera capture ✅ COMPLETE (Aug 2026)
+
+Built to close the one gap CompanyCam actually wins on: the first three seconds
+of input. See `docs/COMPETITIVE_COMPANYCAM.md` for the analysis this came from.
+**Project Dash branch only — not merged to master.**
+
+- [x] **Voice notes** (`voice_notes`, `lib/transcribe.ts`, `api/voice/*`) —
+      hold-to-talk *and* tap-to-latch (site workers wear gloves), iOS-safe mime
+      detection, mic tracks always released, 5-minute cap.
+      Transcription is **Cloudflare Workers AI Whisper**
+      (`@cf/openai/whisper-large-v3-turbo`) — stays on the existing stack, no new
+      vendor, ~$0.0005/audio minute. *The Claude API does not accept audio;
+      speech-to-text has to be its own step.*
+- [x] **Offline-first voice.** Audio queues in IndexedDB and transcribes on sync.
+      `POST /api/voice` accepts the optimistic id the UI already showed, so a
+      background-sync event firing twice — which they do — produces one note, not
+      two copies of the same sentence in the day's record.
+- [x] **Voice + photos → a structured draft** (`lib/diary-ai.ts`, `api/drafts/*`,
+      `claude-opus-5`). The competitive point: their AI writes a *document*, ours
+      writes *rows* — activities, delays, personnel, materials, variations — which
+      flow on into the register, the valuation and the invoice.
+      **Always proposed, never applied.** The draft merges into the diary form and
+      a human presses save; a site diary is evidence and the operative stays its
+      author. Anything the model couldn't place lands in `uncertain`, shown above
+      the form and never merged — nothing is silently dropped.
+- [x] **Photo auto-captioning** (`lib/vision.ts`, `api/photos/caption.ts`,
+      `claude-haiku-4-5`). `ai_caption` sits *beside* the human `caption`, never
+      over it. Batched, per-file authorised, one bad photo can't sink a batch.
+      HEIC and PDF are skipped rather than failed — vision takes neither.
+- [x] **Capture mode** (`project/[id]/capture`) — full-screen viewfinder, 84px
+      shutter, per-photo voice notes, GPS + shutter-time stamping, background
+      uploads so bursts stay responsive. Falls back to the file input when
+      `getUserMedia` is denied or unavailable rather than showing a black screen.
+      A GET never creates an entry; "today" is resolved in the org's timezone.
+- [x] **Quotes** (`quotes`, `quote_items`, `quote_files`, `lib/quotes.ts`,
+      `lib/quote-ai.ts`) — the missing pre-project object. Walk a job you're
+      *pricing*, shoot and talk, and Claude proposes a sectioned scope grouped by
+      room. **It never prices** — that's the estimator's job. Its most valuable
+      output is `assumptions`: every unknown the walkthrough surfaced but couldn't
+      resolve. Money is computed in integer pence, never stored. On acceptance the
+      quote converts to a project and its net becomes `quoted_net`, so the
+      valuation reads the figure the client signed. Conversion is idempotent.
+
+### Fixed along the way (pre-existing, found during integration)
+
+- **Background photo sync had never worked.** `sw.js` posted `item.formData`, but
+  FormData cannot be stored in IndexedDB so `queuePhotoUpload` never saved it —
+  every background-synced photo posted an empty body. Masked because the manual
+  `processQueue()` fallback does it correctly.
+- **Multi-photo upload dropped all but the last.** `PhotoGallery` appended to a
+  `files` prop captured at render, which never changed during the upload loop.
+  Harmless one photo at a time; guaranteed loss with burst capture.
+- Voice route helpers moved to `lib/voice-access.ts` — a route importing values
+  from a sibling route holds only by accident of bundling.
+
+### Manual steps before this works in production
+
+1. Enable **Workers AI** on the Cloudflare account (`[ai]` binding is in
+   `wrangler.toml`) and deploy.
+2. Apply `migrations/0026_voice_ai.sql` and `0027_quotes.sql` to production D1.
+3. Confirm `ANTHROPIC_API_KEY` is set on the Project Dash Pages project.
+4. **Test camera and microphone on a real iPhone and a real Android.** The code
+   handles the known traps (`playsInline`, `audio/mp4` on iOS, track cleanup,
+   insecure-context fallback) but none of it has been exercised on a handset.
+
+---
+
 ## Database Schema
 
 23 tables in Cloudflare D1. The core diary set is below; multi-tenancy

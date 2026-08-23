@@ -30,6 +30,62 @@ interface UploadingFile {
   error?: string;
 }
 
+/**
+ * A position fix, asked for once and cached for the session.
+ *
+ * Never awaited before an upload: a photo with no coordinates is worth far more
+ * than a photo not taken because the phone was still hunting for satellites
+ * inside a half-built extension.
+ */
+let cachedFix: { lat: number; lng: number } | null = null;
+
+function requestFix(): void {
+  if (cachedFix || typeof navigator === 'undefined' || !navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      cachedFix = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    },
+    // Silent on failure — location is a bonus on a site photo, not a requirement,
+    // and a permission prompt refused once shouldn't nag on every shutter press.
+    () => {},
+    { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+  );
+}
+
+/** Ask Claude to caption freshly uploaded photos. Batched at the API's limit of 20. */
+async function fetchCaptions(
+  ids: string[]
+): Promise<Map<string, { ai_caption?: string; ai_tags?: string; ai_status: string }>> {
+  const out = new Map<string, { ai_caption?: string; ai_tags?: string; ai_status: string }>();
+
+  for (let i = 0; i < ids.length; i += 20) {
+    const batch = ids.slice(i, i + 20);
+    try {
+      const res = await fetch('/api/photos/caption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file_ids: batch }),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const r of data.results ?? []) {
+        out.set(r.id, {
+          ai_caption: r.ai_caption,
+          // The column holds JSON; the endpoint returns a real array. Store the
+          // column's shape so anything reading either agrees.
+          ai_tags: r.ai_tags ? JSON.stringify(r.ai_tags) : undefined,
+          ai_status: r.ai_status,
+        });
+      }
+    } catch {
+      // A caption is a convenience. Losing one must never surface as an upload
+      // failure — the photo, which is the evidence, is already safely stored.
+    }
+  }
+
+  return out;
+}
+
 export default function PhotoGallery({
   entryId,
   files,
@@ -39,12 +95,17 @@ export default function PhotoGallery({
   onFilesChange,
 }: Props) {
   const [uploading, setUploading] = useState<UploadingFile[]>([]);
+  const [captioning, setCaptioning] = useState<Set<string>>(new Set());
   const [lightbox, setLightbox] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   async function handleFiles(selectedFiles: FileList | null) {
     if (!selectedFiles || selectedFiles.length === 0) return;
+
+    // Warm the position fix while the user is still choosing/shooting, so the
+    // first upload usually has coordinates without ever having waited for them.
+    requestFix();
 
     const newUploading: UploadingFile[] = [];
 
@@ -68,6 +129,12 @@ export default function PhotoGallery({
 
     setUploading((prev) => [...prev, ...newUploading]);
 
+    // The running list. `files` is a prop captured at render, so it does not
+    // change as this loop progresses — appending to it each time would keep only
+    // the last upload of a burst. Burst shooting makes that failure routine.
+    let current = files;
+    const captionable: string[] = [];
+
     // Upload each file
     for (let i = 0; i < Array.from(selectedFiles).length; i++) {
       const file = selectedFiles[i];
@@ -85,6 +152,16 @@ export default function PhotoGallery({
         formData.append('entry_id', entryId);
         formData.append('file_type', fileType);
         if (linkedTo) formData.append('linked_to', linkedTo);
+
+        // When the shutter fired, not when the upload landed — a diary ordered
+        // by upload time reads wrong the moment anything is queued offline.
+        if (file.lastModified) {
+          formData.append('taken_at', new Date(file.lastModified).toISOString());
+        }
+        if (cachedFix) {
+          formData.append('lat', String(cachedFix.lat));
+          formData.append('lng', String(cachedFix.lng));
+        }
 
         const res = await fetch('/api/photos/upload', {
           method: 'POST',
@@ -114,10 +191,19 @@ export default function PhotoGallery({
           caption: data.caption,
           linked_to: linkedTo,
           client_visible: 0,
+          ai_status: data.ai_status,
+          taken_at: data.taken_at,
+          lat: data.lat,
+          lng: data.lng,
           created_at: new Date().toISOString(),
         };
 
-        onFilesChange([...files, newFile]);
+        current = [...current, newFile];
+        onFilesChange(current);
+
+        // The server marks only real image types pending; PDFs and HEIC can't
+        // be sent to the vision model at all.
+        if (data.ai_status === 'pending') captionable.push(data.id);
 
         // Remove from uploading
         setUploading((prev) => prev.filter((u) => u.id !== uploadItem.id));
@@ -132,6 +218,39 @@ export default function PhotoGallery({
         );
       }
     }
+
+    // Captioning runs after the photos are safely stored, never in front of
+    // them: the upload is the evidence, the caption is the convenience.
+    if (captionable.length) {
+      setCaptioning((prev) => new Set([...prev, ...captionable]));
+      const captions = await fetchCaptions(captionable);
+      setCaptioning((prev) => {
+        const next = new Set(prev);
+        for (const id of captionable) next.delete(id);
+        return next;
+      });
+      if (captions.size) {
+        onFilesChange(
+          current.map((f) => {
+            const c = captions.get(f.id);
+            return c ? { ...f, ...c } : f;
+          })
+        );
+      }
+    }
+  }
+
+  /** Re-run captioning for photos whose first attempt failed. */
+  async function retryCaption(file: EntryFile) {
+    setCaptioning((prev) => new Set(prev).add(file.id));
+    const captions = await fetchCaptions([file.id]);
+    setCaptioning((prev) => {
+      const next = new Set(prev);
+      next.delete(file.id);
+      return next;
+    });
+    const c = captions.get(file.id);
+    if (c) onFilesChange(files.map((f) => (f.id === file.id ? { ...f, ...c } : f)));
   }
 
   async function handleDelete(file: EntryFile) {
@@ -259,33 +378,51 @@ export default function PhotoGallery({
       {imageFiles.length > 0 && (
         <div className={`grid gap-3 ${compact ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'}`}>
           {imageFiles.map((file) => (
-            <div key={file.id} className="group relative aspect-square rounded-lg overflow-hidden bg-gray-100">
-              <img
-                src={`/api/photos/${encodeURIComponent(file.r2_key)}`}
-                alt={file.caption || file.filename}
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={() => setLightbox(file.r2_key)}
-                loading="lazy"
-              />
-              {/* Overlay on hover */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end opacity-0 group-hover:opacity-100">
-                <div className="w-full p-2 flex items-center justify-between">
-                  <span className="text-xs text-white truncate">{file.caption || file.filename}</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(file);
-                    }}
-                    className="p-1 bg-red-500/80 hover:bg-red-600 text-white rounded transition-colors flex-shrink-0"
-                    title="Delete"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
+            <div key={file.id} className="space-y-1">
+              <div className="group relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                <img
+                  src={`/api/photos/${encodeURIComponent(file.r2_key)}`}
+                  alt={file.caption || file.ai_caption || file.filename}
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={() => setLightbox(file.r2_key)}
+                  loading="lazy"
+                />
+                {/* Delete sits in a corner tab rather than a hover overlay: there
+                    is no hover on a phone, and this gallery is used on a phone. */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(file);
+                  }}
+                  className="absolute top-1 right-1 p-1.5 bg-black/50 hover:bg-red-600 text-white rounded-md transition-colors"
+                  title="Delete"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
+
+              {/* The caption. A person's words win; Claude's are shown as a clearly
+                  machine-written suggestion beneath, never written over the top. */}
+              {file.caption ? (
+                <p className="text-xs text-gray-700 leading-snug line-clamp-2">{file.caption}</p>
+              ) : captioning.has(file.id) ? (
+                <p className="text-xs text-gray-400 italic">Describing…</p>
+              ) : file.ai_caption ? (
+                <p className="text-xs text-gray-500 leading-snug line-clamp-2" title={file.ai_caption}>
+                  <span className="text-[#6B8F2E] font-medium">AI</span> {file.ai_caption}
+                </p>
+              ) : file.ai_status === 'failed' ? (
+                <button
+                  type="button"
+                  onClick={() => retryCaption(file)}
+                  className="text-xs text-gray-400 hover:text-gray-600 underline"
+                >
+                  Couldn't describe — retry
+                </button>
+              ) : null}
             </div>
           ))}
         </div>

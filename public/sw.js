@@ -105,6 +105,9 @@ self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-photos') {
     event.waitUntil(syncPhotos());
   }
+  if (event.tag === 'sync-voice-notes') {
+    event.waitUntil(syncVoiceNotes());
+  }
 });
 
 async function syncDiaryEntries() {
@@ -151,22 +154,78 @@ async function syncPhotos() {
   await tx.done;
 
   for (const item of items) {
-    if (item.type !== 'photo') continue;
+    if (item.type !== 'photo' || !item.payload) continue;
 
     try {
-      const res = await fetch(item.url, {
-        method: 'POST',
-        body: item.formData,
-      });
+      // Rebuild the FormData from the queued parts. This used to post
+      // `item.formData`, which queuePhotoUpload never stores — FormData cannot
+      // be put in IndexedDB — so every background-sync photo upload posted an
+      // empty body and silently failed. The manual processQueue() fallback in
+      // src/lib/offline.ts did it correctly, which is why it went unnoticed.
+      const p = item.payload;
+      const formData = new FormData();
+      formData.append('file', new File([p.fileBuffer], p.fileName, { type: p.fileType }));
+      formData.append('entry_id', p.entryId);
+      formData.append('file_type', p.fileCategory);
 
-      if (res.ok) {
+      const res = await fetch(item.url, { method: 'POST', body: formData });
+
+      // 4xx will never succeed on a retry — drop it rather than replaying the
+      // same rejected upload on every future sync event.
+      if (res.ok || (res.status >= 400 && res.status < 500)) {
         const delTx = db.transaction('sync_queue', 'readwrite');
         delTx.objectStore('sync_queue').delete(item.id);
         await delTx.done;
 
         const clients = await self.clients.matchAll();
         clients.forEach((client) => {
-          client.postMessage({ type: 'SYNC_COMPLETE', id: item.id });
+          client.postMessage({ type: 'SYNC_COMPLETE', id: item.id, ok: res.ok });
+        });
+      }
+    } catch {
+      // Will retry
+    }
+  }
+}
+
+async function syncVoiceNotes() {
+  const db = await openDB();
+  const tx = db.transaction('sync_queue', 'readonly');
+  const store = tx.objectStore('sync_queue');
+  const items = await getAllFromStore(store);
+  await tx.done;
+
+  for (const item of items) {
+    if (item.type !== 'voice' || !item.payload) continue;
+
+    try {
+      // FormData can't be stored in IDB, so it is rebuilt from the parts the
+      // client queued (see queueVoiceNote in src/lib/offline.ts).
+      // The queue item's own id is the id the UI optimistically showed when the
+      // note was recorded. Sending it lets the server treat a replayed sync as
+      // the same note rather than a second one.
+      const p = item.payload;
+      const formData = new FormData();
+      formData.append('id', item.id);
+      formData.append('audio', new File([p.fileBuffer], p.fileName, { type: p.fileType }));
+      if (p.entry_id) formData.append('entry_id', p.entry_id);
+      if (p.quote_id) formData.append('quote_id', p.quote_id);
+      if (p.project_id) formData.append('project_id', p.project_id);
+      if (p.file_id) formData.append('file_id', p.file_id);
+      if (p.duration_s) formData.append('duration_s', String(p.duration_s));
+
+      const res = await fetch(item.url, { method: 'POST', body: formData });
+
+      // 4xx will never succeed on a retry, so drop it rather than replaying the
+      // same rejected audio on every future sync event.
+      if (res.ok || (res.status >= 400 && res.status < 500)) {
+        const delTx = db.transaction('sync_queue', 'readwrite');
+        delTx.objectStore('sync_queue').delete(item.id);
+        await delTx.done;
+
+        const clients = await self.clients.matchAll();
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SYNC_COMPLETE', id: item.id, ok: res.ok });
         });
       }
     } catch {

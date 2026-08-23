@@ -232,6 +232,16 @@ export interface EntryFile {
   caption?: string;
   linked_to?: string;
   client_visible?: number;
+  /** Claude's caption. Kept beside `caption` so a guess never overwrites a person's words. */
+  ai_caption?: string;
+  /** JSON array of AI-generated tags, for search and filtering. */
+  ai_tags?: string;
+  /** pending | done | failed */
+  ai_status?: string;
+  /** When the shutter fired (EXIF or client clock), not when the upload landed. */
+  taken_at?: string;
+  lat?: number;
+  lng?: number;
   created_at: string;
 }
 
@@ -265,10 +275,161 @@ export interface WeatherData {
   icon: string;
 }
 
+export type VoiceNoteStatus = 'pending' | 'transcribed' | 'failed';
+
+/**
+ * One recorded note. Attached to a diary entry, a single photo, or a
+ * walkthrough quote. The audio stays in R2 after transcription so a failed or
+ * doubted transcript can always be played back.
+ */
+export interface VoiceNote {
+  id: string;
+  org_id?: string;
+  project_id?: string;
+  entry_id?: string;
+  quote_id?: string;
+  /** entry_files.id, when the note is commentary on one specific photo. */
+  file_id?: string;
+  r2_key: string;
+  mime_type: string;
+  size_bytes?: number;
+  duration_s?: number;
+  transcript?: string;
+  language?: string;
+  status: VoiceNoteStatus;
+  error?: string;
+  created_by: string;
+  created_at: string;
+  transcribed_at?: string;
+}
+
+export type DiaryDraftStatus = 'pending' | 'applied' | 'discarded' | 'failed';
+
+/**
+ * A structured entry Claude proposed from voice + photos, awaiting a human's
+ * confirmation. `payload` is the same shape the diary form posts, so applying a
+ * draft goes through the ordinary save path rather than a second write route.
+ */
+export interface DiaryDraft {
+  id: string;
+  org_id?: string;
+  project_id: string;
+  entry_id?: string;
+  source: 'voice' | 'photos' | 'both';
+  payload?: string;
+  status: DiaryDraftStatus;
+  error?: string;
+  created_by: string;
+  created_at: string;
+  applied_at?: string;
+}
+
+/** The proposed entry itself, once `DiaryDraft.payload` is parsed. */
+export interface DiaryDraftPayload {
+  activities: { task: string; description?: string; status: ActivityStatus }[];
+  delays: { task: string; reason: string; hours_lost?: number }[];
+  personnel: { name: string; role: PersonnelRole; hours?: number; company?: string }[];
+  variations: { description: string; hours_required?: number }[];
+  materials_required: { supplier: string; items: string; date_required?: string }[];
+  equipment_hire: { equipment: string; supplier: string }[];
+  deliveries: { supplier: string; notes?: string }[];
+  notes?: string;
+  /** Anything the model could not place with confidence — shown, never dropped. */
+  uncertain?: string[];
+}
+
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined';
+
+/**
+ * The pre-project object: a job being priced. On acceptance it graduates into a
+ * project and its net becomes that project's quoted sum.
+ */
+export interface Quote {
+  id: string;
+  org_id: string;
+  number?: string;
+  title: string;
+  client_name?: string;
+  client_email?: string;
+  address?: string;
+  postcode?: string;
+  status: QuoteStatus;
+  vat_rate: number;
+  notes?: string;
+  /** JSON array of unknowns the walkthrough flagged but could not price. */
+  assumptions?: string;
+  project_id?: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  sent_at?: string;
+  accepted_at?: string;
+}
+
+export interface QuoteItem {
+  id: string;
+  quote_id: string;
+  /** Room or area — how a walkthrough divides and how a client reads a quote. */
+  section?: string;
+  description: string;
+  qty?: number;
+  unit?: string;
+  rate?: number;
+  net?: number;
+  /** 1 = provisional sum, to be confirmed on site before it is committed. */
+  provisional: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface QuoteFile {
+  id: string;
+  quote_id: string;
+  r2_key: string;
+  filename: string;
+  mime_type: string;
+  size_bytes?: number;
+  caption?: string;
+  ai_caption?: string;
+  ai_tags?: string;
+  /** quote_items.id, when the photo is evidence for one specific line. */
+  linked_to?: string;
+  taken_at?: string;
+  lat?: number;
+  lng?: number;
+  created_at: string;
+}
+
+/** A quote with its lines and photos. */
+export interface QuoteFull extends Quote {
+  items: QuoteItem[];
+  files: QuoteFile[];
+  voice_notes?: VoiceNote[];
+}
+
+/** Totals for a quote, computed — never stored, so they cannot drift. */
+export interface QuoteTotals {
+  net: number;
+  vat: number;
+  total: number;
+  provisional_net: number;
+}
+
+/**
+ * Minimal shape of the Cloudflare Workers AI binding. Declared locally rather
+ * than imported: the `Ai` type lives in the experimental workers-types entry
+ * point, and pinning to it would couple the build to that entry point's churn.
+ */
+export interface WorkersAI {
+  run(model: string, inputs: Record<string, unknown>): Promise<unknown>;
+}
+
 /** Cloudflare environment bindings */
 export interface Env {
   DB: D1Database;
   R2: R2Bucket;
+  /** Cloudflare Workers AI — Whisper transcription. */
+  AI?: WorkersAI;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   /** Platform root domain for subdomain-per-business routing (e.g. projectdash.app). */

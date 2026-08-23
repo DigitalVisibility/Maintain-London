@@ -1,0 +1,219 @@
+---
+export const prerender = false;
+
+import HubLayout from '../../../layouts/HubLayout.astro';
+import { queryAll } from '../../../lib/db';
+import { hasCap } from '../../../lib/capabilities';
+import { computeTotals, parseAssumptions } from '../../../lib/quotes';
+import type { Quote, QuoteItem, QuoteStatus } from '../../../types/diary';
+
+// A quote is what a business charges for a job it has not won yet — the most
+// commercially sensitive thing on the platform. Gated on manage_quotes, which
+// operatives and clients do not have.
+if (!hasCap(Astro.locals, 'manage_quotes')) return Astro.redirect('/project-hub/');
+
+const { env } = Astro.locals.runtime;
+const orgId = Astro.locals.org?.id;
+if (!orgId) return Astro.redirect('/project-hub/');
+
+const quotes = await queryAll<Quote>(
+  env.DB, 'SELECT * FROM quotes WHERE org_id = ? ORDER BY created_at DESC LIMIT 200', [orgId]
+);
+
+// One query for every line rather than one per quote — the totals are computed,
+// never stored, so the list has to sum them and must not do it N times over.
+const items = quotes.length
+  ? await queryAll<QuoteItem>(
+      env.DB,
+      `SELECT * FROM quote_items
+        WHERE quote_id IN (SELECT id FROM quotes WHERE org_id = ?)
+        ORDER BY sort_order`,
+      [orgId]
+    )
+  : [];
+
+const byQuote = new Map<string, QuoteItem[]>();
+for (const item of items) {
+  const list = byQuote.get(item.quote_id) ?? [];
+  list.push(item);
+  byQuote.set(item.quote_id, list);
+}
+
+const rows = quotes.map((quote) => {
+  const lines = byQuote.get(quote.id) ?? [];
+  return {
+    quote,
+    totals: computeTotals(lines, quote.vat_rate),
+    lineCount: lines.length,
+    unpriced: lines.filter((l) => l.rate === null || l.rate === undefined).length,
+    assumptions: parseAssumptions(quote.assumptions).length,
+  };
+});
+
+const open = rows.filter((r) => r.quote.status === 'draft' || r.quote.status === 'sent');
+const pipeline = open.reduce((t, r) => t + r.totals.total, 0);
+const awaiting = rows.filter((r) => r.quote.status === 'sent').reduce((t, r) => t + r.totals.total, 0);
+const won = rows.filter((r) => r.quote.status === 'accepted').reduce((t, r) => t + r.totals.total, 0);
+
+const money = (n: number) => `£${n.toFixed(2)}`;
+
+const STATUS_STYLE: Record<QuoteStatus, string> = {
+  draft: 'bg-gray-100 text-gray-600',
+  sent: 'bg-amber-100 text-amber-800',
+  accepted: 'bg-green-100 text-green-800',
+  declined: 'bg-red-100 text-red-700',
+};
+const STATUS_LABEL: Record<QuoteStatus, string> = {
+  draft: 'Draft', sent: 'Sent', accepted: 'Accepted', declined: 'Declined',
+};
+---
+
+<HubLayout title="Quotes">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 font-display">Quotes</h1>
+        <p class="text-gray-500 text-sm mt-1">Jobs you are pricing. An accepted quote becomes a project.</p>
+      </div>
+      <button
+        id="new-quote"
+        class="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-md bg-brand-green text-gray-900 font-semibold hover:brightness-95"
+      >
+        Walk a site
+      </button>
+    </div>
+
+    <p class="text-xs text-gray-400 mb-5">
+      Start a quote on the pavement, walk round talking and shooting photos, and the scope drafts itself for you to price.
+    </p>
+
+    <!-- New-quote form. Title only: anything more asked for on the doorstep is a
+         reason to open a notes app instead. -->
+    <form id="new-quote-form" class="hidden bg-white rounded-lg border border-gray-200 p-4 mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="quote-title">What is the job?</label>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input
+          id="quote-title"
+          name="title"
+          required
+          placeholder="e.g. Full refurb, 2-bed flat, Peckham"
+          class="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green"
+        />
+        <input
+          id="quote-client"
+          name="client_name"
+          placeholder="Client (optional)"
+          class="sm:w-56 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green"
+        />
+        <button type="submit" class="text-sm px-4 py-2 rounded-md bg-gray-900 text-white font-medium hover:bg-gray-800">
+          Start
+        </button>
+      </div>
+      <p id="new-quote-error" class="hidden text-sm text-red-600 mt-2"></p>
+    </form>
+
+    {rows.length > 0 && (
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">Out for pricing</div>
+          <div class="text-lg font-bold text-gray-900 font-display">{money(pipeline)}</div>
+          <div class="text-xs text-gray-400">{open.length} open</div>
+        </div>
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">Awaiting a decision</div>
+          <div class="text-lg font-bold text-amber-700 font-display">{money(awaiting)}</div>
+          <div class="text-xs text-gray-400">{rows.filter((r) => r.quote.status === 'sent').length} sent</div>
+        </div>
+        <div class="bg-white rounded-lg border border-gray-200 p-3">
+          <div class="text-xs text-gray-500">Won</div>
+          <div class="text-lg font-bold text-green-700 font-display">{money(won)}</div>
+          <div class="text-xs text-gray-400">{rows.filter((r) => r.quote.status === 'accepted').length} accepted</div>
+        </div>
+      </div>
+    )}
+
+    {rows.length > 0 ? (
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-100">
+        {rows.map(({ quote, totals, lineCount, unpriced, assumptions }) => (
+          <a href={`/project-hub/quotes/${quote.id}`} class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs text-gray-400">{quote.number ?? '—'}</span>
+                <span class={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_STYLE[quote.status]}`}>
+                  {STATUS_LABEL[quote.status]}
+                </span>
+                {quote.project_id && (
+                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Project created</span>
+                )}
+              </div>
+              <div class="text-sm font-medium text-gray-900 truncate mt-0.5">{quote.title}</div>
+              <div class="text-xs text-gray-500 truncate">
+                {[quote.client_name, quote.address, quote.postcode].filter(Boolean).join(' · ') || 'No client or address yet'}
+              </div>
+              <div class="text-xs text-gray-400 mt-0.5">
+                {lineCount} line{lineCount === 1 ? '' : 's'}
+                {unpriced > 0 && <span class="text-amber-600"> · {unpriced} unpriced</span>}
+                {assumptions > 0 && <span class="text-amber-600"> · {assumptions} unknown{assumptions === 1 ? '' : 's'} to resolve</span>}
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-sm font-semibold text-gray-900 tabular-nums">{money(totals.total)}</div>
+              <div class="text-xs text-gray-400 tabular-nums">net {money(totals.net)}</div>
+              {totals.provisional_net > 0 && (
+                <div class="text-[11px] text-amber-600 tabular-nums">{money(totals.provisional_net)} provisional</div>
+              )}
+            </div>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="bg-white rounded-lg border border-dashed border-gray-300 p-10 text-center">
+        <h2 class="text-sm font-semibold text-gray-900">No quotes yet</h2>
+        <p class="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+          Every job here starts as a quote. Start one before you knock on the door, walk round talking and shooting photos,
+          and the scope of works drafts itself ready for you to price.
+        </p>
+      </div>
+    )}
+  </div>
+</HubLayout>
+
+<script>
+  const button = document.getElementById('new-quote');
+  const form = document.getElementById('new-quote-form') as HTMLFormElement | null;
+  const error = document.getElementById('new-quote-error');
+  const title = document.getElementById('quote-title') as HTMLInputElement | null;
+  const client = document.getElementById('quote-client') as HTMLInputElement | null;
+
+  button?.addEventListener('click', () => {
+    form?.classList.toggle('hidden');
+    title?.focus();
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!title?.value.trim()) return;
+
+    const submit = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (submit) { submit.disabled = true; submit.textContent = 'Starting…'; }
+    error?.classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title.value.trim(), client_name: client?.value.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not start the quote');
+      // Straight into the builder — the walkthrough tools are at the top of it.
+      window.location.href = `/project-hub/quotes/${data.id}`;
+    } catch (err) {
+      if (error) {
+        error.textContent = err instanceof Error ? err.message : 'Could not start the quote';
+        error.classList.remove('hidden');
+      }
+      if (submit) { submit.disabled = false; submit.textContent = 'Start'; }
+    }
+  });
+</script>

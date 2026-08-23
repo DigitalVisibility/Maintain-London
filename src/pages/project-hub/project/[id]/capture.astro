@@ -1,0 +1,117 @@
+---
+export const prerender = false;
+
+import CaptureMode from '../../../../components/project-hub/CaptureMode';
+import { canAccessProject } from '../../../../lib/access';
+import { hasCap } from '../../../../lib/capabilities';
+import { queryOne, queryAll } from '../../../../lib/db';
+import type { Project, DiaryEntry, EntryFile } from '../../../../types/diary';
+
+const { env } = Astro.locals.runtime;
+const { id } = Astro.params;
+const user = Astro.locals.user;
+
+// Authorise the *project*, not merely the session: without this a signed-in
+// user of one business could open another business's site by changing the id.
+if (!(await canAccessProject(env.DB, Astro.locals, id))) {
+  return Astro.redirect('/project-hub/');
+}
+if (!hasCap(Astro.locals, 'edit_diary')) {
+  return new Response('Forbidden', { status: 403 });
+}
+
+const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
+if (!project) return Astro.redirect('/project-hub/');
+
+// "Today" is the site's day, not the worker's UTC day: at 23:30 on a British
+// summer evening UTC has already rolled over, and photos would land on
+// tomorrow's entry. en-CA formats as YYYY-MM-DD, matching diary_entries.date.
+const orgTz = await queryOne<{ timezone?: string }>(
+  env.DB,
+  'SELECT timezone FROM organisations WHERE id = ?',
+  [Astro.locals.org?.id ?? '']
+);
+const timeZone = orgTz?.timezone || 'Europe/London';
+const today = new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
+
+const entry = await queryOne<DiaryEntry>(
+  env.DB,
+  'SELECT * FROM diary_entries WHERE project_id = ? AND date = ?',
+  [id, today]
+);
+
+// A GET must never write. Creating today's entry here would mean a crawler, a
+// prefetch or a stray refresh silently inserting diary rows — so when no entry
+// exists yet we render a "Start today's entry" action that goes to the normal
+// new-entry form, and the camera opens once there is something to attach to.
+const files = entry
+  ? await queryAll<EntryFile>(
+      env.DB,
+      "SELECT * FROM entry_files WHERE entry_id = ? AND file_type = 'photo' ORDER BY created_at",
+      [entry.id]
+    )
+  : [];
+
+const todayLabel = new Intl.DateTimeFormat('en-GB', {
+  timeZone, weekday: 'long', day: 'numeric', month: 'long',
+}).format(new Date());
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover so the surface runs under the notch/home indicator;
+         user-scalable=no because pinch-zooming a viewfinder only gets in the way. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Capture — {project.name}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  </head>
+  <!-- No sidebar shell: this is a full-screen surface, not a page inside it. -->
+  <body class="bg-black text-white overflow-hidden">
+    <!-- client:only — CaptureMode touches navigator.mediaDevices, which does not
+         exist on the worker, so it must never be server-rendered. -->
+    {entry ? (
+      <CaptureMode
+        client:only="react"
+        projectId={id!}
+        project={project}
+        entryId={entry.id}
+        initialFiles={files}
+        userName={user?.name}
+      />
+    ) : (
+      <div class="fixed inset-0 flex flex-col items-center justify-center gap-6 px-6 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-white/60" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+        </svg>
+        <div>
+          <h1 class="text-xl font-bold">No entry for {todayLabel}</h1>
+          <p class="mt-2 text-sm text-white/70 max-w-xs mx-auto">
+            Photos hang off the day's diary entry. Start today's entry and the camera opens straight after.
+          </p>
+        </div>
+        <a
+          href={`/project-hub/project/${id}/diary/new`}
+          class="inline-flex items-center justify-center gap-2 w-full max-w-xs min-h-[60px] rounded-xl bg-[#AEDE4A] active:bg-[#9BCF3A] text-gray-900 font-bold"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          Start today's entry
+        </a>
+        <a href={`/project-hub/project/${id}/`} class="text-sm text-white/70 underline underline-offset-4 py-3">
+          Back to {project.name}
+        </a>
+      </div>
+    )}
+  </body>
+</html>

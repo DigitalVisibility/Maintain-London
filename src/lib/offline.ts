@@ -10,7 +10,7 @@ const DB_VERSION = 1;
 
 interface SyncQueueItem {
   id: string;
-  type: 'entry' | 'photo' | 'clock';
+  type: 'entry' | 'photo' | 'clock' | 'voice';
   url: string;
   method: string;
   payload?: Record<string, unknown>;
@@ -85,6 +85,41 @@ export async function queuePhotoUpload(
       fileBuffer: buffer,
       entryId: formData.get('entry_id'),
       fileCategory: formData.get('file_type'),
+    },
+    createdAt: new Date().toISOString(),
+  });
+}
+
+/**
+ * Add a voice note upload to the offline queue.
+ *
+ * The audio is stored as an ArrayBuffer rather than a Blob: Safari has shipped
+ * builds that cannot round-trip a Blob through IndexedDB, and a spoken note the
+ * user cannot repeat is the worst thing this app could lose.
+ */
+export async function queueVoiceNote(
+  id: string,
+  url: string,
+  formData: FormData
+): Promise<void> {
+  const db = await getDB();
+  const file = formData.get('audio') as File;
+  const buffer = await file.arrayBuffer();
+
+  await db.put('sync_queue', {
+    id,
+    type: 'voice',
+    url,
+    method: 'POST',
+    payload: {
+      fileName: file.name,
+      fileType: file.type,
+      fileBuffer: buffer,
+      entry_id: formData.get('entry_id') || undefined,
+      quote_id: formData.get('quote_id') || undefined,
+      project_id: formData.get('project_id') || undefined,
+      file_id: formData.get('file_id') || undefined,
+      duration_s: formData.get('duration_s') || undefined,
     },
     createdAt: new Date().toISOString(),
   });
@@ -172,6 +207,14 @@ export async function requestPhotoSync(): Promise<void> {
   }
 }
 
+/** Request a background sync for voice notes */
+export async function requestVoiceSync(): Promise<void> {
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    const reg = await navigator.serviceWorker.ready;
+    await (reg as any).sync.register('sync-voice-notes');
+  }
+}
+
 /** Manually process the sync queue (fallback when Background Sync isn't supported) */
 export async function processQueue(): Promise<{ synced: number; failed: number }> {
   const queue = await getSyncQueue();
@@ -190,6 +233,21 @@ export async function processQueue(): Promise<{ synced: number; failed: number }
         formData.append('file', file);
         formData.append('entry_id', p.entryId);
         formData.append('file_type', p.fileCategory);
+
+        res = await fetch(item.url, { method: 'POST', body: formData });
+      } else if (item.type === 'voice' && item.payload) {
+        const p = item.payload as any;
+        const formData = new FormData();
+        const file = new File([p.fileBuffer], p.fileName, { type: p.fileType });
+        // The queue item's id is the one the UI already showed. Sending it makes
+        // a replayed sync idempotent rather than duplicating the note.
+        formData.append('id', item.id);
+        formData.append('audio', file);
+        if (p.entry_id) formData.append('entry_id', p.entry_id);
+        if (p.quote_id) formData.append('quote_id', p.quote_id);
+        if (p.project_id) formData.append('project_id', p.project_id);
+        if (p.file_id) formData.append('file_id', p.file_id);
+        if (p.duration_s) formData.append('duration_s', String(p.duration_s));
 
         res = await fetch(item.url, { method: 'POST', body: formData });
       } else {

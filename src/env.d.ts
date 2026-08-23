@@ -3,6 +3,8 @@
 type Runtime = import('@astrojs/cloudflare').Runtime<{
   DB: D1Database;
   R2: R2Bucket;
+  /** Cloudflare Workers AI — Whisper transcription for voice notes. */
+  AI?: import('./types/diary').WorkersAI;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   /** Platform root domain for subdomain-per-business routing (e.g. projectdash.app). */

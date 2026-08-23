@@ -6,10 +6,13 @@ import DelayTable from './DelayTable';
 import WeatherWidget from './WeatherWidget';
 import SupplierSelect from './SupplierSelect';
 import PhotoGallery from './PhotoGallery';
+import VoiceRecorder from './VoiceRecorder';
 import type { PersonnelItem } from './PersonnelManager';
 import type { ActivityItem } from './ActivityTable';
 import type { DelayItem } from './DelayTable';
-import type { WeatherData, Project, EntryFile, FileType } from '../../types/diary';
+import type {
+  WeatherData, Project, EntryFile, FileType, VoiceNote, DiaryDraftPayload,
+} from '../../types/diary';
 import { $isOnline, $pendingSyncCount } from '../../stores/offline';
 import { queueEntrySave, requestEntrySync, getSyncQueueCount } from '../../lib/offline';
 import { generateId } from '../../lib/ids';
@@ -183,6 +186,13 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
 
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+
+  // Voice notes recorded against this day, and the state of writing it up.
+  const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
+  const [drafting, setDrafting] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [uncertain, setUncertain] = useState<string[]>([]);
+  const [draftId, setDraftId] = useState<string | null>(null);
   // Once the entry is being deleted, block any further saves — otherwise the
   // autosave below would re-create the very entry we just removed (the
   // one-per-day constraint makes it reappear under the same identity).
@@ -200,6 +210,48 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
     }, 30000);
     return () => clearInterval(timer);
   }, [form.status]);
+
+  // Voice notes already recorded against this day.
+  useEffect(() => {
+    if (!entryId) return;
+    let cancelled = false;
+    fetch(`/api/voice?entry_id=${encodeURIComponent(entryId)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d?.notes) setVoiceNotes(d.notes);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [entryId]);
+
+  // Capture mode drafts the day, then sends the operative here with ?draft=<id>.
+  // The draft is fetched and merged in on arrival, so the write-up lands in the
+  // real form — the place where it can be corrected before anyone saves it.
+  useEffect(() => {
+    const draftParam = new URLSearchParams(window.location.search).get('draft');
+    if (!draftParam) return;
+
+    // Clear it immediately: a refresh must not merge the same draft twice, and
+    // duplicated activities are worse than a lost one.
+    window.history.replaceState({}, '', window.location.pathname);
+
+    fetch(`/api/drafts/${draftParam}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d?.payload) {
+          setDraftError("Couldn't load that write-up — the recordings are still on the day.");
+          return;
+        }
+        applyDraft(d.payload as DiaryDraftPayload);
+        setUncertain(d.payload.uncertain ?? []);
+        setDraftId(draftParam);
+      })
+      .catch(() => setDraftError('Could not load the write-up.'));
+    // Once, on mount. Re-running would re-merge.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleDelete() {
     if (!entryId) return;
@@ -431,6 +483,139 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
   // Keep the auto-save interval pointed at the latest handleSave closure.
   handleSaveRef.current = handleSave;
 
+  // ── Voice notes and the AI draft ──────────────────────────────────────────
+  //
+  // The draft is always *proposed*, never applied. A site diary is evidence: it
+  // can end up in an adjudication, so the operative stays its author. Claude
+  // fills the form in; the person looks at it and presses save.
+
+  function applyDraft(payload: DiaryDraftPayload) {
+    setForm((prev) => ({
+      ...prev,
+      // Append rather than replace — anything already typed was typed by a
+      // person and outranks a machine's reading of the same day.
+      activities: [
+        ...prev.activities,
+        ...payload.activities.map((a) => ({
+          id: generateId(),
+          task: a.task,
+          description: a.description ?? '',
+          status: a.status,
+          client_visible: false,
+        })),
+      ] as any,
+      delays: [
+        ...prev.delays,
+        ...payload.delays.map((d) => ({
+          id: generateId(),
+          task: d.task,
+          reason: d.reason,
+          hours_lost: d.hours_lost ?? '',
+          client_visible: false,
+        })),
+      ] as any,
+      // Operatives can't edit personnel — PersonnelManager is read-only for
+      // them — so merging rows they cannot then correct would be a trap.
+      personnel: canManageEntry
+        ? ([
+            ...prev.personnel,
+            ...payload.personnel.map((p) => ({
+              id: generateId(),
+              name: p.name,
+              role: p.role,
+              hours: p.hours ?? '',
+              company: p.company ?? '',
+              client_visible: false,
+            })),
+          ] as any)
+        : prev.personnel,
+      variations: [
+        ...prev.variations,
+        ...payload.variations.map((v): VariationItem => ({
+          id: generateId(),
+          description: v.description,
+          hours_required: v.hours_required ?? '',
+          client_visible: false,
+        })),
+      ],
+      materials_required: [
+        ...prev.materials_required,
+        ...payload.materials_required.map((m): MaterialItem => ({
+          id: generateId(),
+          supplier: m.supplier,
+          items: m.items,
+          date_required: m.date_required ?? '',
+          client_visible: false,
+        })),
+      ],
+      equipment_hire: [
+        ...prev.equipment_hire,
+        ...payload.equipment_hire.map((e): EquipmentItem => ({
+          id: generateId(),
+          equipment: e.equipment,
+          supplier: e.supplier,
+          client_visible: false,
+        })),
+      ],
+      deliveries: [
+        ...prev.deliveries,
+        ...payload.deliveries.map((d): DeliveryItem => ({
+          id: generateId(),
+          supplier: d.supplier,
+          notes: d.notes ?? '',
+          client_visible: false,
+        })),
+      ],
+      notes: [prev.notes, payload.notes].filter(Boolean).join('\n\n'),
+    }));
+    setSaveStatus('idle');
+  }
+
+  /** Ask Claude to write the day up from the recordings and photos. */
+  async function writeUpDay() {
+    if (!entryId || drafting) return;
+    setDrafting(true);
+    setDraftError(null);
+    setUncertain([]);
+
+    try {
+      const res = await fetch('/api/drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: projectId, entry_id: entryId }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDraftError(data.error || 'Could not write up the day.');
+        return;
+      }
+      if (!data.payload) {
+        setDraftError(data.draft?.error || "Couldn't draft this one — write it by hand.");
+        return;
+      }
+
+      applyDraft(data.payload as DiaryDraftPayload);
+      // Shown, never merged: these are the things Claude could not place, and
+      // they are the lines most worth a human's eye.
+      setUncertain(data.payload.uncertain ?? []);
+      setDraftId(data.draft.id);
+
+      await handleSave();
+      // Only record the draft as applied once the save actually landed.
+      fetch(`/api/drafts/${data.draft.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'applied' }),
+      }).catch(() => {});
+    } catch {
+      setDraftError('Could not reach the server. Your recordings are safe.');
+    } finally {
+      setDrafting(false);
+    }
+  }
+
+
   function copyYesterday() {
     if (!yesterdayData) return;
     setForm((prev) => ({
@@ -583,6 +768,95 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
           )}
         </div>
       </div>
+
+      {/* Talk it through — the fastest way into this form is not to type. */}
+      {entryId && (
+        <Section
+          title="Talk it through"
+          defaultOpen={true}
+          badge={voiceNotes.length}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+            </svg>
+          }
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Record what happened today and Claude will fill this form in for you.
+              Nothing is saved to the diary until you check it and press save.
+            </p>
+
+            <VoiceRecorder
+              entryId={entryId}
+              projectId={projectId}
+              notes={voiceNotes}
+              onNote={(note) =>
+                setVoiceNotes((prev) => {
+                  const without = prev.filter((n) => n.id !== note.id);
+                  return [...without, note];
+                })
+              }
+              onError={(message) => setDraftError(message)}
+            />
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={writeUpDay}
+                disabled={drafting || !voiceNotes.some((n) => n.status === 'transcribed')}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-md bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {drafting ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                    </svg>
+                    Writing it up…
+                  </>
+                ) : (
+                  'Write up the day'
+                )}
+              </button>
+              {drafting && (
+                <span className="text-xs text-gray-400">This takes a few seconds.</span>
+              )}
+              {!drafting && !voiceNotes.some((n) => n.status === 'transcribed') && (
+                <span className="text-xs text-gray-400">
+                  Record a note first — a write-up built from photos alone would be guesswork.
+                </span>
+              )}
+            </div>
+
+            {draftError && (
+              <div className="p-3 rounded-md border border-amber-200 bg-amber-50 text-sm text-amber-800">
+                {draftError}
+              </div>
+            )}
+
+            {/* The things Claude could not place. Shown, never merged — these are
+                the lines most worth a human's eye, and burying them would defeat
+                the point of collecting them. */}
+            {uncertain.length > 0 && (
+              <div className="p-3 rounded-md border border-gray-200 bg-gray-50">
+                <h4 className="text-sm font-semibold text-gray-900 mb-1.5">Worth checking</h4>
+                <p className="text-xs text-gray-500 mb-2">
+                  Claude wasn't sure where these belonged. Nothing here has been added to the form.
+                </p>
+                <ul className="space-y-1">
+                  {uncertain.map((u, i) => (
+                    <li key={i} className="text-sm text-gray-700 flex gap-2">
+                      <span className="text-gray-300">•</span>
+                      <span>{u}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
 
       {/* Weather */}
       <Section

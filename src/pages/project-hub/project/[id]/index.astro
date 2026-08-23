@@ -32,6 +32,7 @@ const canApproveWorks = hasCap(Astro.locals, 'approve_works');
 const canClock = hasCap(Astro.locals, 'clock_time');
 const canReleaseToClient = hasCap(Astro.locals, 'release_to_client');
 const canViewCosts = hasCap(Astro.locals, 'view_costs');
+const canEditDiary = hasCap(Astro.locals, 'edit_diary');
 
 const project = await queryOne<Project>(env.DB, 'SELECT * FROM projects WHERE id = ?', [id]);
 if (!project || project.org_id !== orgId) return Astro.redirect('/project-hub/');
@@ -93,6 +94,17 @@ const totalEntries = await queryOne<{ count: number }>(
             </svg>
             Reports
           </a>
+          {canEditDiary && (
+            <a
+              href={`/project-hub/project/${id}/capture`}
+              class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-black text-white font-semibold rounded-md text-sm transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+              </svg>
+              Shoot &amp; talk
+            </a>
+          )}
           <a
             href={`/project-hub/project/${id}/diary/new`}
             class="inline-flex items-center gap-2 px-4 py-2 bg-[#AEDE4A] hover:bg-[#9BCF3A] text-gray-900 font-semibold rounded-md text-sm transition-colors"
