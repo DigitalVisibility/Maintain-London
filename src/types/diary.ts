@@ -153,6 +153,10 @@ export interface AttendanceRow {
   hours: number | null;
   note: string | null;
   status: AttendanceStatus;
+  /** Clocked in more than the threshold away from the site location. */
+  offsite?: boolean;
+  /** Metres between the clock-in location and the site, when both are known. */
+  distance_m?: number | null;
 }
 
 export type ActivityStatus = 'active' | 'complete' | 'on_hold';
