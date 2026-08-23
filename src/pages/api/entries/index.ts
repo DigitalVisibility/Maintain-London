@@ -47,6 +47,18 @@ export const POST: APIRoute = async ({ locals, request }) => {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Releasing to the client is a manager/owner action. Someone without
+  // `release_to_client` (an operative) can create the day's diary, but nothing
+  // they create is visible to the client until a manager releases it.
+  if (!hasCap(locals, 'release_to_client')) {
+    body.client_released = false;
+    body.weather_visible = false;
+    body.notes_visible = false;
+    for (const key of ['personnel', 'activities', 'delays', 'variations', 'materials_required', 'equipment_hire', 'deliveries']) {
+      if (Array.isArray(body[key])) body[key] = body[key].map((it: any) => ({ ...it, client_visible: false }));
+    }
+  }
+
   const entryId = generateId();
   const timestamp = now();
 

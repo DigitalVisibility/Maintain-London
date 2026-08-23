@@ -14,11 +14,13 @@ interface PersonnelItem {
 interface Props {
   personnel: PersonnelItem[];
   onChange: (personnel: PersonnelItem[]) => void;
+  /** Operatives can't add/edit who's on site — the manager records that. */
+  readOnly?: boolean;
 }
 
 export type { PersonnelItem };
 
-export default function PersonnelManager({ personnel, onChange }: Props) {
+export default function PersonnelManager({ personnel, onChange, readOnly = false }: Props) {
   function addPerson(role: PersonnelRole) {
     onChange([...personnel, { id: generateId(), name: '', role, hours: '', company: '' }]);
   }
@@ -42,6 +44,7 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
       <div>
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-sm font-medium text-gray-700">Operatives</h4>
+          {!readOnly && (
           <button
             type="button"
             onClick={() => addPerson('operative')}
@@ -52,6 +55,7 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
             </svg>
             Add Operative
           </button>
+          )}
         </div>
 
         {operatives.length === 0 ? (
@@ -66,7 +70,8 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
                     value={person.name}
                     onChange={(e) => updatePerson(index, 'name', e.target.value)}
                     placeholder="Name"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent"
+                    disabled={readOnly}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
                   />
                   <input
                     type="number"
@@ -76,8 +81,10 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
                     min="0"
                     max="24"
                     step="0.5"
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent"
+                    disabled={readOnly}
+                    className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
                   />
+                  {!readOnly && (
                   <button
                     type="button"
                     onClick={() => removePerson(index)}
@@ -88,6 +95,7 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
                       <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
+                  )}
                 </div>
               ) : null
             )}
@@ -99,6 +107,7 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
       <div>
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-sm font-medium text-gray-700">Visitors</h4>
+          {!readOnly && (
           <button
             type="button"
             onClick={() => addPerson('visitor')}
@@ -109,6 +118,7 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
             </svg>
             Add Visitor
           </button>
+          )}
         </div>
 
         {visitors.length === 0 ? (
@@ -123,15 +133,18 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
                     value={person.name}
                     onChange={(e) => updatePerson(index, 'name', e.target.value)}
                     placeholder="Name"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent"
+                    disabled={readOnly}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
                   />
                   <input
                     type="text"
                     value={person.company}
                     onChange={(e) => updatePerson(index, 'company', e.target.value)}
                     placeholder="Company"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent"
+                    disabled={readOnly}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
                   />
+                  {!readOnly && (
                   <button
                     type="button"
                     onClick={() => removePerson(index)}
@@ -142,6 +155,7 @@ export default function PersonnelManager({ personnel, onChange }: Props) {
                       <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
+                  )}
                 </div>
               ) : null
             )}

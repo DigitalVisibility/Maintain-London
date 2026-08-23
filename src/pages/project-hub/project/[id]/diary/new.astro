@@ -3,6 +3,7 @@ export const prerender = false;
 
 import HubLayout from '../../../../../layouts/HubLayout.astro';
 import DiaryForm from '../../../../../components/project-hub/DiaryForm';
+import { hasCap } from '../../../../../lib/capabilities';
 import { queryOne, queryAll } from '../../../../../lib/db';
 import type {
   Project, Supplier, DiaryEntry, EntryPersonnel, EntryActivity,
@@ -92,6 +93,9 @@ try {
       suppliers={supplierNames}
       userName={user?.name}
       yesterdayData={yesterdayData}
+      canManageEntry={hasCap(Astro.locals, 'manage_projects')}
+      canRelease={hasCap(Astro.locals, 'release_to_client')}
+      canDelete={hasCap(Astro.locals, 'manage_projects')}
     />
   </div>
 </HubLayout>
