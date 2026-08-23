@@ -9,6 +9,7 @@
 
 import { queryAll, execute, generateId, now } from './db';
 import { sendEmail, emailLayout, loadSender } from './email';
+import { sendToUser } from './push';
 
 export interface ApprovalProject {
   id: string;
@@ -125,32 +126,32 @@ export async function notifyApprovers(env: ApprovalEnv, project: ApprovalProject
   const decideUrl = `${base}/project-hub/approve?token=${encodeURIComponent(info.decideToken)}`;
   const costStr = info.cost !== null ? `£${info.cost.toFixed(2)}` : 'cost TBC';
 
-  let recipients: string[] = [];
+  let recipients: { id: string; email: string }[] = [];
   if (info.level === 'manager') {
-    const rows = await queryAll<{ email: string }>(
+    const rows = await queryAll<{ id: string; email: string }>(
       env.DB,
-      `SELECT u.email FROM memberships m JOIN user u ON u.id = m.user_id
+      `SELECT u.id, u.email FROM memberships m JOIN user u ON u.id = m.user_id
         WHERE m.org_id = ? AND m.role IN ('owner','admin','manager')`,
       [project.org_id]
     );
-    recipients = rows.map((r) => r.email);
+    recipients = rows.map((r) => ({ id: r.id, email: r.email }));
   } else if (info.level === 'client') {
-    const rows = await queryAll<{ email: string }>(
+    const rows = await queryAll<{ id: string; email: string }>(
       env.DB,
-      `SELECT u.email FROM project_clients pc JOIN user u ON u.id = pc.user_id WHERE pc.project_id = ?`,
+      `SELECT u.id, u.email FROM project_clients pc JOIN user u ON u.id = pc.user_id WHERE pc.project_id = ?`,
       [project.id]
     );
-    recipients = rows.map((r) => r.email);
+    recipients = rows.map((r) => ({ id: r.id, email: r.email }));
   } else if (info.isEmergency) {
-    const rows = await queryAll<{ email: string }>(
+    const rows = await queryAll<{ id: string; email: string }>(
       env.DB,
-      `SELECT u.email FROM memberships m JOIN user u ON u.id = m.user_id
+      `SELECT u.id, u.email FROM memberships m JOIN user u ON u.id = m.user_id
         WHERE m.org_id = ? AND m.role IN ('owner','admin','manager')
        UNION
-       SELECT u.email FROM project_clients pc JOIN user u ON u.id = pc.user_id WHERE pc.project_id = ?`,
+       SELECT u.id, u.email FROM project_clients pc JOIN user u ON u.id = pc.user_id WHERE pc.project_id = ?`,
       [project.org_id, project.id]
     );
-    recipients = rows.map((r) => r.email);
+    recipients = rows.map((r) => ({ id: r.id, email: r.email }));
   }
   if (recipients.length === 0) return;
 
@@ -167,8 +168,16 @@ export async function notifyApprovers(env: ApprovalEnv, project: ApprovalProject
 
   const sender = await loadSender(env.DB, project.org_id);
 
+  // Push (best-effort; no-op until VAPID is configured).
+  const pushBody = info.isEmergency
+    ? `${info.requester} started emergency works on ${project.name} (${costStr})`
+    : `${info.requester} needs approval on ${project.name} (${costStr})`;
+  for (const r of recipients) {
+    await sendToUser(env.DB, env as any, r.id, { title: heading, body: pushBody, url: decideUrl, tag: `approval-${project.id}` });
+  }
+
   await sendEmail(env.RESEND_API_KEY, {
-    to: recipients,
+    to: recipients.map((r) => r.email),
     from: sender.from,
     replyTo: sender.replyTo,
     subject: heading,
