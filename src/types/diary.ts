@@ -94,7 +94,27 @@ export interface EntryPersonnel {
   role: PersonnelRole;
   hours?: number;
   company?: string;
+  /** Links to the workforce roster (null for a free-typed temp/agency worker). */
+  person_id?: string;
+  /** Optional note for this person on this day, e.g. "arrived late due to trains". */
+  note?: string;
   client_visible?: number;
+  created_at: string;
+}
+
+/** A member of a business's workforce roster (people put on site). */
+export interface Person {
+  id: string;
+  org_id: string;
+  name: string;
+  role: string;          // operative | manager | subcontractor | visitor
+  company?: string;
+  user_id?: string;
+  phone?: string;
+  default_days?: string; // CSV of weekday numbers, Mon=1 … Sun=7
+  default_start?: string;
+  default_end?: string;
+  active: number;
   created_at: string;
 }
 

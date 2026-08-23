@@ -29,8 +29,8 @@ const CHILD_TABLES: ChildTable[] = [
   {
     table: 'entry_personnel',
     field: 'personnel',
-    columns: ['name', 'role', 'hours', 'company'],
-    values: (r) => [r.name, r.role ?? 'operative', r.hours ?? null, r.company ?? null],
+    columns: ['name', 'role', 'hours', 'company', 'person_id', 'note'],
+    values: (r) => [r.name, r.role ?? 'operative', r.hours ?? null, r.company ?? null, r.person_id ?? null, r.note ?? null],
   },
   {
     table: 'entry_activities',
