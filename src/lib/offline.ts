@@ -10,7 +10,7 @@ const DB_VERSION = 1;
 
 interface SyncQueueItem {
   id: string;
-  type: 'entry' | 'photo';
+  type: 'entry' | 'photo' | 'clock';
   url: string;
   method: string;
   payload?: Record<string, unknown>;
@@ -88,6 +88,16 @@ export async function queuePhotoUpload(
     },
     createdAt: new Date().toISOString(),
   });
+}
+
+/** Queue a clock action (a completed offline session) for sync when back online. */
+export async function queueClock(
+  id: string, url: string, method: string, payload: Record<string, unknown>
+): Promise<void> {
+  const db = await getDB();
+  await db.put('sync_queue', {
+    id, type: 'clock', url, method, payload, createdAt: new Date().toISOString(),
+  } satisfies SyncQueueItem);
 }
 
 /** Get all items in the sync queue */
