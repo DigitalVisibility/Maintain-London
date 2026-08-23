@@ -26,21 +26,18 @@ can't clock themselves, and those hours still reach the timesheet.
 
 ---
 
-## Tier 1 — Fixes & safety (first)
+## Tier 1 — Fixes & safety (first) ✅ DONE (commit 68e675f)
 
-- [ ] **1. Delete a diary entry (staff).** The DELETE API already allows
-  owner/admin/manager, but there's **no button in the UI**, and the open entry
-  auto-saves itself back every 30s (that's why "today's" won't delete). Add a
-  delete control for staff + stop autosave re-creating a just-deleted entry.
-  *(Tom 12)* — **M**
-- [ ] **2. Lock the diary form down for operatives.** Today an operative can
-  edit the date/time/site-manager header, add operatives, **and release content
-  to the client** — the `release_to_client` capability exists but is never
-  enforced. Hide/disable those controls for operatives **and** enforce it
-  server-side. *(Tom 8, 9)* — **Security · M**
-- [ ] **3. Multi-photo upload polish.** The gallery picker already accepts
-  multiple files (that's why 39 came through); only the camera is one-at-a-time.
-  Verify + tidy. *(Tom 13)* — **S**
+- [x] **1. Delete a diary entry (staff).** "Delete entry" button in the save bar
+  for owner/admin/manager; a `deleted` guard stops autosave re-creating it.
+  *(Tom 12)*
+- [x] **2. Lock the diary form down for operatives.** Operatives can't edit the
+  header (time/site-manager), add/edit personnel, or see the client-visibility
+  section — enforced in the UI **and** server-side (closed the gap where
+  `release_to_client` was never checked). *(Tom 8, 9)*
+- [x] **3. Multi-photo upload.** Verified already working — the gallery picker
+  takes multiple files at once (camera is one-at-a-time by nature). No fix
+  needed. *(Tom 13)*
 
 ## Tier 2 — Attendance engine (the core of Tom's feedback)
 
