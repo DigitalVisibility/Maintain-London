@@ -77,6 +77,35 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
 
   const body = await request.json();
   const timestamp = now();
+
+  // Client visibility is a manager/owner decision. Anyone without
+  // `release_to_client` (i.e. operatives) may edit the diary content, but their
+  // save must not change what the client sees — so we ignore the visibility
+  // fields they sent and preserve exactly what's already stored.
+  if (!hasCap(locals, 'release_to_client')) {
+    const childTables: [string, string][] = [
+      ['personnel', 'entry_personnel'], ['activities', 'entry_activities'],
+      ['delays', 'entry_delays'], ['variations', 'entry_variations'],
+      ['materials_required', 'entry_materials_required'],
+      ['equipment_hire', 'entry_equipment_hire'], ['deliveries', 'entry_deliveries'],
+    ];
+    const existingVis = await Promise.all(childTables.map(([, table]) =>
+      queryAll<{ id: string; client_visible: number }>(
+        env.DB, `SELECT id, client_visible FROM ${table} WHERE entry_id = ?`, [id]
+      )
+    ));
+    childTables.forEach(([key], i) => {
+      const vis = new Map(existingVis[i].map((r) => [r.id, r.client_visible === 1]));
+      if (Array.isArray(body[key])) {
+        body[key] = body[key].map((item: any) => ({
+          ...item, client_visible: item.id ? (vis.get(item.id) ?? false) : false,
+        }));
+      }
+    });
+    body.client_released = existing.client_released === 1;
+    body.weather_visible = existing.weather_visible === 1;
+    body.notes_visible = existing.notes_visible === 1;
+  }
   const statements: { sql: string; params: unknown[] }[] = [];
 
   // Preserve the original release timestamp; stamp it the first time it's released.

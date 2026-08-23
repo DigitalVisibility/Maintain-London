@@ -87,6 +87,12 @@ interface Props {
   suppliers: string[];
   userName?: string;
   yesterdayData?: Partial<FormData> | null;
+  /** Can edit the header (time, site manager) and personnel — managers/admins/owners. */
+  canManageEntry?: boolean;
+  /** Can vet and release content to the client — not operatives. */
+  canRelease?: boolean;
+  /** Can delete the whole entry — staff (owner/admin/manager). */
+  canDelete?: boolean;
 }
 
 function today() {
@@ -143,7 +149,7 @@ function Section({
   );
 }
 
-export default function DiaryForm({ projectId, project, entryId: initialEntryId, initialData, initialFiles, suppliers, userName, yesterdayData }: Props) {
+export default function DiaryForm({ projectId, project, entryId: initialEntryId, initialData, initialFiles, suppliers, userName, yesterdayData, canManageEntry = true, canRelease = true, canDelete = false }: Props) {
   // Tracked in state so that once a brand-new entry is created (incl. via
   // auto-save) we switch to editing it instead of re-creating duplicates.
   const [entryId, setEntryId] = useState<string | undefined>(initialEntryId);
@@ -177,6 +183,10 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
 
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+  // Once the entry is being deleted, block any further saves — otherwise the
+  // autosave below would re-create the very entry we just removed (the
+  // one-per-day constraint makes it reappear under the same identity).
+  const deletedRef = useRef(false);
 
   // Auto-save draft every 30 seconds. Use a ref so the interval always calls
   // the latest handleSave (which knows the current entryId) — otherwise a stale
@@ -185,10 +195,27 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
   useEffect(() => {
     if (form.status !== 'draft') return;
     const timer = setInterval(() => {
+      if (deletedRef.current) return;
       handleSaveRef.current?.(true);
     }, 30000);
     return () => clearInterval(timer);
   }, [form.status]);
+
+  async function handleDelete() {
+    if (!entryId) return;
+    if (!confirm('Delete this whole diary entry? This removes its activities, personnel and photos and cannot be undone.')) return;
+    deletedRef.current = true; // stop autosave re-creating it
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/entries/${entryId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Delete failed');
+      window.location.href = `/project-hub/project/${projectId}/diary/`;
+    } catch (err: any) {
+      deletedRef.current = false;
+      setSaving(false);
+      alert(err.message || 'Could not delete this entry.');
+    }
+  }
 
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -288,7 +315,7 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
   }, []);
 
   async function handleSave(isAutoSave = false) {
-    if (saving) return;
+    if (saving || deletedRef.current) return;
     setSaving(true);
 
     const payload = {
@@ -506,7 +533,8 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
               value={form.start_time}
               onChange={(e) => updateField('start_time', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent"
+              disabled={!canManageEntry}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
             />
           </div>
           <div>
@@ -518,7 +546,8 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
               value={form.end_time}
               onChange={(e) => updateField('end_time', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent"
+              disabled={!canManageEntry}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
             />
           </div>
           <div>
@@ -528,7 +557,8 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
               value={form.site_manager}
               onChange={(e) => updateField('site_manager', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent"
+              disabled={!canManageEntry}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#AEDE4A] focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
             />
           </div>
         </div>
@@ -596,6 +626,7 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
         <PersonnelManager
           personnel={form.personnel}
           onChange={(p) => updateField('personnel', p)}
+          readOnly={!canManageEntry}
         />
       </Section>
 
@@ -751,7 +782,9 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
         />
       </Section>
 
-      {/* Client Visibility / Vetting */}
+      {/* Client Visibility / Vetting — only staff who can release to the client.
+          Operatives never see or control what the client sees. */}
+      {canRelease && (
       <Section
         title="Client Visibility"
         badge={visibleCount}
@@ -894,6 +927,7 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
           )}
         </div>
       </Section>
+      )}
 
       {/* Save bar */}
       <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-4 md:-mx-6 lg:-mx-8 flex items-center justify-between gap-4 rounded-t-lg shadow-lg">
@@ -919,6 +953,16 @@ export default function DiaryForm({ projectId, project, entryId: initialEntryId,
           )}
         </div>
         <div className="flex items-center gap-3">
+          {isEdit && canDelete && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+            >
+              Delete entry
+            </button>
+          )}
           <a
             href={`/project-hub/project/${projectId}/diary/`}
             className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
