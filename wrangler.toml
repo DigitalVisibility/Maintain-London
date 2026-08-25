@@ -1,18 +1,32 @@
-name = "maintain-london"
+# Project Dash — the SaaS platform. NOT the Maintain London site.
+#
+# This file is the safety catch. `wrangler pages deploy` reads `name` to decide
+# which Cloudflare Pages project it publishes to, so while this said
+# "maintain-london" any deploy from this branch went straight over Tom's live
+# site. It must never say that again.
+#
+# Project Dash has its own database, its own bucket and its own sessions.
+# Maintain London is a customer of Project Hub, not tenant #1 of Project Dash,
+# and its data is a competitor's data to every business that signs up here.
+
+name = "project-dash"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "./dist"
 
-# Cloudflare D1 Database
+# Cloudflare D1 — Project Dash's OWN database. Empty, no Maintain London seed.
+#   npx wrangler d1 create project-dash-db
+# Paste the id it prints over the placeholder below.
 [[d1_databases]]
 binding = "DB"
-database_name = "maintain-london-db"
-database_id = "ef370f17-a325-4c4f-a69e-b65fce344a14"
+database_name = "project-dash-db"
+database_id = "REPLACE_ME_project_dash_d1_id"
 
-# Cloudflare R2 Bucket (photo/file storage)
+# Cloudflare R2 — Project Dash's OWN bucket.
+#   npx wrangler r2 bucket create project-dash-files
 [[r2_buckets]]
 binding = "R2"
-bucket_name = "maintain-london-files"
+bucket_name = "project-dash-files"
 
 # Cloudflare Workers AI (Whisper transcription for site voice notes).
 # Free allocation is 10,000 neurons/day; whisper-large-v3-turbo is
@@ -20,11 +34,15 @@ bucket_name = "maintain-london-files"
 [ai]
 binding = "AI"
 
-# Cloudflare KV (used by @astrojs/cloudflare for sessions)
+# Cloudflare KV — Project Dash's OWN session store. Sharing this with the
+# Maintain London site would let a session cross between the two products.
+#   npx wrangler kv namespace create SESSION
 [[kv_namespaces]]
 binding = "SESSION"
-id = "2a700acb29224559b22c7bb01f039c9c"
+id = "REPLACE_ME_project_dash_kv_id"
 
 [vars]
-# BETTER_AUTH_SECRET — set in Cloudflare Dashboard > Pages > Settings > Environment Variables (do NOT commit secrets)
-BETTER_AUTH_URL = "https://maintainlondon.co.uk"
+# PLATFORM_DOMAIN and the secrets are set in the Cloudflare dashboard, not here.
+# BETTER_AUTH_SECRET must be a NEW value — reusing Maintain London's would make
+# its session cookies valid against this deployment.
+BETTER_AUTH_URL = "https://projectdash.app"

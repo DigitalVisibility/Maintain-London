@@ -6,14 +6,26 @@ platform at **projectdash.app**, with each business on its own subdomain
 
 The golden rule, above everything else:
 
-> **The Project Dash deployment must use the SAME database (D1), file storage
-> (R2) and session store (KV) as the existing Maintain London site.**
-> Every business — Maintain London included — is a tenant *inside* that one
-> database. Never point Project Dash at a new/empty database.
+> **Project Dash must use its OWN database (D1), file storage (R2) and session
+> store (KV). Never point it at the Maintain London resources.**
 
-Your existing `maintainlondon.co.uk` site is untouched by all of this. It keeps
-deploying from `master` and keeps working exactly as before. Project Dash is a
-*second* deployment of the same code from the `project-dash` branch.
+**This rule was reversed on 25 August 2026, and the earlier version of this
+document said the opposite.** It told you to share Maintain London's database,
+bucket and sessions. That was written when Maintain London was tenant #1 of your
+own group, and it caused real damage before it was caught — see
+[PRODUCT_SEPARATION.md](PRODUCT_SEPARATION.md) §3.3. Two reasons it is now wrong:
+
+- **Tom is a competitor to your subscribers.** Maintain London is a London
+  maintenance contractor; so are the businesses signing up. "My job costs sit in
+  the same database as a rival's?" is a lost sales call, and "the queries are
+  scoped properly" is a losing answer even though it's true.
+- **A shared database couples the two products.** Anything written from the Dash
+  deployment — a test business, a renamed org, an uploaded logo — lands in Tom's
+  live data and changes what his site shows.
+
+Your existing `maintainlondon.co.uk` site keeps deploying from `master` and keeps
+its own `maintain-london-db`, `maintain-london-files` and KV. Project Dash is a
+separate deployment from the `project-dash` branch with a separate everything.
 
 ---
 
@@ -61,17 +73,34 @@ the Maintain London one.
 
 ## Part 3 — Bind the SAME database, files and sessions
 
-On the **project-dash** Pages project → **Settings → Bindings** (a.k.a. Functions
-→ bindings), add these, pointing at the **existing** resources:
+First create Dash's own resources (once):
 
-| Type | Variable name | Points at (existing) |
-|------|---------------|----------------------|
-| D1 database | `DB` | `maintain-london-db` |
-| R2 bucket | `R2` | `maintain-london-files` |
-| KV namespace | `SESSION` | the same KV the current site uses |
+```bash
+npx wrangler login
+npx wrangler d1 create project-dash-db
+npx wrangler r2 bucket create project-dash-files
+npx wrangler kv namespace create SESSION
+```
 
-Double-check these are the **existing** database/bucket/namespace, not new ones.
-This is the golden rule from the top of the page.
+Paste the printed D1 and KV ids into the `REPLACE_ME_*` placeholders in
+[wrangler.toml](../wrangler.toml). Then on the **project-dash** Pages project →
+**Settings → Bindings**, add:
+
+| Type | Variable name | Points at (NEW — create it) |
+|------|---------------|------------------------------|
+| D1 database | `DB` | `project-dash-db` |
+| R2 bucket | `R2` | `project-dash-files` |
+| KV namespace | `SESSION` | the new Project Dash namespace |
+| Workers AI | `AI` | *(no resource to pick — just add the binding)* |
+
+**Double-check none of these say `maintain-london`.** That is the golden rule
+from the top of the page. If a binding here points at a Maintain London
+resource, Tom's live data is inside your SaaS.
+
+**`AI` is new** (Aug 2026). It powers Whisper transcription for site voice notes.
+Add it as a **Workers AI** binding named `AI`; unlike the others it has nothing to
+point at. Without it, voice notes still record and store — they just come back
+marked "couldn't transcribe" and retryable, rather than failing silently.
 
 ---
 
@@ -83,10 +112,14 @@ these to **Production** (and Preview if you use it):
 | Name | Value | Notes |
 |------|-------|-------|
 | `PLATFORM_DOMAIN` | `projectdash.app` | **The switch.** Turns on subdomain-per-business mode. |
-| `BETTER_AUTH_SECRET` | *(same value as the current site)* | Must match — sessions live in the shared DB, so the secret has to be identical or logins won't validate. Mark it **encrypted/secret**. |
+| `BETTER_AUTH_SECRET` | *(a NEW random value)* | Must **not** match the Maintain London site. The databases are separate now, so a shared secret buys nothing and would make one product's session cookies valid against the other. Generate with `openssl rand -base64 32`. Mark it **encrypted/secret**. |
 | `RESEND_API_KEY` | *(same as current site)* | Sends invites/summaries. Secret. |
 | `ANTHROPIC_API_KEY` | *(same as current site)* | Drafts client summaries. Secret. |
 | `CRON_SECRET` | *(same as the summary cron worker)* | Secret. |
+
+`ANTHROPIC_API_KEY` now does more than the client summaries: it also writes the
+photo captions, the voice-to-diary write-ups and the quote scopes. Without it
+those features return a clear "not configured" error rather than misbehaving.
 
 Notes:
 - **You do not need to set `BETTER_AUTH_URL` here.** On the platform the app
@@ -99,6 +132,28 @@ Notes:
 
 Re-deploy the project after adding these (Deployments → Retry/Deploy, or push a
 commit — **do not** use the dashboard "Rollback").
+
+---
+
+## Part 4b — Build the database
+
+Dash's D1 starts empty. The migrations were written for Maintain London's
+database and seed it as tenant #1 — `0006` inserts `org-maintain-london` and
+attaches every existing row to it, `0003` inserts a sample project — so they
+can't just be replayed. [`scripts/bootstrap-dash-db.sh`](../scripts/bootstrap-dash-db.sh)
+runs the schema in order and then strips those seeds back out:
+
+```bash
+./scripts/bootstrap-dash-db.sh
+```
+
+It refuses to run while `wrangler.toml` still contains `REPLACE_ME`
+placeholders, so it cannot accidentally target the wrong database. When it
+finishes it prints a row count: expect **0 organisations, 0 projects, 0
+memberships, 0 users**. The generic UK merchant suppliers from `0002` are kept
+as platform defaults, with `org_id` set to NULL.
+
+The first business is then created through signup rather than SQL.
 
 ---
 
@@ -124,29 +179,31 @@ zone, add a **Redirect Rule**: when hostname ends with `projectdash.co.uk`,
 
 ## Part 6 — The summary cron
 
-The nightly "client summary" cron worker just needs to reach an endpoint that
-shares the same database. Point its target URL at **`https://projectdash.app`**
-(or leave it on the existing site — both share the DB). Make sure its
-`CRON_SECRET` matches the one you set in Part 4. The emails it sends already
-build their links from each business's own subdomain, so recipients land in the
-right place automatically.
+The two products now need **two** cron workers, because they no longer share a
+database. Deploy a second copy of `workers/summary-cron` pointed at
+**`https://projectdash.app`**, with its own `CRON_SECRET` matching the one you
+set in Part 4.
+
+**Leave the existing worker pointed at `maintainlondon.co.uk`.** Repointing it at
+Dash would stop Tom's nightly client summaries. The emails build their links from
+each business's own subdomain, so recipients land in the right place either way.
 
 ---
 
 ## Part 7 — Check the business slugs (they are the subdomains)
 
-A business's **slug** is its subdomain. Current value:
+A business's **slug** is its subdomain. Dash starts with **no businesses** — the
+first one is created at signup, and its slug is derived from the name it gives.
 
-| Business | Slug → subdomain |
-|----------|------------------|
-| Maintain London | `maintainlondon` → `maintainlondon.projectdash.app` |
+Maintain London is **not** a business on this platform. It stays on
+`maintainlondon.co.uk` with Project Hub. If you want it on Dash later as a real
+subscriber, it signs up like anyone else and gets a fresh, empty tenant.
 
 Owners can change their own slug any time from **Settings → Branding** (it's
 validated for format, reserved names and uniqueness). To set one directly:
 
 ```bash
-npx wrangler d1 execute maintain-london-db --remote \
-  --command "UPDATE organisations SET slug = 'newslug' WHERE id = 'org-…'"
+npx wrangler d1 execute project-dash-db --remote   --command "UPDATE organisations SET slug = 'newslug' WHERE id = 'org-...'"
 ```
 
 Slugs must be lowercase letters/numbers/hyphens, and can't be a reserved name
@@ -159,9 +216,13 @@ Slugs must be lowercase letters/numbers/hyphens, and can't be a reserved name
 Visit these and confirm:
 
 - [ ] `https://projectdash.app` → the **Project Dash landing**.
-- [ ] `https://maintainlondon.projectdash.app` → a **login branded "Maintain London"**.
-- [ ] Sign in there → you're in Maintain London's app, and the address stays on
+- [ ] Sign up a **test business** → it gets its own slug and subdomain.
+- [ ] `https://<that-slug>.projectdash.app` → a login branded with **its** name
+      and colour, not Maintain London's green.
+- [ ] Sign in there → you're in that business's app, and the address stays on
       that subdomain.
+- [ ] `https://maintainlondon.co.uk/project-hub` still works and is **untouched**
+      by everything above.
 - [ ] While signed in, visit a **different** business's subdomain you're *not* a
       member of → you're sent to the **"Choose a business"** page, **not** into
       their data. (This is the isolation working.)
