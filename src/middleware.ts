@@ -1,6 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { createAuth } from './lib/auth';
-import { resolveActiveOrg, loadOrg, isPlatformAdmin, ACTIVE_ORG_COOKIE } from './lib/org';
+import { resolveActiveOrg, loadOrg, isPlatformAdmin, ACTIVE_ORG_COOKIE, HUB_ORG_ID } from './lib/org';
 import { effectiveCapabilities, ALL_CAPABILITIES, type CapabilityOverride, type UserCapabilityOverride } from './lib/capabilities';
 import { queryAll } from './lib/db';
 
@@ -51,15 +51,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.isPlatformAdmin = platformAdmin;
 
     if (platformAdmin) {
-      // Agency super-admin: full access to whichever org they've entered (no
-      // membership required). With no org selected they use the agency dashboard.
-      if (cookieOrg) {
-        const org = await loadOrg(env.DB, cookieOrg);
-        if (org) {
-          context.locals.org = org;
-          context.locals.role = 'owner';
-          context.locals.capabilities = [...ALL_CAPABILITIES];
-        }
+      // Admin on a single-tenant site: always Maintain London, cookie or not.
+      // This used to load whichever org the `active_org` cookie named and set
+      // nothing at all when the cookie was missing — which left org_id empty
+      // and rendered an empty dashboard, since every query is scoped by it.
+      // Falls back to the cookie if HUB_ORG_ID doesn't resolve, so a renamed or
+      // differently-seeded org row degrades to today's behaviour instead of
+      // leaving an admin with no org at all.
+      const org =
+        (await loadOrg(env.DB, HUB_ORG_ID)) ||
+        (cookieOrg ? await loadOrg(env.DB, cookieOrg) : null);
+      if (org) {
+        context.locals.org = org;
+        context.locals.role = 'owner';
+        context.locals.capabilities = [...ALL_CAPABILITIES];
+        context.locals.memberships = [];
       }
     } else {
       // Normal user: scoped to the orgs they're a member of.

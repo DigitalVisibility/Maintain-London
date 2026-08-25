@@ -19,13 +19,24 @@ const currentPath = Astro.url.pathname;
 const org = Astro.locals.org;
 const memberships = Astro.locals.memberships ?? [];
 const orgName = org?.name ?? 'Maintain London';
-const orgLogo = org?.logo_url || '/images/Icons/Stacked.png';
+// `/api/branding/...` is a Project Dash route and does not exist here, so a
+// logo_url of that shape 404s and leaves a broken image in the sidebar. It gets
+// into the database when a logo is uploaded from the other product against a
+// shared row; ignore it and fall back to Maintain London's own icon.
+const storedLogo = org?.logo_url ?? '';
+const orgLogo = storedLogo && !storedLogo.startsWith('/api/branding/')
+  ? storedLogo
+  : '/images/Icons/Stacked.png';
 const brandColor = org?.brand_color || '#AEDE4A';
 const orgRole = Astro.locals.role ?? user?.role ?? 'operative';
 const canManageUsers = hasCap(Astro.locals, 'manage_users');
 const canViewCosts = hasCap(Astro.locals, 'view_costs');
 const canReleaseToClient = hasCap(Astro.locals, 'release_to_client');
-const isPlatformAdmin = Astro.locals.isPlatformAdmin;
+// The agency area is a business-switching surface inherited from the
+// multi-tenant work. Project Hub has one business, so the link is hidden.
+// The page itself is now inert anyway: the org is pinned in middleware and
+// the active_org cookie it sets is ignored.
+const isPlatformAdmin = false;
 ---
 
 <!doctype html>

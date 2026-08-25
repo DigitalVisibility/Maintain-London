@@ -11,6 +11,18 @@ import type { MembershipWithOrg, Organisation } from '../types/diary';
 
 export const ACTIVE_ORG_COOKIE = 'active_org';
 
+/**
+ * Project Hub is single-tenant: it is Maintain London's own site and serves no
+ * other business. The multi-business machinery below is the ancestor of Project
+ * Dash, which now lives in its own repo against its own database.
+ *
+ * Pinning the org here is what stops another `organisations` row from capturing
+ * the session. The old fallback picked `memberships[0]` ordered by name, so any
+ * business sorting before "Maintain London" would silently become the active
+ * one and the dashboard would render empty — every query is scoped by org_id.
+ */
+export const HUB_ORG_ID = 'org-maintain-london';
+
 /** Load a single organisation by id (used for platform-admin god-access). */
 export async function loadOrg(db: D1Database, id: string): Promise<Organisation | null> {
   return queryOne<Organisation>(
@@ -60,8 +72,14 @@ export async function resolveActiveOrg(
   const memberships = await getMemberships(db, userId);
   if (memberships.length === 0) return null;
 
+  // Pinned, not chosen — see HUB_ORG_ID. The cookie is deliberately ignored:
+  // there is only one business here, so there is nothing to switch to.
   const chosen =
-    (cookieOrgId && memberships.find((m) => m.org_id === cookieOrgId)) || memberships[0];
+    memberships.find((m) => m.org_id === HUB_ORG_ID) ||
+    // Only reached if HUB_ORG_ID doesn't match a real row (a renamed org). Keeps
+    // the previous cookie-then-first behaviour so this can never be a regression.
+    (cookieOrgId && memberships.find((m) => m.org_id === cookieOrgId)) ||
+    memberships[0];
 
   return {
     org: {
@@ -73,6 +91,8 @@ export async function resolveActiveOrg(
       created_at: '',
     },
     role: chosen.role,
-    memberships,
+    // Only ever the one. The sidebar shows its business switcher when this has
+    // more than one entry, and Tom should never see that control.
+    memberships: [chosen],
   };
 }
