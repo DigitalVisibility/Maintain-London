@@ -11,7 +11,7 @@ export const POST: APIRoute = async ({ locals }) => {
     return Response.json({ error: 'Push notifications aren’t configured on this deployment yet.' }, { status: 503 });
   }
   await sendToUser(env.DB, env, locals.user.id, {
-    title: 'Project Dash',
+    title: 'Project Hub',
     body: 'Notifications are working 🎉',
     url: '/project-hub/',
     tag: 'test',

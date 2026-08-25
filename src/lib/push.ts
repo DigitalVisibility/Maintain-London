@@ -85,7 +85,7 @@ export async function sendPush(sub: PushSub, payload: string, env: PushEnv): Pro
   // aes128gcm content coding header (RFC 8188): salt(16) rs(4) idlen(1) keyid ciphertext
   const body = concat(salt, new Uint8Array([0, 0, 0x10, 0x00]), new Uint8Array([asPublic.length]), asPublic, ct);
 
-  const jwt = await vapidJwt(sub.endpoint, env.VAPID_SUBJECT || 'mailto:admin@projectdash.app', env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
+  const jwt = await vapidJwt(sub.endpoint, env.VAPID_SUBJECT || 'mailto:admin@maintainlondon.co.uk', env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
   return fetch(sub.endpoint, {
     method: 'POST',
     headers: {

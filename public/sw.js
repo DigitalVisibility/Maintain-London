@@ -1,6 +1,9 @@
 /** Project Hub Service Worker — offline caching + background sync */
 
-const CACHE_VERSION = 'ph-v1';
+// Bumped to v2: the activate handler deletes every 'ph-' cache that isn't the
+// current one, so this forces a clean shell onto devices still holding the
+// old cache. Bump it whenever a cached page or asset must not survive.
+const CACHE_VERSION = 'ph-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -203,13 +206,13 @@ function getAllFromStore(store) {
 
 // ── Web push: show notifications, and focus/open the app on click ──
 self.addEventListener('push', (event) => {
-  let data = { title: 'Project Dash', body: 'You have a new notification.', url: '/project-hub/' };
+  let data = { title: 'Project Hub', body: 'You have a new notification.', url: '/project-hub/' };
   try { if (event.data) data = { ...data, ...event.data.json() }; } catch (e) { /* keep defaults */ }
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/images/projectdash/mark.svg',
-      badge: '/images/projectdash/mark.svg',
+      icon: '/images/Icons/Stacked.png',
+      badge: '/images/Icons/Stacked.png',
       tag: data.tag || undefined,
       data: { url: data.url || '/project-hub/' },
     })
