@@ -17,6 +17,20 @@ const canManageProjects = hasCap(Astro.locals, 'manage_projects');
 let projects: Project[] = [];
 let stats = { entriesThisWeek: 0, photosThisWeek: 0, delaysThisWeek: 0 };
 const unread: Record<string, number> = {};
+
+// Monday of the current week. Declared out here on purpose: the stat tiles link
+// to `?from={weekStart}`, so the template needs it. While it was a `const`
+// inside the try block below it was block-scoped and invisible to the template,
+// and rendering threw `weekStart is not defined` — but only once the week had
+// any activity, because the tiles are hidden when every count is zero. A quiet
+// week looked fine; the first diary entry blanked the dashboard.
+const now = new Date();
+const day = now.getDay();
+const mondayOffset = day === 0 ? -6 : 1 - day;
+const monday = new Date(now);
+monday.setDate(now.getDate() + mondayOffset);
+const weekStart = monday.toISOString().split('T')[0];
+
 try {
   projects = await queryAll<Project>(
     env.DB,
@@ -25,13 +39,6 @@ try {
   );
 
   // Dashboard stats: this week's data, scoped to this org's projects
-  const now = new Date();
-  const day = now.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + mondayOffset);
-  const weekStart = monday.toISOString().split('T')[0];
-
   const entriesRow = await queryOne<{ count: number }>(
     env.DB,
     `SELECT COUNT(*) as count FROM diary_entries
