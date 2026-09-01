@@ -1,0 +1,72 @@
+---
+export const prerender = false;
+
+import SignOutButton from '../../components/project-hub/SignOutButton';
+
+/**
+ * Shown when someone is signed in but has no `memberships` row, so no org
+ * resolves and every dashboard query is scoped by an empty org_id.
+ *
+ * Without this the Hub rendered "No projects yet" — indistinguishable from a
+ * business that genuinely has no work on, which reads as data loss. The account
+ * email is shown because the usual cause is signing in with a second account
+ * that was never the one invited.
+ */
+const user = Astro.locals.user;
+
+// Reachable directly. If the account does resolve to a business, this page would
+// tell them something untrue — send them to the dashboard instead.
+if (Astro.locals.org) return Astro.redirect('/project-hub/');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Account Not Linked | Project Hub</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center px-4">
+      <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+          <img src="/images/Icons/Stacked.png" alt="Project Hub" class="h-16 w-auto mx-auto mb-4" />
+          <h1 class="text-2xl font-bold text-gray-900" style="font-family:'Inter Variable',system-ui,sans-serif">Project Hub</h1>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <h2 class="text-lg font-semibold text-gray-900">Your account isn't attached to a business yet</h2>
+          <p class="text-sm text-gray-600 mt-3">
+            You're signed in, but this account isn't linked to a business, so there's
+            nothing for it to show. Your work hasn't been deleted — this account just
+            hasn't been connected to it.
+          </p>
+          <p class="text-sm text-gray-600 mt-3">
+            Ask whoever invited you to re-send the invitation, and accept it while
+            signed in as{' '}
+            {user?.email
+              ? <span class="font-medium text-gray-900">{user.email}</span>
+              : <span>this account</span>}.
+          </p>
+
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <p class="text-sm text-gray-500">
+              If you have more than one login, the invitation may have gone to the other one.
+            </p>
+            <SignOutButton client:load className="mt-3 text-sm font-medium text-gray-900 hover:underline">
+              Sign in with a different account
+            </SignOutButton>
+          </div>
+
+          <p class="text-xs text-gray-400 mt-6">
+            Still stuck? Contact Maintain London on
+            <a href="mailto:team@maintainlondon.co.uk" class="underline">team@maintainlondon.co.uk</a>
+            or 020 3886 2023.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

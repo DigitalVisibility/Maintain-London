@@ -1,0 +1,61 @@
+---
+/**
+ * Custom error page. Astro renders this when a page throws while handling a
+ * request, in place of the adapter's bare "Internal Server Error".
+ *
+ * Deliberately has no imports, no database access and no `Astro.locals` reads —
+ * if this page throws, there is nothing left to fall back to.
+ *
+ * Limits worth knowing: Astro streams HTML, so this only replaces the response
+ * when the throw happens before any output has been flushed — a frontmatter
+ * error, typically. A throw part-way through a template (an undefined variable
+ * referenced in the markup) has already sent the opening HTML, and the response
+ * is truncated at that point rather than replaced. That case still needs to be
+ * caught in the page itself.
+ */
+interface Props { error?: unknown; }
+const { error } = Astro.props;
+const detail = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Something went wrong | Maintain London</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body style="margin:0;background:#f9fafb;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#111827">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem">
+      <div style="width:100%;max-width:32rem">
+        <div style="text-align:center;margin-bottom:2rem">
+          <img src="/images/Icons/Stacked.png" alt="Maintain London" style="height:4rem;width:auto" />
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:0.5rem;padding:2rem">
+          <h1 style="margin:0;font-size:1.125rem;font-weight:600">This page failed to load</h1>
+          <p style="margin:0.75rem 0 0;font-size:0.875rem;color:#4b5563;line-height:1.5">
+            Something went wrong while building this page. This is a fault on our side —
+            your data has not been changed or deleted. Reloading may work; if it doesn't,
+            please report it so it can be fixed.
+          </p>
+          <p style="margin:1rem 0 0;font-size:0.875rem;color:#4b5563">
+            Contact Maintain London on
+            <a href="mailto:team@maintainlondon.co.uk" style="color:#111827">team@maintainlondon.co.uk</a>
+            or 020 3886 2023.
+          </p>
+          {detail && (
+            <details style="margin-top:1.5rem">
+              <summary style="font-size:0.75rem;color:#6b7280;cursor:pointer">Technical details</summary>
+              <pre style="margin:0.5rem 0 0;padding:0.75rem;background:#f3f4f6;border-radius:0.375rem;font-size:0.75rem;color:#374151;white-space:pre-wrap;word-break:break-word">{detail}</pre>
+            </details>
+          )}
+          <p style="margin:1.5rem 0 0">
+            <a href="/project-hub/" style="font-size:0.875rem;font-weight:500;color:#111827">Back to Project Hub</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

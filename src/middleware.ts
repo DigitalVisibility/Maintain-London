@@ -109,5 +109,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/project-hub/agency');
   }
 
+  // Signed in, but `resolveActiveOrg` found no memberships row, so no org is set.
+  // Every Hub query is scoped by org_id, which would be '' here — the dashboard
+  // then renders "No projects yet" and looks exactly like a business with no work
+  // on. Say what's actually wrong instead of showing an empty Hub.
+  if (isHubPage && sessionData && !context.locals.isPlatformAdmin && !context.locals.org
+      && !pathname.startsWith('/project-hub/no-business')) {
+    return context.redirect('/project-hub/no-business');
+  }
+
   return next();
 });

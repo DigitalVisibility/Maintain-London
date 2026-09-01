@@ -8,7 +8,9 @@ import type { Project } from '../../../types/diary';
 const { env } = Astro.locals.runtime;
 const user = Astro.locals.user;
 
-// The projects this client is attached to.
+// The projects this client is attached to. Empty when the invitation carried no
+// project_id — the account is fine, it just has no `project_clients` rows. The
+// empty state below has to say so: a bare portal reads as deleted work.
 const projects = user
   ? await queryAll<Project>(
       env.DB,
@@ -77,8 +79,18 @@ if (user) {
       ))}
     </div>
   ) : (
-    <div class="bg-white rounded-lg border border-gray-200 p-10 text-center text-sm text-gray-500">
-      No projects shared with you yet. Your contractor will release updates here.
+    <div class="bg-white rounded-lg border border-gray-200 p-10 text-center">
+      <h2 class="text-base font-semibold text-gray-900">No projects have been shared with you yet</h2>
+      <p class="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+        Your account is set up correctly — your contractor just hasn't given it access
+        to a project yet. Nothing has been removed, and updates will appear here as
+        soon as they do.
+      </p>
+      <p class="text-sm text-gray-500 mt-4">
+        Expecting to see a project? Contact Maintain London on
+        <a href="mailto:team@maintainlondon.co.uk" class="underline">team@maintainlondon.co.uk</a>
+        or 020 3886 2023.
+      </p>
     </div>
   )}
 </PortalLayout>
