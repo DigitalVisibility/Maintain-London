@@ -33,22 +33,18 @@ done
 
 echo
 echo "Stripping the Maintain London seed ..."
-npx wrangler d1 execute "$DB" --remote --command "
-  DELETE FROM memberships   WHERE org_id = 'org-maintain-london';
-  DELETE FROM organisations WHERE id     = 'org-maintain-london';
-  DELETE FROM projects      WHERE id     = 'proj_sample_001';
-  UPDATE suppliers SET org_id = NULL WHERE is_default = 1;
-"
+# One statement per call, children before the parent. D1 rejects a multi-statement
+# --command, and deleting the organisation first trips a foreign key from
+# projects/suppliers/memberships that 0006 attached to it.
+for sql in   "DELETE FROM memberships WHERE org_id = 'org-maintain-london'"   "DELETE FROM projects      WHERE id     = 'proj_sample_001'"   "UPDATE suppliers SET org_id = NULL WHERE is_default = 1"   "DELETE FROM projects  WHERE org_id = 'org-maintain-london'"   "DELETE FROM suppliers WHERE org_id = 'org-maintain-london'"   "DELETE FROM organisations WHERE id = 'org-maintain-london'"; do
+  echo "  -> ${sql:0:60}"
+  npx wrangler d1 execute "$DB" --remote --command "$sql"
+done
 
 echo
 echo "Verifying the database is clean ..."
-npx wrangler d1 execute "$DB" --remote --command "
-  SELECT 'organisations' AS tbl, COUNT(*) AS rows FROM organisations
-  UNION ALL SELECT 'projects', COUNT(*) FROM projects
-  UNION ALL SELECT 'memberships', COUNT(*) FROM memberships
-  UNION ALL SELECT 'user', COUNT(*) FROM user
-  UNION ALL SELECT 'default suppliers', COUNT(*) FROM suppliers WHERE is_default = 1;
-"
+npx wrangler d1 execute "$DB" --remote --command "SELECT 'organisations' AS t, COUNT(*) AS n FROM organisations UNION ALL SELECT 'projects', COUNT(*) FROM projects UNION ALL SELECT 'memberships', COUNT(*) FROM memberships UNION ALL SELECT 'user', COUNT(*) FROM user UNION ALL SELECT 'suppliers_default', COUNT(*) FROM suppliers WHERE is_default = 1"
+
 echo
 echo "Expect 0 organisations, 0 projects, 0 memberships, 0 users."
 echo "The default suppliers are generic UK merchants and are kept on purpose."
